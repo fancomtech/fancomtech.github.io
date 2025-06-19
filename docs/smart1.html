@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบห้องสมุดอัจฉริยะ (รวมแผนพัฒนา)</title>
+    
+    <!-- Chosen Palette: Calm Harmony (Slate/Teal) -->
+    <!-- Application Structure Plan: The SPA combines the functional library system with the enhancement roadmap. The core library operations (dashboard, member management, borrow/return records) remain the primary interface. A new, prominent button on the main dashboard allows users to toggle the visibility of a dedicated "Enhancements Roadmap" section. This section features tab-based navigation for different categories of proposed improvements and interactive feature cards with modal details, making the future vision easily explorable without cluttering the main operational view. This separation ensures core functionality is always at hand, while future plans are accessible and clearly presented. -->
+    <!-- Visualization & Content Choices:
+        - Main Dashboard Stats: Goal: Inform (Current Library Status). Presentation: HTML cards with dynamic numbers. Justification: Quick, high-level overview.
+        - Book Category Chart (Functional): Goal: Inform (Current Popularity by Category). Viz: Bar Chart (Chart.js) showing book counts per category. Interaction: Hover for tooltips. Justification: Visually represents reading trends.
+        - Latest Borrow/Return Table & All Student Data Table (Functional): Goal: Inform (Operational Details). Presentation: HTML tables with dynamic data. Justification: Provides granular data.
+        - Enhancements Overview Chart: Goal: Organize/Summarize (Proposed Development Scope). Viz: Doughnut Chart (Chart.js) showing feature count per category. Interaction: Hover for tooltips. Justification: Provides a high-level visual summary of the proposal's scope.
+        - Individual Feature Suggestions (Enhancements): Goal: Inform/Organize (Detailed Feature Proposals). Presentation: Feature cards in a grid (HTML/Tailwind). Interaction: Click to open a modal with more details. Justification: Modern, scannable, and allows for progressive disclosure.
+        - Feature Details (Enhancements): Goal: Inform (Deep Dive into a Feature). Presentation: Modal popup (HTML/Tailwind/JS). Interaction: Close button. Justification: Keeps the main interface clean.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #333; /* Dark gray text */
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .tab-button.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488; /* teal-600 */
+        }
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            background-color: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table th {
+            background-color: #e2e8f0;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .data-table tbody tr:hover {
+            background-color: #f7fafc;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 320px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-green-500 to-green-700 p-6 text-white text-center rounded-b-3xl shadow-lg">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-2">📚 ระบบห้องสมุดอัจฉริยะ 📖</h1>
+        <p class="text-xl font-light">เพิ่มพูนการอ่าน สร้างวินัยไปพร้อมกัน</p>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <!-- Main Dashboard Buttons -->
+        <div id="main-dashboard-buttons" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <button id="adminLoginBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-3">
+                <i class="fas fa-user-tie text-2xl"></i>
+                <span class="text-xl">สำหรับบรรณารักษ์</span>
+            </button>
+            <button id="memberLoginBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-3">
+                <i class="fas fa-graduation-cap text-2xl"></i>
+                <span class="text-xl">สำหรับนักเรียน</span>
+            </button>
+            <button id="addMemberBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-3">
+                <i class="fas fa-user-plus text-2xl"></i>
+                <span class="text-xl">ลงทะเบียนนักเรียนใหม่</span>
+            </button>
+            <button id="showEnhancementsBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-3 col-span-full">
+                <i class="fas fa-rocket text-2xl"></i>
+                <span class="text-xl">ดูแผนการพัฒนาระบบ</span>
+            </button>
+        </div>
+
+        <!-- Functional Library Dashboard Section -->
+        <section id="functional-dashboard-section" class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-3xl font-bold mb-6 text-center text-green-700">ภาพรวมข้อมูลห้องสมุดปัจจุบัน</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-blue-100 p-5 rounded-lg shadow-md flex items-center justify-between">
+                    <div class="text-blue-700">
+                        <i class="fas fa-users text-4xl mb-2"></i>
+                        <p class="text-lg font-semibold">จำนวนนักเรียน</p>
+                        <p id="totalStudents" class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+                <div class="bg-yellow-100 p-5 rounded-lg shadow-md flex items-center justify-between">
+                    <div class="text-yellow-700">
+                        <i class="fas fa-book text-4xl mb-2"></i>
+                        <p class="text-lg font-semibold">หนังสือรวม (เล่ม)</p>
+                        <p id="totalBooks" class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+                <div class="bg-red-100 p-5 rounded-lg shadow-md flex items-center justify-between">
+                    <div class="text-red-700">
+                        <i class="fas fa-check-circle text-4xl mb-2"></i>
+                        <p class="text-lg font-semibold">ยืม-คืนตรงเวลา (ครั้ง)</p>
+                        <p id="totalOnTimeReturns" class="text-3xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center text-green-600">สถิติหนังสือยอดนิยมตามหมวดหมู่</h3>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <canvas id="bookCategoryChart" class="w-full h-80"></canvas>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center text-green-600">ประวัติการยืม-คืนล่าสุด</h3>
+                <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <table id="latestBorrowReturnsTable" class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ-สกุล</th>
+                                <th>ชื่อหนังสือ</th>
+                                <th>วันที่ยืม</th>
+                                <th>วันที่คืน</th>
+                                <th>คะแนนที่ได้รับ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded here dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-2xl font-bold mb-4 text-center text-green-600">ตารางแสดงข้อมูลนักเรียนทั้งหมด</h3>
+                <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <table id="allStudentDataTable" class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ-สกุล</th>
+                                <th>จำนวนหนังสือที่ยืมรวม (เล่ม)</th>
+                                <th>จำนวนรางวัลที่แลก (ครั้ง)</th>
+                                <th>คะแนนสะสม</th>
+                                <th>สถานะ</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded here dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhancements Roadmap Section -->
+        <section id="enhancements-roadmap-section" class="bg-white p-6 rounded-2xl shadow-lg mb-8 hidden">
+            <h2 class="text-3xl font-bold mb-6 text-center text-teal-700">แผนการพัฒนาระบบห้องสมุดอัจฉริยะ</h2>
+            <p class="text-slate-600 text-center mt-2 mb-8">สำรวจฟีเจอร์และแนวทางการปรับปรุงเพื่อยกระดับประสบการณ์ห้องสมุด</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-8">
+                <div>
+                    <h3 class="font-semibold text-lg mb-2 text-slate-700">สรุปเป้าหมายหลัก</h3>
+                    <p class="text-slate-600 mb-4">
+                        แผนการพัฒนานี้มุ่งเน้นการปรับปรุงระบบห้องสมุดใน 5 ด้านหลัก เพื่อเพิ่มประสิทธิภาพการจัดการ, สร้างแรงจูงใจในการอ่าน, และมอบประสบการณ์ที่ดีที่สุดให้กับนักเรียนและบรรณารักษ์.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-teal-50 p-4 rounded-lg">
+                            <p class="text-3xl font-bold text-teal-600">15+</p>
+                            <p class="text-sm text-slate-500">ฟีเจอร์ที่นำเสนอ</p>
+                        </div>
+                        <div class="bg-sky-50 p-4 rounded-lg">
+                            <p class="text-3xl font-bold text-sky-600">5</p>
+                            <p class="text-sm text-slate-500">หมวดหมู่หลัก</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="featuresChart"></canvas>
+                </div>
+            </div>
+
+            <nav class="bg-white rounded-t-lg shadow-md sticky top-0 z-10">
+                <div class="flex justify-center border-b border-slate-200">
+                    <button data-tab="tab-book-management" class="tab-button active text-sm md:text-base font-semibold px-4 py-4 md:px-6">📖 การจัดการหนังสือ</button>
+                    <button data-tab="tab-points-rewards" class="tab-button text-sm md:text-base font-semibold px-4 py-4 md:px-6">🏆 คะแนนและรางวัล</button>
+                    <button data-tab="tab-ux" class="tab-button text-sm md:text-base font-semibold px-4 py-4 md:px-6">✨ ประสบการณ์ผู้ใช้</button>
+                    <button data-tab="tab-librarian" class="tab-button text-sm md:text-base font-semibold px-4 py-4 md:px-6">🛠️ เครื่องมือบรรณารักษ์</button>
+                    <button data-tab="tab-advanced" class="tab-button text-sm md:text-base font-semibold px-4 py-4 md:px-6">🚀 ฟีเจอร์ขั้นสูง</button>
+                </div>
+            </nav>
+
+            <div class="bg-white p-6 md:p-8 rounded-b-2xl shadow-lg">
+                <!-- Tab 1: Book Management -->
+                <div id="tab-book-management" class="tab-content space-y-4">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-700">การจัดการหนังสือ (Book Management)</h3>
+                        <p class="text-slate-500 mt-1">ปรับปรุงระบบฐานข้อมูลและกระบวนการที่เกี่ยวข้องกับหนังสือให้ทันสมัยและมีประสิทธิภาพสูงสุด</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบฐานข้อมูลหนังสือ" data-details="สร้างฐานข้อมูลกลางสำหรับหนังสือทั้งหมด ประกอบด้วยข้อมูลสำคัญ เช่น รหัสหนังสือ, ชื่อ, ผู้แต่ง, หมวดหมู่, สถานะ (พร้อมยืม/ถูกยืม), และจำนวนคงเหลือ เพื่อให้ง่ายต่อการจัดการและค้นหา.">
+                            <h4 class="font-bold text-lg">ระบบฐานข้อมูลหนังสือ</h4>
+                            <p class="text-sm text-slate-600 mt-1">ศูนย์กลางข้อมูลหนังสือทั้งหมดของห้องสมุด</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">สำคัญ: สูง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบจองหนังสือ" data-details="เพิ่มความสามารถให้นักเรียนสามารถตรวจสอบสถานะและทำการจองหนังสือที่กำลังถูกยืมอยู่ล่วงหน้าได้ เมื่อหนังสือถูกนำมาคืน ระบบจะแจ้งเตือนนักเรียนที่จองไว้ให้มารับ.">
+                            <h4 class="font-bold text-lg">ระบบจองหนังสือ</h4>
+                            <p class="text-sm text-slate-600 mt-1">ไม่พลาดหนังสือเล่มโปรดที่กำลังถูกยืม</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบแจ้งเตือนการคืน" data-details="พัฒนาระบบอัตโนมัติเพื่อส่งการแจ้งเตือนไปยังนักเรียนเมื่อใกล้ถึงกำหนดคืนหนังสือ หรือเมื่อหนังสือค้างส่งเกินกำหนด เพื่อช่วยลดอัตราการคืนล่าช้า.">
+                            <h4 class="font-bold text-lg">ระบบแจ้งเตือนการคืน</h4>
+                            <p class="text-sm text-slate-600 mt-1">แจ้งเตือนอัตโนมัติเมื่อใกล้ครบกำหนด</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Points & Rewards -->
+                <div id="tab-points-rewards" class="tab-content space-y-4 hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-700">การจัดการคะแนนและรางวัล (Points & Rewards)</h3>
+                        <p class="text-slate-500 mt-1">สร้างแรงจูงใจในการอ่านและสร้างวินัยผ่านระบบสะสมคะแนนแลกรางวัลที่สนุกและท้าทายยิ่งขึ้น</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ประเภทคะแนนที่หลากหลาย" data-details="เพิ่มช่องทางการสะสมคะแนนให้มากกว่าแค่การยืม-คืน เช่น การเขียนรีวิวหนังสือ, การเข้าร่วมกิจกรรมพิเศษของห้องสมุด, หรือการทำแบบทดสอบหลังการอ่าน เพื่อส่งเสริมการมีส่วนร่วม.">
+                            <h4 class="font-bold text-lg">ประเภทคะแนนที่หลากหลาย</h4>
+                            <p class="text-sm text-slate-600 mt-1">สะสมคะแนนจากกิจกรรมต่างๆ ไม่ใช่แค่การยืม</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="แคตตาล็อกของรางวัล" data-details="สร้างระบบแลกของรางวัลที่มีประสิทธิภาพ โดยมีแคตตาล็อกของรางวัลให้นักเรียนเลือก เช่น สิทธิ์ยืมหนังสือเพิ่ม, อุปกรณ์การเรียน, หรือของที่ระลึกพิเศษ โดยระบบจะตัดคะแนนสะสมอัตโนมัติ.">
+                            <h4 class="font-bold text-lg">แคตตาล็อกของรางวัล</h4>
+                            <p class="text-sm text-slate-600 mt-1">เลือกแลกของรางวัลได้หลากหลายและน่าสนใจ</p>
+                            <div class="flex gap-2 mt-4">
+                               <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระดับสมาชิก (Gamification)" data-details="นำหลักการ Gamification มาใช้โดยการกำหนดระดับของสมาชิกตามคะแนนสะสม เช่น นักอ่านฝึกหัด, นักอ่านชั้นเซียน, ปรมาจารย์หนังสือ พร้อมมอบสิทธิพิเศษหรือตราสัญลักษณ์สำหรับแต่ละระดับ.">
+                            <h4 class="font-bold text-lg">ระดับสมาชิก (Gamification)</h4>
+                            <p class="text-sm text-slate-600 mt-1">เลื่อนระดับนักอ่านเพื่อปลดล็อกสิทธิพิเศษ</p>
+                             <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">สำคัญ: ต่ำ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab 3: User Experience -->
+                <div id="tab-ux" class="tab-content space-y-4 hidden">
+                     <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-700">ส่วนเสริมสำหรับผู้ใช้งาน (User Experience)</h3>
+                        <p class="text-slate-500 mt-1">ยกระดับประสบการณ์การใช้งานระบบห้องสมุดให้ง่าย, สะดวก, และเป็นส่วนตัวมากยิ่งขึ้น</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="หน้าโปรไฟล์นักเรียนที่สมบูรณ์" data-details="พัฒนาหน้าโปรไฟล์ของนักเรียนให้แสดงข้อมูลที่เป็นประโยชน์ครบถ้วน เช่น รายการหนังสือที่กำลังยืมและวันครบกำหนดคืน, ประวัติการยืมทั้งหมด, และประวัติการได้-ใช้คะแนนอย่างละเอียด.">
+                            <h4 class="font-bold text-lg">หน้าโปรไฟล์นักเรียนที่สมบูรณ์</h4>
+                            <p class="text-sm text-slate-600 mt-1">แดชบอร์ดส่วนตัวสำหรับนักอ่านทุกคน</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">สำคัญ: สูง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="การแจ้งเตือนส่วนบุคคล" data-details="สร้างระบบแจ้งเตือนที่ชาญฉลาดเพื่อส่งข้อมูลที่เกี่ยวข้องกับนักเรียนโดยตรง เช่น แจ้งเตือนเมื่อหนังสือที่จองไว้พร้อมให้ยืม หรือแจ้งเตือนสรุปคะแนนที่ได้รับในแต่ละสัปดาห์.">
+                            <h4 class="font-bold text-lg">การแจ้งเตือนส่วนบุคคล</h4>
+                            <p class="text-sm text-slate-600 mt-1">รับข่าวสารสำคัญที่เกี่ยวกับคุณโดยเฉพาะ</p>
+                             <div class="flex gap-2 mt-4">
+                               <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                         <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ปรับปรุง UI/UX" data-details="ออกแบบหน้าตาของระบบ (UI) และประสบการณ์การใช้งาน (UX) ใหม่ทั้งหมดให้ดูทันสมัย, ใช้งานง่าย, และตอบสนองต่อทุกขนาดหน้าจอ (Responsive Design) ตั้งแต่คอมพิวเตอร์ไปจนถึงโทรศัพท์มือถือ.">
+                            <h4 class="font-bold text-lg">ปรับปรุง UI/UX</h4>
+                            <p class="text-sm text-slate-600 mt-1">ออกแบบใหม่ให้สวยงามและใช้งานง่ายขึ้น</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">สำคัญ: สูง</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Librarian Tools -->
+                <div id="tab-librarian" class="tab-content space-y-4 hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-700">การจัดการและรายงานสำหรับบรรณารักษ์</h3>
+                        <p class="text-slate-500 mt-1">เสริมศักยภาพให้บรรณารักษ์ด้วยเครื่องมือการจัดการและรายงานผลที่ทรงพลัง</p>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="รายงานเชิงลึก" data-details="สร้างแดชบอร์ดสำหรับบรรณารักษ์ที่สามารถแสดงรายงานเชิงลึกได้ เช่น สถิติหนังสือที่ถูกยืมบ่อยที่สุด, หมวดหมู่ยอดนิยม, ช่วงเวลาที่มีการยืมมากที่สุด, และรายชื่อนักเรียนที่มีกิจกรรมการอ่านสูงสุด.">
+                            <h4 class="font-bold text-lg">รายงานเชิงลึก</h4>
+                            <p class="text-sm text-slate-600 mt-1">ดูข้อมูลและสถิติสำคัญเพื่อการวางแผน</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">สำคัญ: สูง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบยืนยันตัวตนที่แข็งแกร่ง" data-details="ยกระดับความปลอดภัยของระบบสำหรับบรรณารักษ์ โดยเปลี่ยนจากการใช้รหัสผ่านธรรมดาเป็นการยืนยันตัวตนผ่านบัญชี Google (OAuth) เพื่อป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต.">
+                            <h4 class="font-bold text-lg">ระบบยืนยันตัวตนที่แข็งแกร่ง</h4>
+                            <p class="text-sm text-slate-600 mt-1">เพิ่มความปลอดภัยในการเข้าระบบบรรณารักษ์</p>
+                            <div class="flex gap-2 mt-4">
+                               <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ฟังก์ชันตรวจสอบหนังสือ" data-details="เพิ่มเครื่องมือให้บรรณารักษ์สามารถอัปเดตสถานะของหนังสือแต่ละเล่มได้อย่างรวดเร็ว เช่น การบันทึกสถานะ 'ชำรุด' หรือ 'ส่งซ่อม' เพื่อนำออกจากระบบการยืมชั่วคราว.">
+                            <h4 class="font-bold text-lg">ฟังก์ชันตรวจสอบหนังสือ</h4>
+                            <p class="text-sm text-slate-600 mt-1">อัปเดตสถานะหนังสือแต่ละเล่มได้ง่ายขึ้น</p>
+                            <div class="flex gap-2 mt-4">
+                               <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Advanced Features -->
+                <div id="tab-advanced" class="tab-content space-y-4 hidden">
+                     <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-700">คุณสมบัติขั้นสูง (Advanced Features)</h3>
+                        <p class="text-slate-500 mt-1">นำเทคโนโลยีใหม่ๆ เข้ามาผสมผสานเพื่อสร้างนวัตกรรมและมอบประสบการณ์ที่เหนือกว่า</p>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="การเชื่อมต่อ QR/Barcode" data-details="นำระบบ QR Code หรือ Barcode มาใช้กับหนังสือและบัตรนักเรียน เพื่อให้กระบวนการยืม-คืนหนังสือที่เคาน์เตอร์บริการเป็นไปอย่างรวดเร็ว, ลดขั้นตอน, และลดความผิดพลาด.">
+                            <h4 class="font-bold text-lg">การเชื่อมต่อ QR/Barcode</h4>
+                            <p class="text-sm text-slate-600 mt-1">ยืม-คืนรวดเร็วและแม่นยำด้วยการสแกน</p>
+                            <div class="flex gap-2 mt-4">
+                               <span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">สำคัญ: กลาง</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบแนะนำหนังสือ" data-details="พัฒนาระบบ AI พื้นฐานเพื่อวิเคราะห์ประวัติการยืมของนักเรียน และนำเสนอหนังสือเล่มอื่นที่น่าสนใจในหมวดหมู่เดียวกันหรือมีเนื้อหาใกล้เคียงกัน เพื่อเปิดโลกการอ่านให้กว้างขึ้น.">
+                            <h4 class="font-bold text-lg">ระบบแนะนำหนังสือ</h4>
+                            <p class="text-sm text-slate-600 mt-1">AI ช่วยแนะนำหนังสือเล่มถัดไปที่น่าอ่าน</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">สำคัญ: ต่ำ</span>
+                            </div>
+                        </div>
+                        <div class="feature-card bg-slate-50 p-5 rounded-xl border border-slate-200" data-title="ระบบให้คะแนนและรีวิว" data-details="สร้างพื้นที่ให้นักเรียนสามารถให้คะแนน (เช่น 1-5 ดาว) และเขียนรีวิวสั้นๆ เกี่ยวกับหนังสือที่อ่านจบแล้วได้ เพื่อแบ่งปันมุมมองและช่วยเพื่อนๆ ในการตัดสินใจเลือกหนังสือ.">
+                            <h4 class="font-bold text-lg">ระบบให้คะแนนและรีวิว</h4>
+                            <p class="text-sm text-slate-600 mt-1">แบ่งปันความคิดเห็นและมุมมองหลังการอ่าน</p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">สำคัญ: ต่ำ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center mt-8">
+                <button id="hideEnhancementsBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ซ่อนแผนการพัฒนา</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-green-700 p-4 text-white text-center rounded-t-3xl shadow-lg mt-auto">
+        <p>©2025 FANTECH</p>
+    </footer>
+
+    <!-- Modals -->
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content w-full max-w-md p-6 transform scale-95 opacity-0">
+            <h3 class="text-2xl font-bold mb-6 text-center text-blue-700">เข้าสู่ระบบบรรณารักษ์</h3>
+            <div class="mb-4">
+                <label for="adminPassword" class="block text-gray-700 text-sm font-bold mb-2">รหัสผ่าน:</label>
+                <input type="password" id="adminPassword" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="กรอกรหัสผ่านบรรณารักษ์">
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmAdminLogin" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">เข้าสู่ระบบ</button>
+                <button onclick="closeModal('adminLoginModal')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div id="adminDashboardModal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content w-full max-w-4xl p-8 transform scale-95 opacity-0">
+            <h3 class="text-3xl font-bold mb-6 text-center text-blue-700">หน้าจัดการบรรณารักษ์</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <button id="manageStudentsBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition duration-300">
+                    <i class="fas fa-users-cog mr-2"></i> จัดการข้อมูลนักเรียน
+                </button>
+                <button id="librarianRecordBorrowReturnBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition duration-300">
+                    <i class="fas fa-book-reader mr-2"></i> บันทึกการยืม-คืนหนังสือ
+                </button>
+                <button id="librarianRecordPointsExchangeBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition duration-300">
+                    <i class="fas fa-gift mr-2"></i> บันทึกคะแนน/แลกรางวัล
+                </button>
+            </div>
+
+            <div id="adminContentArea" class="bg-gray-50 p-6 rounded-xl shadow-inner min-h-[300px]">
+                <p class="text-center text-gray-500 text-lg">เลือกเมนูด้านบนเพื่อเริ่มต้น</p>
+            </div>
+
+            <div class="flex justify-end mt-8">
+                <button onclick="closeModal('adminDashboardModal')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Login Modal -->
+    <div id="memberLoginModal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content w-full max-w-md p-6 transform scale-95 opacity-0">
+            <h3 class="text-2xl font-bold mb-6 text-center text-purple-700">เข้าสู่ระบบนักเรียน</h3>
+            <div class="mb-4">
+                <label for="studentIdLogin" class="block text-gray-700 text-sm font-bold mb-2">รหัสประจำตัวนักเรียน:</label>
+                <input type="text" id="studentIdLogin" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="กรอกรหัสประจำตัวนักเรียน">
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmMemberLogin" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">เข้าสู่ระบบ</button>
+                <button onclick="closeModal('memberLoginModal')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard Modal -->
+    <div id="memberDashboardModal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content w-full max-w-3xl p-8 transform scale-95 opacity-0">
+            <h3 class="text-3xl font-bold mb-6 text-center text-purple-700">ข้อมูลส่วนตัวนักเรียน</h3>
+            <div id="studentPersonalData" class="mb-6 bg-purple-50 p-5 rounded-lg shadow-inner">
+                <p class="text-lg mb-2"><span class="font-semibold">รหัสประจำตัวนักเรียน:</span> <span id="displayStudentId"></span></p>
+                <p class="text-lg mb-2"><span class="font-semibold">ชื่อ-สกุล:</span> <span id="displayStudentName"></span></p>
+                <p class="text-lg mb-2"><span class="font-semibold">เบอร์โทร:</span> <span id="displayStudentPhone"></span></p>
+                <p class="text-lg mb-2 text-green-700 font-bold"><span class="font-semibold">คะแนนสะสม:</span> <span id="displayStudentPoints"></span> คะแนน</p>
+            </div>
+
+            <div class="mb-8">
+                <h4 class="text-2xl font-bold mb-4 text-purple-600">ประวัติการยืม-คืนหนังสือของคุณ</h4>
+                <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <table id="myBorrowHistoryTable" class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>ชื่อหนังสือ</th>
+                                <th>วันที่ยืม</th>
+                                <th>วันที่คืน</th>
+                                <th>คะแนนที่ได้รับ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Student's personal borrow history data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-2xl font-bold mb-4 text-purple-600">ประวัติการแลกรางวัลของคุณ</h4>
+                <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <table id="myRewardExchangeTable" class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>รางวัลที่แลก</th>
+                                <th>วันที่แลก</th>
+                                <th>คะแนนที่ใช้ไป</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Student's personal reward exchange data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-8">
+                <button onclick="closeModal('memberDashboardModal')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div id="addMemberModal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content w-full max-w-lg p-6 transform scale-95 opacity-0">
+            <h3 id="addMemberModalTitle" class="text-2xl font-bold mb-6 text-center text-yellow-600">ลงทะเบียนนักเรียนใหม่</h3>
+            <form id="studentForm">
+                <input type="hidden" id="studentIdEdit" value="">
+                <div class="mb-4">
+                    <label for="studentId" class="block text-gray-700 text-sm font-bold mb-2">รหัสประจำตัวนักเรียน:</label>
+                    <input type="text" id="studentId" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="รหัสประจำตัวนักเรียน (ไม่บังคับหากเพิ่มใหม่)" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="nationalId" class="block text-gray-700 text-sm font-bold mb-2">เลขบัตรประชาชน (13 หลัก):</label>
+                    <input type="number" id="nationalId" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกเลขบัตรประชาชน" required>
+                </div>
+                <div class="mb-4">
+                    <label for="fullName" class="block text-gray-700 text-sm font-bold mb-2">ชื่อ-สกุล:</label>
+                    <input type="text" id="fullName" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกชื่อ-สกุล" required>
+                </div>
+                <div class="mb-4">
+                    <label for="houseNo" class="block text-gray-700 text-sm font-bold mb-2">บ้านเลขที่:</label>
+                    <input type="text" id="houseNo" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกบ้านเลขที่" required>
+                </div>
+                <div class="mb-4">
+                    <label for="villageNo" class="block text-gray-700 text-sm font-bold mb-2">หมู่ที่:</label>
+                    <input type="text" id="villageNo" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกหมู่ที่" required>
+                </div>
+                <div class="mb-6">
+                    <label for="phoneNo" class="block text-gray-700 text-sm font-bold mb-2">เบอร์โทร:</label>
+                    <input type="text" id="phoneNo" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกเบอร์โทร" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">บันทึกข้อมูล</button>
+                    <button type="button" onclick="closeModal('addMemberModal')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Feature Details (from Enhancements Roadmap) -->
+    <div id="featureModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
+        <div class="modal-content w-full max-w-lg rounded-2xl shadow-xl p-6 md:p-8 transform scale-95">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                <h3 id="modalTitle" class="text-xl font-bold text-teal-700"></h3>
+                <button id="closeFeatureModalBtn" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <p id="modalDetails" class="text-slate-600"></p>
+        </div>
+    </div>
+
+
+    <script>
+        // Updated Google Apps Script URL with your provided URL
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNqafiSsMTyok5O4LgsugC7j0zYBZjyr69vGnDOdDVKxpjp0MNOoKIx1Z2VnUS_T1v/exec';
+        const ADMIN_PASSWORD = '1234';
+
+        let LIBRARY_POINTS_CONFIG_FRONTEND = {
+            'on_time_return': 5,
+            'book_summary': 10
+        };
+        let POINTS_PER_REWARD_UNIT_FRONTEND = 100;
+        let allStudentsData = [];
+        let allBooksData = [];
+        let allBorrowReturnsData = [];
+        let allRewardExchangesData = [];
+
+        let bookCategoryChartInstance = null;
+        let featuresChartInstance = null;
+
+        function showAlert(icon, title, text) {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                showConfirmButton: false,
+                timer: icon === 'info' ? false : 2000,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    if (icon === 'info') Swal.showLoading();
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+
+            // Remove 'hidden' class to make the modal visible (display: flex)
+            modal.classList.remove('hidden');
+            
+            // Force a reflow/re-render to ensure the 'display' property change is registered by the browser
+            // before we try to transition its opacity and transform.
+            // This is a common trick to make CSS transitions work when an element's display property changes.
+            void modal.offsetHeight; 
+
+            // Now, remove the initial state classes (opacity-0, scale-95) to trigger the CSS transitions
+            modal.classList.remove('opacity-0'); // Fades in the overlay
+            if (modalContent) {
+                modalContent.classList.remove('opacity-0'); // Fades in the content
+                modalContent.classList.remove('scale-95'); // Scales in the content
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+
+            // Add classes to trigger the fade-out and scale-out transitions
+            modal.classList.add('opacity-0');
+            if (modalContent) {
+                modalContent.classList.add('opacity-0');
+                modalContent.classList.add('scale-95');
+            }
+            
+            // After the transition duration, add 'hidden' class to completely hide the modal
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Reset form fields or content after closing the modal
+                if (modalId === 'adminLoginModal') {
+                    document.getElementById('adminPassword').value = '';
+                } else if (modalId === 'memberLoginModal') {
+                    document.getElementById('studentIdLogin').value = '';
+                } else if (modalId === 'addMemberModal') {
+                    document.getElementById('studentForm').reset();
+                    document.getElementById('addMemberModalTitle').innerText = 'ลงทะเบียนนักเรียนใหม่';
+                    document.getElementById('studentId').value = '';
+                    document.getElementById('studentIdEdit').value = '';
+                    document.getElementById('studentId').removeAttribute('readonly');
+                } else if (modalId === 'adminDashboardModal') {
+                    document.getElementById('adminContentArea').innerHTML = '<p class="text-center text-gray-500 text-lg">เลือกเมนูด้านบนเพื่อเริ่มต้น</p>';
+                }
+            }, 300); // This timeout should match the CSS transition duration (0.3s = 300ms)
+        }
+
+        async function fetchSheetData(action, params = {}) {
+            const url = new URL(GOOGLE_APPS_SCRIPT_URL);
+            url.searchParams.append('action', action);
+            for (const key in params) {
+                url.searchParams.append(key, params[key]);
+            }
+            // Log the URL and action being sent for debugging
+            console.log('Fetching with action:', action, 'URL:', url.toString());
+
+            try {
+                showAlert('info', 'กำลังดำเนินการ', 'กรุณารอสักครู่...');
+                const response = await fetch(url.toString());
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    Swal.close();
+                    return data.data;
+                } else {
+                    showAlert('error', 'เกิดข้อผิดพลาด', data.message || 'ไม่สามารถดึงข้อมูลได้');
+                    console.error('Error fetching sheet data:', data.message);
+                    return null;
+                }
+            } catch (error) {
+                showAlert('error', 'การเชื่อมต่อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้');
+                console.error('Error in fetchSheetData:', error);
+                return null;
+            }
+        }
+
+        async function loadDashboardData() {
+            const libraryConfig = await fetchSheetData('getLibraryConfig');
+            if (libraryConfig) {
+                LIBRARY_POINTS_CONFIG_FRONTEND = libraryConfig.LIBRARY_POINTS_CONFIG || {};
+                POINTS_PER_REWARD_UNIT_FRONTEND = libraryConfig.POINTS_PER_REWARD_UNIT || 0;
+            } else {
+                console.warn("Failed to load library configuration. Using default empty config.");
+            }
+
+            const dashboardData = await fetchSheetData('getDashboardData');
+            if (dashboardData) {
+                allStudentsData = dashboardData.students || [];
+                allBooksData = dashboardData.books || [];
+                allBorrowReturnsData = dashboardData.borrowReturns || [];
+                allRewardExchangesData = dashboardData.rewardExchanges || [];
+
+                document.getElementById('totalStudents').innerText = allStudentsData.length;
+                document.getElementById('totalBooks').innerText = allBooksData.length;
+                
+                let totalOnTimeReturns = 0;
+                let bookCategoryStats = {};
+
+                const predefinedCategories = ['นิยาย', 'สารคดี', 'การ์ตูน', 'วรรณกรรม', 'อื่นๆ'];
+                predefinedCategories.forEach(cat => bookCategoryStats[cat] = 0);
+
+                allBorrowReturnsData.forEach(item => {
+                    if (item['สถานะคืน'] === 'ตรงเวลา') {
+                        totalOnTimeReturns += 1;
+                    }
+                    const category = item['หมวดหมู่หนังสือ'] || 'อื่นๆ';
+                    bookCategoryStats[category] = (bookCategoryStats[category] || 0) + 1;
+                });
+
+                document.getElementById('totalOnTimeReturns').innerText = totalOnTimeReturns;
+                renderBookCategoryChart(bookCategoryStats);
+                renderLatestBorrowReturnsTable(allBorrowReturnsData.slice(-10).reverse());
+                renderAllStudentData(allStudentsData, allBorrowReturnsData, allRewardExchangesData);
+            }
+        }
+
+        function renderBookCategoryChart(stats) {
+            const ctx = document.getElementById('bookCategoryChart').getContext('2d');
+            const labels = Object.keys(stats).filter(key => stats[key] > 0 || (Object.keys(stats).includes(key)));
+            const data = labels.map(key => stats[key]);
+
+            const backgroundColors = [
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(201, 203, 207, 0.7)'
+            ];
+            const borderColors = [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(201, 203, 207, 1)'
+            ];
+
+            if (bookCategoryChartInstance) {
+                bookCategoryChartInstance.destroy();
+            }
+
+            bookCategoryChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'จำนวนหนังสือ (เล่ม)',
+                        data: data,
+                        backgroundColor: backgroundColors.slice(0, labels.length),
+                        borderColor: borderColors.slice(0, labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'จำนวนเล่ม'
+                            },
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' เล่ม';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderLatestBorrowReturnsTable(data) {
+            const tbody = document.getElementById('latestBorrowReturnsTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">ยังไม่มีข้อมูลการยืม-คืนหนังสือล่าสุด</td></tr>';
+                return;
+            }
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                row.insertCell().innerText = item['รหัสนักเรียน'] || '-';
+                row.insertCell().innerText = item['ชื่อ-สกุล'] || '-';
+                row.insertCell().innerText = item['ชื่อหนังสือ'] || '-';
+                row.insertCell().innerText = item['วันที่ยืม'] || '-';
+                row.insertCell().innerText = item['วันที่คืน'] || '-';
+                row.insertCell().innerText = parseInt(item['คะแนนที่ได้รับ'] || 0);
+            });
+        }
+
+        function renderAllStudentData(students, borrowReturns, rewardExchanges) {
+            const tbody = document.getElementById('allStudentDataTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">ยังไม่มีข้อมูลนักเรียน</td></tr>';
+                return;
+            }
+
+            const studentAggregatedData = {};
+            students.forEach(student => {
+                studentAggregatedData[student['รหัสนักเรียน']] = {
+                    ...student,
+                    totalBorrowedBooks: 0,
+                    totalRewardsExchanged: 0,
+                    accumulatedPoints: parseInt(student['คะแนนสะสม'] || 0)
+                };
+            });
+
+            borrowReturns.forEach(br => {
+                const studentId = br['รหัสนักเรียน'];
+                if (studentAggregatedData[studentId]) {
+                    studentAggregatedData[studentId].totalBorrowedBooks += 1;
+                }
+            });
+
+            rewardExchanges.forEach(re => {
+                const studentId = re['รหัสนักเรียน'];
+                if (studentAggregatedData[studentId]) {
+                    studentAggregatedData[studentId].totalRewardsExchanged += 1;
+                }
+            });
+
+            Object.values(studentAggregatedData).forEach(student => {
+                const row = tbody.insertRow();
+                row.insertCell().innerText = student['รหัสนักเรียน'] || '-';
+                row.insertCell().innerText = student['ชื่อ-สกุล'] || '-';
+                row.insertCell().innerText = student.totalBorrowedBooks;
+                row.insertCell().innerText = student.totalRewardsExchanged;
+                row.insertCell().innerText = student.accumulatedPoints;
+                row.insertCell().innerText = student.accumulatedPoints > 0 ? 'ใช้งาน' : 'ไม่มีคะแนน';
+
+                const actionsCell = row.insertCell();
+                actionsCell.className = 'flex space-x-2';
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fas fa-edit text-blue-500 hover:text-blue-700"></i>';
+                editBtn.onclick = () => editStudent(student['รหัสนักเรียน']);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt text-red-500 hover:text-red-700"></i>';
+                deleteBtn.onclick = () => deleteStudent(student['รหัสนักเรียน']);
+                actionsCell.appendChild(editBtn);
+                actionsCell.appendChild(deleteBtn);
+            });
+        }
+
+        document.getElementById('adminLoginBtn').addEventListener('click', () => {
+            openModal('adminLoginModal');
+        });
+
+        document.getElementById('memberLoginBtn').addEventListener('click', () => {
+            openModal('memberLoginModal');
+        });
+
+        document.getElementById('addMemberBtn').addEventListener('click', () => {
+            openModal('addMemberModal');
+            document.getElementById('addMemberModalTitle').innerText = 'ลงทะเบียนนักเรียนใหม่';
+            document.getElementById('studentId').value = '';
+            document.getElementById('studentIdEdit').value = '';
+            document.getElementById('studentId').removeAttribute('readonly');
+        });
+
+        document.getElementById('confirmAdminLogin').addEventListener('click', () => {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                closeModal('adminLoginModal');
+                openModal('adminDashboardModal');
+            } else {
+                showAlert('error', 'รหัสผ่านผิด', 'รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง');
+            }
+        });
+
+        document.getElementById('confirmMemberLogin').addEventListener('click', async () => {
+            const studentIdInput = document.getElementById('studentIdLogin').value;
+            if (!studentIdInput) {
+                showAlert('error', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัสประจำตัวนักเรียน');
+                return;
+            }
+
+            const student = allStudentsData.find(s => s['รหัสนักเรียน'] === studentIdInput);
+
+            if (student) {
+                const studentBorrowHistory = allBorrowReturnsData.filter(br => br['รหัสนักเรียน'] === studentIdInput);
+                const studentRewardHistory = allRewardExchangesData.filter(re => re['รหัสนักเรียน'] === studentIdInput);
+
+                document.getElementById('displayStudentId').innerText = student['รหัสนักเรียน'] || '-';
+                document.getElementById('displayStudentName').innerText = student['ชื่อ-สกุล'] || '-';
+                document.getElementById('displayStudentPhone').innerText = student['เบอร์โทร'] || '-';
+                document.getElementById('displayStudentPoints').innerText = student['คะแนนสะสม'] || '0';
+
+                const mySavingsTbody = document.getElementById('myBorrowHistoryTable').querySelector('tbody');
+                mySavingsTbody.innerHTML = '';
+                if (studentBorrowHistory.length === 0) {
+                    mySavingsTbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">ยังไม่มีประวัติการยืม-คืนหนังสือ</td></tr>';
+                } else {
+                    studentBorrowHistory.forEach(item => {
+                        const row = mySavingsTbody.insertRow();
+                        row.insertCell().innerText = item['ชื่อหนังสือ'] || '-';
+                        row.insertCell().innerText = item['วันที่ยืม'] || '-';
+                        row.insertCell().innerText = item['วันที่คืน'] || '-';
+                        row.insertCell().innerText = parseInt(item['คะแนนที่ได้รับ'] || 0);
+                    });
+                }
+
+                const myEggExchangeTbody = document.getElementById('myRewardExchangeTable').querySelector('tbody');
+                myEggExchangeTbody.innerHTML = '';
+                if (studentRewardHistory.length === 0) {
+                    myEggExchangeTbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">ยังไม่มีประวัติการแลกรางวัล</td></tr>';
+                } else {
+                    studentRewardHistory.forEach(item => {
+                        const row = myEggExchangeTbody.insertRow();
+                        row.insertCell().innerText = item['รางวัลที่แลก'] || '-';
+                        row.insertCell().innerText = item['วันที่แลก'] || '-';
+                        row.insertCell().innerText = parseInt(item['คะแนนที่ใช้ไป'] || 0);
+                    });
+                }
+
+                closeModal('memberLoginModal');
+                openModal('memberDashboardModal');
+            } else {
+                showAlert('error', 'ไม่พบนักเรียน', 'ไม่พบรหัสประจำตัวนักเรียนนี้');
+            }
+        });
+
+        document.getElementById('studentForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const studentIdEdit = document.getElementById('studentIdEdit').value;
+            const studentId = document.getElementById('studentId').value;
+            const nationalId = document.getElementById('nationalId').value;
+            const fullName = document.getElementById('fullName').value;
+            const houseNo = document.getElementById('houseNo').value;
+            const villageNo = document.getElementById('villageNo').value;
+            const phoneNo = document.getElementById('phoneNo').value;
+
+            if (!nationalId || !fullName || !houseNo || !villageNo || !phoneNo) {
+                showAlert('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+
+            let action = '';
+            let params = {
+                nationalId: nationalId,
+                fullName: fullName,
+                houseNo: houseNo,
+                villageNo: villageNo,
+                phoneNo: phoneNo
+            };
+
+            if (studentIdEdit) {
+                action = 'updateStudent';
+                params.studentId = studentIdEdit;
+            } else {
+                action = 'addStudent';
+                if (studentId) {
+                    params.studentId = studentId;
+                }
+            }
+
+            const result = await fetchSheetData(action, params);
+            if (result) {
+                showAlert('success', 'บันทึกสำเร็จ', studentIdEdit ? 'อัปเดตข้อมูลนักเรียนเรียบร้อยแล้ว' : 'เพิ่มนักเรียนใหม่เรียบร้อยแล้ว');
+                closeModal('addMemberModal');
+                loadDashboardData();
+            }
+        });
+
+        document.getElementById('manageStudentsBtn').addEventListener('click', async () => {
+            const adminContentArea = document.getElementById('adminContentArea');
+            adminContentArea.innerHTML = `
+                <h4 class="text-xl font-bold mb-4 text-blue-600">จัดการข้อมูลนักเรียน</h4>
+                <div class="overflow-x-auto bg-white p-4 rounded-lg shadow-inner">
+                    <table id="adminStudentManagementTable" class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ-สกุล</th>
+                                <th>เลขบัตรประชาชน</th>
+                                <th>เบอร์โทร</th>
+                                <th>คะแนนสะสม</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            const tbody = document.getElementById('adminStudentManagementTable').querySelector('tbody');
+            if (allStudentsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">ยังไม่มีข้อมูลนักเรียน</td></tr>';
+                return;
+            }
+
+            allStudentsData.forEach(student => {
+                const row = tbody.insertRow();
+                row.insertCell().innerText = student['รหัสนักเรียน'] || '-';
+                row.insertCell().innerText = student['ชื่อ-สกุล'] || '-';
+                row.insertCell().innerText = student['เลขบัตรประชาชน'] || '-';
+                row.insertCell().innerText = student['เบอร์โทร'] || '-';
+                row.insertCell().innerText = parseInt(student['คะแนนสะสม'] || 0);
+
+                const actionsCell = row.insertCell();
+                actionsCell.className = 'flex space-x-2';
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fas fa-edit text-blue-500 hover:text-blue-700"></i>';
+                editBtn.onclick = () => editStudent(student['รหัสนักเรียน']);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt text-red-500 hover:text-red-700"></i>';
+                deleteBtn.onclick = () => deleteStudent(student['รหัสนักเรียน']);
+                actionsCell.appendChild(editBtn);
+                actionsCell.appendChild(deleteBtn);
+            });
+        });
+
+        async function editStudent(studentId) {
+            const studentToEdit = allStudentsData.find(s => s['รหัสนักเรียน'] === studentId);
+            if (studentToEdit) {
+                document.getElementById('addMemberModalTitle').innerText = 'แก้ไขข้อมูลนักเรียน';
+                document.getElementById('studentIdEdit').value = studentToEdit['รหัสนักเรียน'];
+                document.getElementById('studentId').value = studentToEdit['รหัสนักเรียน'];
+                document.getElementById('studentId').setAttribute('readonly', true);
+                document.getElementById('nationalId').value = studentToEdit['เลขบัตรประชาชน'] || '';
+                document.getElementById('fullName').value = studentToEdit['ชื่อ-สกุล'] || '';
+                document.getElementById('houseNo').value = studentToEdit['บ้านเลขที่'] || '';
+                document.getElementById('villageNo').value = studentToEdit['หมู่ที่'] || '';
+                document.getElementById('phoneNo').value = studentToEdit['เบอร์โทร'] || '';
+                openModal('addMemberModal');
+            } else {
+                showAlert('error', 'ไม่พบข้อมูล', 'ไม่พบข้อมูลนักเรียนที่ต้องการแก้ไข');
+            }
+        }
+
+        async function deleteStudent(studentId) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: `คุณต้องการลบข้อมูลนักเรียนรหัส ${studentId} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const deleteResult = await fetchSheetData('deleteStudent', { studentId: studentId });
+                    if (deleteResult) {
+                        showAlert('success', 'ลบสำเร็จ', 'ข้อมูลนักเรียนถูกลบเรียบร้อยแล้ว');
+                        loadDashboardData();
+                        document.getElementById('manageStudentsBtn').click();
+                    }
+                }
+            });
+        }
+
+        document.getElementById('librarianRecordBorrowReturnBtn').addEventListener('click', () => {
+            const adminContentArea = document.getElementById('adminContentArea');
+            adminContentArea.innerHTML = `
+                <h4 class="text-xl font-bold mb-4 text-blue-600">บันทึกการยืม-คืนหนังสือ</h4>
+                <form id="borrowReturnForm">
+                    <div class="mb-4">
+                        <label for="brStudentId" class="block text-gray-700 text-sm font-bold mb-2">รหัสนักเรียน:</label>
+                        <input type="text" id="brStudentId" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกรหัสนักเรียน" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="brBookTitle" class="block text-gray-700 text-sm font-bold mb-2">ชื่อหนังสือ:</label>
+                        <input type="text" id="brBookTitle" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="กรอกชื่อหนังสือ" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="brBorrowDate" class="block text-gray-700 text-sm font-bold mb-2">วันที่ยืม:</label>
+                        <input type="date" id="brBorrowDate" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="brReturnDate" class="block text-gray-700 text-sm font-bold mb-2">วันที่คืน:</label>
+                        <input type="date" id="brReturnDate" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <p class="text-xs text-gray-500 mt-1">เว้นว่างหากยังไม่คืนหนังสือ</p>
+                    </div>
+                     <div class="mb-6">
+                        <label for="brBookCategory" class="block text-gray-700 text-sm font-bold mb-2">หมวดหมู่หนังสือ:</label>
+                        <select id="brBookCategory" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                            <option value="">เลือกหมวดหมู่</option>
+                            <option value="นิยาย">นิยาย</option>
+                            <option value="สารคดี">สารคดี</option>
+                            <option value="การ์ตูน">การ์ตูน</option>
+                            <option value="วรรณกรรม">วรรณกรรม</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="mb-6">
+                        <label for="brStatus" class="block text-gray-700 text-sm font-bold mb-2">สถานะการคืน:</label>
+                        <select id="brStatus" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                            <option value="">เลือกสถานะ</option>
+                            <option value="ยืมอยู่">ยืมอยู่</option>
+                            <option value="ตรงเวลา">คืนตรงเวลา</option>
+                            <option value="เกินกำหนด">คืนเกินกำหนด</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">บันทึก</button>
+                        <button type="button" onclick="document.getElementById('adminContentArea').innerHTML = '<p class=\'text-center text-gray-500 text-lg\'>เลือกเมนูด้านบนเพื่อเริ่มต้น</p>';" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-md transition duration-300">ยกเลิก</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('borrowReturnForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const brStudentId = document.getElementById('brStudentId').value;
+                const brBookTitle = document.getElementById('brBookTitle').value;
+                const brBorrowDate = document.getElementById('brBorrowDate').value;
+                const brReturnDate = document.getElementById('brReturnDate').value;
+                const brBookCategory = document.getElementById('brBookCategory').value;
+                const brStatus = document.getElementById('brStatus').value;
+
+                if (!brStudentId || !brBookTitle || !brBorrowDate || !brBookCategory || !brStatus) {
+                    showAlert('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลการยืม-คืนให้ครบ');
+                    return;
+                }
+
+                let pointsEarned = 0;
+                if (brStatus === 'ตรงเวลา') {
+                    pointsEarned = LIBRARY_POINTS_CONFIG_FRONTEND.on_time_return;
+                }
+
+                const result = await fetchSheetData('recordBorrowReturn', {
+                    studentId: brStudentId,
+                    bookTitle: brBookTitle,
+                    borrowDate: brBorrowDate,
+                    returnDate: brReturnDate,
+                    bookCategory: brBookCategory,
+                    status: brStatus,
+                    pointsEarned: pointsEarned
+                });
+
+                if (result) {
+                    showAlert('success', 'บันทึกสำเร็จ', 'บันทึกการยืม-คืนหนังสือเรียบร้อยแล้ว');
+                    loadDashboardData();
+                    document.getElementById('borrowReturnForm').reset();
+                }
+            });
+        });
+
+        document.getElementById('librarianRecordPointsExchangeBtn').addEventListener('click', () => {
+            const adminContentArea = document.getElementById('adminContentArea');
+            adminContentArea.innerHTML = `
+                <h4 class="text-xl font-bold mb-4 text-blue-600">บันทึกคะแนนพิเศษ/แลกรางวัล</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h5 class="text-lg font-semibold mb-3 text-green-700">เพิ่มคะแนนพิเศษ (เช่น สรุปหนังสือ)</h5>
+                        <form id="addSpecialPointsForm">
+                            <div class="mb-4">
+                                <label for="spStudentId" class="block text-gray-700 text-sm font-bold mb-2">รหัสนักเรียน:</label>
+                                <input type="text" id="spStudentId" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="กรอกรหัสนักเรียน" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="spActivity" class="block text-gray-700 text-sm font-bold mb-2">กิจกรรมที่ได้รับคะแนน:</label>
+                                <input type="text" id="spActivity" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="เช่น สรุปหนังสือ, ร่วมกิจกรรม" required>
+                            </div>
+                            <div class="mb-6">
+                                <label for="spPoints" class="block text-gray-700 text-sm font-bold mb-2">คะแนนที่ให้:</label>
+                                <input type="number" id="spPoints" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="จำนวนคะแนน" required min="1">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300">บันทึกคะแนน</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h5 class="text-lg font-semibold mb-3 text-red-700">แลกรางวัล</h5>
+                        <form id="exchangeRewardForm">
+                            <div class="mb-4">
+                                <label for="erStudentId" class="block text-gray-700 text-sm font-bold mb-2">รหัสนักเรียน:</label>
+                                <input type="text" id="erStudentId" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="กรอกรหัสนักเรียน" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="erRewardType" class="block text-gray-700 text-sm font-bold mb-2">รางวัลที่แลก:</label>
+                                <input type="text" id="erRewardType" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="เช่น ดินสอ, สิทธิ์ยืมเพิ่ม" required>
+                            </div>
+                            <div class="mb-6">
+                                <label for="erPointsCost" class="block text-gray-700 text-sm font-bold mb-2">คะแนนที่ใช้ (คะแนน):</label>
+                                <input type="number" id="erPointsCost" class="shadow appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="จำนวนคะแนนที่ใช้" required min="1">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition duration-300">บันทึกการแลกรางวัล</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('addSpecialPointsForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const spStudentId = document.getElementById('spStudentId').value;
+                const spActivity = document.getElementById('spActivity').value;
+                const spPoints = parseInt(document.getElementById('spPoints').value);
+
+                if (!spStudentId || !spActivity || isNaN(spPoints) || spPoints <= 0) {
+                    showAlert('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+                    return;
+                }
+
+                const result = await fetchSheetData('addSpecialPoints', {
+                    studentId: spStudentId,
+                    activity: spActivity,
+                    points: spPoints
+                });
+
+                if (result) {
+                    showAlert('success', 'บันทึกสำเร็จ', `เพิ่ม ${spPoints} คะแนนให้นักเรียน ${spStudentId} แล้ว`);
+                    loadDashboardData();
+                    document.getElementById('addSpecialPointsForm').reset();
+                }
+            });
+
+            document.getElementById('exchangeRewardForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const erStudentId = document.getElementById('erStudentId').value;
+                const erRewardType = document.getElementById('erRewardType').value;
+                const erPointsCost = parseInt(document.getElementById('erPointsCost').value);
+
+                if (!erStudentId || !erRewardType || isNaN(erPointsCost) || erPointsCost <= 0) {
+                    showAlert('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ถูกต้อง');
+                    return;
+                }
+
+                const student = allStudentsData.find(s => s['รหัสนักเรียน'] === erStudentId);
+                if (student) {
+                    const currentPoints = parseInt(student['คะแนนสะสม'] || 0);
+                    if (currentPoints < erPointsCost) {
+                        showAlert('error', 'คะแนนไม่พอ', `นักเรียนมีคะแนนสะสมไม่พอ (${currentPoints} คะแนน)`);
+                        return;
+                    }
+                } else {
+                    showAlert('error', 'ไม่พบนักเรียน', 'ไม่พบรหัสประจำตัวนักเรียนนี้');
+                    return;
+                }
+                
+                const result = await fetchSheetData('recordRewardExchange', {
+                    studentId: erStudentId,
+                    rewardType: erRewardType,
+                    pointsCost: erPointsCost
+                });
+
+                if (result) {
+                    showAlert('success', 'บันทึกสำเร็จ', `บันทึกการแลกรางวัล '${erRewardType}' สำหรับนักเรียน ${erStudentId} แล้ว`);
+                    loadDashboardData();
+                    document.getElementById('exchangeRewardForm').reset();
+                }
+            });
+        });
+
+        // Enhancements Roadmap specific JS
+
+        const showEnhancementsBtn = document.getElementById('showEnhancementsBtn');
+        const hideEnhancementsBtn = document.getElementById('hideEnhancementsBtn');
+        const functionalDashboard = document.getElementById('functional-dashboard-section');
+        const mainDashboardButtons = document.getElementById('main-dashboard-buttons');
+        const enhancementsRoadmap = document.getElementById('enhancements-roadmap-section');
+
+        showEnhancementsBtn.addEventListener('click', () => {
+            functionalDashboard.classList.add('hidden');
+            mainDashboardButtons.classList.add('hidden'); // Hide main buttons too
+            enhancementsRoadmap.classList.remove('hidden');
+            initializeFeaturesChart(); // Initialize chart when roadmap is shown
+        });
+
+        hideEnhancementsBtn.addEventListener('click', () => {
+            functionalDashboard.classList.remove('hidden');
+            mainDashboardButtons.classList.remove('hidden'); // Show main buttons again
+            enhancementsRoadmap.classList.add('hidden');
+        });
+
+        function initializeFeaturesChart() {
+            const ctxFeatures = document.getElementById('featuresChart').getContext('2d');
+            if (featuresChartInstance) {
+                featuresChartInstance.destroy();
+            }
+            featuresChartInstance = new Chart(ctxFeatures, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        'การจัดการหนังสือ', 
+                        'คะแนนและรางวัล', 
+                        'ประสบการณ์ผู้ใช้', 
+                        'เครื่องมือบรรณารักษ์', 
+                        'ฟีเจอร์ขั้นสูง'
+                    ],
+                    datasets: [{
+                        label: 'จำนวนฟีเจอร์',
+                        data: [3, 3, 3, 3, 3],
+                        backgroundColor: [
+                            '#14b8a6',
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#6366f1',
+                            '#8b5cf6',
+                        ],
+                        borderColor: '#f8fafc',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    family: "'Sarabun', sans-serif",
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                             titleFont: {
+                                family: "'Sarabun', sans-serif"
+                            },
+                            bodyFont: {
+                                family: "'Sarabun', sans-serif"
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.raw !== null) {
+                                        label += context.raw + ' ฟีเจอร์';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.add('hidden'));
+
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        const featureCards = document.querySelectorAll('.feature-card');
+        const featureModal = document.getElementById('featureModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDetails = document.getElementById('modalDetails');
+        const closeFeatureModalBtn = document.getElementById('closeFeatureModalBtn');
+
+        featureCards.forEach(card => {
+            card.addEventListener('click', () => {
+                modalTitle.textContent = card.dataset.title;
+                modalDetails.textContent = card.dataset.details;
+                openModal('featureModal');
+            });
+        });
+
+        closeFeatureModalBtn.addEventListener('click', () => closeModal('featureModal'));
+        featureModal.addEventListener('click', (event) => {
+            if (event.target === featureModal) {
+                closeModal('featureModal');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+
+    </script>
+</body>
+</html>
