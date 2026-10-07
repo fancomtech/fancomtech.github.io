@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR Game: อันตรายจากการใช้ยา</title>
+    
+    <!-- Google Fonts: Mitr -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (สำหรับ Layout พื้นฐานและการจัดรูปแบบ) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --glass-bg: rgba(20, 30, 50, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glow-color: rgba(0, 200, 255, 0.6);
+            --theme-color: #00d2ff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Mitr', sans-serif;
+            overflow: hidden;
+            background-color: #000;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Video Input (Hidden) */
+        #input_video {
+            display: none;
+        }
+
+        /* Canvas Layers */
+        #camera-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+            /* ห้ามใช้ transform: scaleX(-1) ตรงนี้ เพราะเราวาดกลับด้านใน Canvas Context แล้ว */
+        }
+
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        #ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 3;
+            pointer-events: none; /* ให้คลิกทะลุไปหาปุ่มได้ */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #cursor-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* UI Components */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
+            pointer-events: auto;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 198, 255, 0.6);
+        }
+
+        .btn-red { background: linear-gradient(135deg, #ff416c, #ff4b2b); box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4); }
+        .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4); }
+
+        /* Game Screens */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            pointer-events: none;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Play UI */
+        .choice-btn {
+            background: rgba(20, 30, 50, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto; /* Required for JS hit testing bounding box */
+            backdrop-filter: blur(8px);
+            width: 100%;
+        }
+
+        .choice-btn.hovered {
+            background: rgba(0, 200, 255, 0.3);
+            border-color: #00d2ff;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        .choice-btn.selected-correct {
+            background: rgba(0, 255, 0, 0.5) !important;
+            border-color: #0f0 !important;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8) !important;
+        }
+
+        .choice-btn.selected-wrong {
+            background: rgba(255, 0, 0, 0.5) !important;
+            border-color: #f00 !important;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8) !important;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: #00d2ff;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* Grid for choices */
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 80%;
+            max-width: 1000px;
+            margin-top: 20px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .timer-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #00d2ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            background: var(--glass-bg);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+        }
+
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            font-size: 1.2rem;
+        }
+
+        /* Scrollable areas */
+        .scrollable {
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        .scrollable::-webkit-scrollbar { width: 8px; }
+        .scrollable::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .scrollable::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 4px; }
+
+        /* Form Inputs */
+        input[type="text"], input[type="number"], select {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 5px;
+            font-family: 'Mitr', sans-serif;
+            pointer-events: auto;
+        }
+
+        .player-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        /* Alert Box */
+        .alert-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 100;
+            display: none;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Camera Video Source (Hidden) -->
+    <video id="input_video" autoplay playsinline></video>
+
+    <!-- Canvas Layers -->
+    <canvas id="camera-canvas"></canvas>
+    <canvas id="three-canvas"></canvas>
+    
+    <!-- Custom Alert -->
+    <div id="alertBox" class="alert-box">ข้อความเตือน</div>
+
+    <!-- UI Layer -->
+    <div id="ui-layer">
+        
+        <!-- 1. MAIN MENU -->
+        <div id="screen-menu" class="screen active">
+            <div class="glass-panel p-10 text-center flex flex-col items-center max-w-2xl w-full">
+                <h1 class="text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500" style="filter: drop-shadow(0 0 10px rgba(0,200,255,0.5));">
+                    AR การศึกษา<br>อันตรายจากการใช้ยา
+                </h1>
+                <p class="text-xl mb-8 text-gray-300">ใช้กล้องและ "นิ้วชี้" ของคุณในการตอบคำถาม</p>
+                <div class="flex flex-col gap-4 w-64">
+                    <button class="btn" onclick="changeState('PLAYER_SETUP')">เริ่มเกม (Start)</button>
+                    <button class="btn btn-green" onclick="changeState('QUESTION_MANAGER')">จัดการคำถาม (Teacher)</button>
+                    <button class="btn btn-green" onclick="changeState('DASHBOARD')">กระดานสรุป (Dashboard)</button>
+                    <button class="btn" onclick="toggleFullScreen()">เข้าสู่โหมดเต็มจอ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PLAYER SETUP -->
+        <div id="screen-setup" class="screen">
+            <div class="glass-panel p-8 max-w-2xl w-full mx-4 pointer-events-auto">
+                <h2 class="text-3xl font-bold mb-6 text-center text-cyan-400">ตั้งค่าผู้เล่น</h2>
+                
+                <div class="mb-4">
+                    <label class="block mb-2">จำนวนผู้เล่น (1-4 คนแนะนำ สำหรับ 1 กล้อง):</label>
+                    <input type="number" id="numPlayers" min="1" max="12" value="1" onchange="generatePlayerInputs()">
+                </div>
+
+                <div id="playerInputsContainer" class="scrollable mb-6 p-2">
+                    <!-- Javascript will populate this -->
+                </div>
+
+                <div class="flex justify-between mt-4">
+                    <button class="btn btn-red" onclick="changeState('MENU')">กลับ</button>
+                    <button class="btn" onclick="startCalibration()">ยืนยัน & ถัดไป</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CALIBRATION -->
+        <div id="screen-calibration" class="screen">
+            <div class="glass-panel p-8 text-center max-w-xl w-full pointer-events-auto">
+                <h2 class="text-3xl font-bold mb-4 text-cyan-400">ปรับเทียบกล้อง (Calibration)</h2>
+                <div id="calib-status" class="text-yellow-400 mb-4 text-xl animate-pulse">กำลังโหลดระบบ AI ตรวจจับมือ...</div>
+                <div class="text-left mb-6 bg-black bg-opacity-50 p-4 rounded-lg">
+                    <p>1. ยกมือขึ้นและชู <b>นิ้วชี้</b></p>
+                    <p>2. ทดสอบเลื่อนนิ้วไปทาง ซ้าย-ขวา-บน-ล่าง</p>
+                    <p>3. ตรวจสอบว่า "วงกลมสีฟ้า" ขยับตามปลายนิ้วตรงกัน (ไม่กลับด้าน)</p>
+                    <p class="text-red-400 mt-2 text-sm">* หากยังไม่พบมือ กรุณาขยับถอยห่างจากกล้องเล็กน้อย</p>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button class="btn btn-red" onclick="changeState('PLAYER_SETUP')">กลับ</button>
+                    <button id="btn-start-play" class="btn opacity-50 cursor-not-allowed" disabled onclick="startGameplay()">เริ่มเกม!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PLAYING -->
+        <div id="screen-play" class="screen">
+            <div class="top-bar w-full flex justify-between px-8 pt-4">
+                <div id="player-turn-badge" class="status-badge font-bold text-xl">ผู้เล่น: รอสักครู่</div>
+                <div id="score-badge" class="status-badge font-bold text-xl text-yellow-400">คะแนน: 0</div>
+                <div id="question-count-badge" class="status-badge">ข้อที่ 1/20</div>
+                <div id="timer-display" class="timer-circle">20</div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-panel p-8 mt-20 max-w-4xl w-full text-center mx-4 flex flex-col items-center">
+                <h2 id="question-text" class="text-3xl md:text-4xl font-bold mb-8 leading-relaxed">กำลังโหลดคำถาม...</h2>
+                
+                <div id="choices-container" class="choices-grid">
+                    <div class="choice-btn" id="choice-0"><span id="choice-text-0">A</span><div class="progress-bar" id="prog-0"></div></div>
+                    <div class="choice-btn" id="choice-1"><span id="choice-text-1">B</span><div class="progress-bar" id="prog-1"></div></div>
+                    <div class="choice-btn" id="choice-2"><span id="choice-text-2">C</span><div class="progress-bar" id="prog-2"></div></div>
+                    <div class="choice-btn" id="choice-3"><span id="choice-text-3">D</span><div class="progress-bar" id="prog-3"></div></div>
+                </div>
+            </div>
+            
+            <!-- Feedback Overlay (Correct/Wrong) -->
+            <div id="feedback-overlay" class="absolute inset-0 flex flex-col justify-center items-center bg-black bg-opacity-70 hidden z-50 pointer-events-none">
+                <h1 id="feedback-text" class="text-6xl font-bold mb-4" style="text-shadow: 0 0 20px currentColor;">ถูกต้อง!</h1>
+                <p id="feedback-score" class="text-3xl text-yellow-400 font-bold mb-2">+150 คะแนน</p>
+                <p id="feedback-explanation" class="text-xl max-w-2xl text-center p-4 bg-gray-800 rounded-xl border border-gray-600 mt-4">คำอธิบาย...</p>
+            </div>
+        </div>
+
+        <!-- 5. LEADERBOARD -->
+        <div id="screen-leaderboard" class="screen">
+            <div class="glass-panel p-8 max-w-3xl w-full text-center pointer-events-auto">
+                <h1 class="text-5xl font-bold mb-2 text-yellow-400">🏆 สรุปผลการแข่งขัน 🏆</h1>
+                <p class="text-xl mb-6">เกมอันตรายจากการใช้ยา</p>
+                
+                <div class="bg-black bg-opacity-50 rounded-xl p-4 mb-6 scrollable">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-600 text-cyan-400">
+                                <th class="p-3">อันดับ</th>
+                                <th class="p-3">ชื่อ</th>
+                                <th class="p-3 text-right">คะแนน</th>
+                                <th class="p-3 text-center">ถูก/ผิด</th>
+                                <th class="p-3 text-center">ความแม่นยำ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button class="btn" onclick="changeState('MENU')">กลับเมนูหลัก</button>
+                    <button class="btn btn-green" onclick="changeState('DASHBOARD')">ดูรายงานละเอียด (ครู)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. QUESTION MANAGER (Teacher) -->
+        <div id="screen-manager" class="screen">
+            <div class="glass-panel p-6 max-w-5xl w-full h-[90vh] flex flex-col pointer-events-auto mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-3xl font-bold text-green-400">จัดการคลังคำถาม</h2>
+                    <div class="flex gap-2">
+                        <button class="btn btn-red text-sm py-2 px-4" onclick="changeState('MENU')">กลับ</button>
+                        <button class="btn text-sm py-2 px-4" onclick="resetQuestions()">รีเซ็ตค่าเริ่มต้น</button>
+                        <button class="btn btn-green text-sm py-2 px-4" onclick="addNewQuestionUI()">+ เพิ่มข้อใหม่</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto pr-2" id="q-list-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. TEACHER DASHBOARD -->
+        <div id="screen-dashboard" class="screen">
+            <div class="glass-panel p-6 max-w-5xl w-full h-[90vh] flex flex-col pointer-events-auto mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-3xl font-bold text-green-400">Teacher Dashboard - รายงานผล</h2>
+                    <button class="btn btn-red text-sm py-2 px-4" onclick="changeState('MENU')">กลับเมนูหลัก</button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-900 bg-opacity-50 p-4 rounded-xl text-center border border-blue-500">
+                        <h3 class="text-gray-300">ผู้เล่นทั้งหมด</h3>
+                        <p class="text-3xl font-bold text-white" id="dash-players">0</p>
+                    </div>
+                    <div class="bg-green-900 bg-opacity-50 p-4 rounded-xl text-center border border-green-500">
+                        <h3 class="text-gray-300">คะแนนสูงสุด</h3>
+                        <p class="text-3xl font-bold text-white" id="dash-topscore">0</p>
+                    </div>
+                    <div class="bg-purple-900 bg-opacity-50 p-4 rounded-xl text-center border border-purple-500">
+                        <h3 class="text-gray-300">ความแม่นยำเฉลี่ย</h3>
+                        <p class="text-3xl font-bold text-white" id="dash-avgacc">0%</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-2 text-cyan-400">สถิติผู้เล่นรายบุคคล</h3>
+                <div class="flex-1 overflow-y-auto bg-black bg-opacity-50 rounded-xl p-4">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-600 text-cyan-400">
+                                <th class="p-2">ชื่อ</th>
+                                <th class="p-2 text-right">คะแนน</th>
+                                <th class="p-2 text-center">ตอบถูก</th>
+                                <th class="p-2 text-center">ตอบผิด</th>
+                                <th class="p-2 text-center">ไม่ได้ตอบ</th>
+                                <th class="p-2 text-center">เวลาเฉลี่ย/ข้อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-player-body">
+                            <tr><td colspan="6" class="text-center p-4">ยังไม่มีข้อมูลการเล่นในรอบนี้</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cursor Canvas (Topmost) -->
+    <canvas id="cursor-canvas"></canvas>
+
+    <script>
+        // ==========================================
+        // 1. GLOBAL STATE & DATA
+        // ==========================================
+        let APP_STATE = 'MENU';
+        let isFullScreen = false;
+
+        // Player Data Model
+        let players = [];
+        let playerColors = ['#00d2ff', '#38ef7d', '#ffeb3b', '#ff416c', '#b100ff', '#ff9800', '#00e5ff', '#76ff03', '#f50057', '#d50000', '#00b0ff', '#1de9b6'];
+        let currentPlayerTurn = 0; // Index of player currently answering (for turn-based if > hands)
+        // Note: Realistically, AR multiplayer works best if we map Hands to Players.
+        // We will try to map detected hand index to player index.
+
+        // Game State variables
+        let currentQuestionIndex = 0;
+        let questionTimer = 0;
+        let lastTime = 0;
+        let isAnswering = false; // Lock state
+        let questionStartTime = 0;
+
+        // Sample Question Bank (20 Questions - อันตรายจากการใช้ยา)
+        const defaultQuestions = [
+            { q: "การใช้ยาอย่างปลอดภัยควรทำอย่างไรเป็นอันดับแรก?", c: ["อ่านฉลากและคำแนะนำ", "กินยาตามเพื่อน", "เพิ่มขนาดยาเอง", "กินยาทุกครั้งที่รู้สึกไม่สบาย"], a: 0, exp: "ควรอ่านฉลากและปฏิบัติตามคำแนะนำก่อนใช้ยาทุกครั้งเพื่อความปลอดภัย", t: 20, s: 100 },
+            { q: "ยาปฏิชีวนะ (ยาฆ่าเชื้อ) ควรกินอย่างไร?", c: ["กินเฉพาะตอนมีอาการ", "กินติดต่อกันจนหมดตามแพทย์สั่ง", "หยุดกินเมื่อรู้สึกดีขึ้น", "กินคู่กับนมเพื่อให้ดูดซึมดี"], a: 1, exp: "ต้องกินติดต่อกันจนหมดตามแพทย์สั่ง เพื่อป้องกันเชื้อดื้อยา", t: 20, s: 100 },
+            { q: "ข้อใดคืออันตรายจากการใช้ยาพาราเซตามอลเกินขนาด?", c: ["ปวดหัวรุนแรง", "หัวใจเต้นผิดจังหวะ", "ตับอักเสบและเป็นพิษต่อตับ", "ไตวายเฉียบพลัน"], a: 2, exp: "พาราเซตามอลในปริมาณมากเกินไปจะไปทำลายเซลล์ตับ ทำให้ตับวายได้", t: 20, s: 100 },
+            { q: "หากลืมกินยา 1 มื้อ ควรทำอย่างไร?", c: ["ข้ามไปกินมื้อถัดไป 1 เม็ดตามปกติ", "กินรวบ 2 เม็ดในมื้อถัดไป", "หยุดยาไปเลย", "แบ่งยาครึ่งเม็ดกินทันที"], a: 0, exp: "ให้ข้ามไปกินมื้อถัดไปในขนาดยาปกติ ห้ามเพิ่มขนาดยาเป็น 2 เท่าเด็ดขาด", t: 20, s: 100 },
+            { q: "การเก็บรักษายาที่ถูกต้องคือข้อใด?", c: ["เก็บในรถยนต์ที่จอดตากแดด", "เก็บในตู้เย็นทุกชนิด", "เก็บในที่แห้ง พ้นแสงแดดและความชื้น", "เก็บรวมกันในขวดเดียวเพื่อประหยัดพื้นที่"], a: 2, exp: "ความร้อน แสงแดด และความชื้น ทำให้ยาเสื่อมสภาพเร็ว", t: 15, s: 100 },
+            { q: "วันหมดอายุบนแผงยาเขียนว่า 'EXP 05/25' หมายความว่าอย่างไร?", c: ["ผลิตเดือน 5 ปี 2025", "หมดอายุเดือน 5 ปี 2025", "ห้ามกินก่อนเดือน 5 ปี 2025", "กินได้ถึงวันที่ 5 ของทุกเดือน"], a: 1, exp: "EXP (Expiry Date) คือวันหมดอายุ ยานี้หมดอายุในเดือนพฤษภาคม ปี ค.ศ. 2025", t: 20, s: 100 },
+            { q: "ใครที่ควรปรึกษาแพทย์หรือเภสัชกรก่อนซื้อยากินเองเสมอ?", c: ["วัยรุ่น", "สตรีมีครรภ์และผู้มีโรคประจำตัว", "นักกีฬา", "ผู้ชายวัยทำงาน"], a: 1, exp: "สตรีมีครรภ์ หญิงให้นมบุตร และผู้มีโรคประจำตัว มีความเสี่ยงในการใช้ยาสูงกว่าปกติ", t: 15, s: 100 },
+            { q: "ยาประเภทใดที่มักทำให้เกิดอาการง่วงซึม?", c: ["ยาพาราเซตามอล", "ยาแก้ปวดท้อง", "ยาแก้แพ้ (Antihistamine) รุ่นแรก", "ยาวิตามินซี"], a: 2, exp: "ยาแก้แพ้รุ่นแรก เช่น คลอร์เฟนิรามีน (CPM) มีผลข้างเคียงคือทำให้ง่วงซึม", t: 20, s: 100 },
+            { q: "เมื่อเกิดอาการแพ้ยา (เช่น ผื่นขึ้น หายใจไม่ออก) ควรทำอย่างไร?", c: ["รอดูอาการ 1 วัน", "ดื่มน้ำเยอะๆ ให้อาเจียน", "หยุดยาทันทีและรีบไปพบแพทย์", "กินยาแก้แพ้ทับไป"], a: 2, exp: "อาการแพ้ยาอาจรุนแรงถึงชีวิต ต้องหยุดยาและไปโรงพยาบาลทันที พร้อมนำยาไปด้วย", t: 15, s: 100 },
+            { q: "การแบ่งยาของตนเองให้ผู้อื่นกิน มีผลเสียอย่างไร?", c: ["ประหยัดค่ายา", "เป็นการแสดงความน้ำใจ", "อาจเกิดอันตรายเพราะโรคและร่างกายต่างกัน", "ทำให้ยาออกฤทธิ์ดีขึ้น"], a: 2, exp: "ยาที่เหมาะกับคนหนึ่ง อาจเป็นพิษหรือทำให้เกิดการแพ้ในอีกคนหนึ่งได้", t: 20, s: 100 },
+            // Add more to reach 20 for completeness, keeping it educational
+            { q: "ยาแคปซูลสามารถแกะผงยาออกมาละลายน้ำกินได้หรือไม่?", c: ["ได้เสมอ เพื่อให้กลืนง่าย", "ไม่ได้ เพราะแคปซูลถูกออกแบบมาเพื่อควบคุมการแตกตัว", "ได้ เฉพาะยาฆ่าเชื้อ", "ได้ ถ้าใช้น้ำอุ่น"], a: 1, exp: "แคปซูลช่วยป้องกันกรดในกระเพาะ หรือควบคุมการปลดปล่อยยา การแกะอาจทำให้ยาออกฤทธิ์ผิดปกติ", t: 20, s: 100 },
+            { q: "ยาหยอดตาที่เปิดขวดแล้ว มีอายุการใช้งานนานเท่าใด?", c: ["จนกว่าจะหมดอายุตามข้างขวด", "1 เดือน หลังเปิดใช้", "6 เดือน หลังเปิดใช้", "1 ปี หลังเปิดใช้"], a: 1, exp: "ยาหยอดตาส่วนใหญ่ที่เปิดใช้แล้ว จะปราศจากเชื้อได้เพียง 1 เดือนเท่านั้น", t: 15, s: 100 },
+            { q: "การกินยาลดกรด ควรปฏิบัติตามข้อใด?", c: ["กินพร้อมนม", "เคี้ยวให้ละเอียดก่อนกลืน (ชนิดเม็ด)", "กินพร้อมยาชนิดอื่นได้ทุกชนิด", "กินก่อนนอนเท่านั้น"], a: 1, exp: "ยาลดกรดชนิดเม็ดควรเคี้ยวให้ละเอียดก่อนกลืน เพื่อให้ยากระจายตัวเคลือบกระเพาะได้ดี", t: 20, s: 100 },
+            { q: "บุคคลใดมีความเสี่ยงสูงในการใช้ยา NSAIDs (ยาแก้ปวดต้านการอักเสบ)?", c: ["ผู้ที่เป็นโรคกระเพาะอาหาร", "ผู้ที่เป็นโรคตาบอดสี", "ผู้ที่มีผมร่วง", "ผู้ที่เป็นโรคผิวหนัง"], a: 0, exp: "ยา NSAIDs มีฤทธิ์ระคายเคืองกระเพาะอาหาร อาจทำให้เลือดออกในกระเพาะได้", t: 20, s: 100 },
+            { q: "ยาน้ำเชื่อมสำหรับเด็ก ควรใช้สิ่งใดในการตวงยา?", c: ["ช้อนกินข้าว", "ช้อนกาแฟในครัว", "ช้อนตวงยา หรือ กระบอกฉีดยา (Syringe)", "กะปริมาณด้วยสายตา"], a: 2, exp: "ช้อนในครัวมีขนาดไม่มาตรฐาน ต้องใช้อุปกรณ์ตวงยาทางการแพทย์เพื่อความแม่นยำ", t: 15, s: 100 },
+            { q: "คำเตือน 'ยานี้อาจทำให้เกิดความผิดปกติของตับ' มักพบในยาใดหากใช้เกินขนาด?", c: ["วิตามินบีรวม", "พาราเซตามอล", "ยาอมแก้เจ็บคอ", "ยาทาแผลสด"], a: 1, exp: "พาราเซตามอลเป็นพิษต่อตับหากรับประทานเกินขนาด (ผู้ใหญ่ไม่ควรเกิน 4,000 มก./วัน)", t: 15, s: 100 },
+            { q: "การทิ้งยาที่หมดอายุ ควรทำอย่างไร?", c: ["ทิ้งลงชักโครก", "ทิ้งรวมกับขยะเปียก", "แยกทิ้งในขยะอันตราย หรือส่งคืนโรงพยาบาล", "เผาทำลายด้วยตนเอง"], a: 2, exp: "ยาเป็นสารเคมี ควรแยกทิ้งเป็นขยะอันตรายเพื่อป้องกันสารปนเปื้อนในสิ่งแวดล้อม", t: 20, s: 100 },
+            { q: "ข้อใดคือลักษณะของยาที่เสื่อมสภาพ?", c: ["เม็ดยาเปลี่ยนสี หรือแตกร่วน", "แคปซูลบวม เยิ้มติดกัน", "ยาน้ำมีตะกอนที่เขย่าแล้วไม่ละลาย", "ถูกทุกข้อ"], a: 3, exp: "การเปลี่ยนสี กลิ่น รูปทรง หรือการแยกชั้น คือสัญญาณว่ายาเสื่อมสภาพ ห้ามรับประทาน", t: 20, s: 100 },
+            { q: "ยาสามัญประจำบ้าน คืออะไร?", c: ["ยาที่ต้องให้แพทย์สั่งเท่านั้น", "ยาที่ซื้อได้ตามร้านสะดวกซื้อ เพื่อรักษาอาการเจ็บป่วยเล็กน้อย", "ยาที่ใช้รักษาโรคมะเร็ง", "ยาที่มีราคาแพงที่สุด"], a: 1, exp: "เป็นยาที่กระทรวงสาธารณสุขอนุญาตให้ประชาชนหาซื้อได้เอง เพื่อรักษาอาการเจ็บป่วยเบื้องต้น", t: 15, s: 100 },
+            { q: "หากสงสัยเกี่ยวกับวิธีการใช้ยา ควรสอบถามใครดีที่สุด?", c: ["เพื่อนบ้าน", "ค้นหาในอินเทอร์เน็ตโดยไม่กรองข้อมูล", "เภสัชกร หรือ แพทย์", "หมอดู"], a: 2, exp: "เภสัชกรและแพทย์เป็นผู้เชี่ยวชาญด้านยา ที่สามารถให้คำแนะนำที่ถูกต้องและปลอดภัยที่สุด", t: 15, s: 100 }
+        ];
+
+        let questions = JSON.parse(JSON.stringify(defaultQuestions)); // Deep copy
+
+        // ==========================================
+        // 2. AUDIO SYSTEM (Web Audio API)
+        // ==========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const SoundEngine = {
+            playTone: function(freq, type, duration, vol) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            },
+            startSound: () => {
+                SoundEngine.playTone(440, 'sine', 0.2, 0.5);
+                setTimeout(() => SoundEngine.playTone(554, 'sine', 0.2, 0.5), 100);
+                setTimeout(() => SoundEngine.playTone(659, 'sine', 0.4, 0.5), 200);
+            },
+            hoverSound: () => SoundEngine.playTone(800, 'sine', 0.1, 0.1),
+            correctSound: () => {
+                SoundEngine.playTone(523.25, 'triangle', 0.1, 0.5); // C5
+                setTimeout(() => SoundEngine.playTone(659.25, 'triangle', 0.1, 0.5), 100); // E5
+                setTimeout(() => SoundEngine.playTone(783.99, 'triangle', 0.3, 0.5), 200); // G5
+            },
+            wrongSound: () => {
+                SoundEngine.playTone(300, 'sawtooth', 0.2, 0.5);
+                setTimeout(() => SoundEngine.playTone(250, 'sawtooth', 0.4, 0.5), 150);
+            },
+            countdownSound: () => SoundEngine.playTone(1000, 'square', 0.1, 0.2),
+            timeoutSound: () => SoundEngine.playTone(200, 'sawtooth', 0.5, 0.5)
+        };
+
+        // ==========================================
+        // 3. UTILITIES & UI MANAGEMENT
+        // ==========================================
+        function showAlert(msg) {
+            const box = document.getElementById('alertBox');
+            box.innerText = msg;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 3000);
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function changeState(newState) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            APP_STATE = newState;
+
+            // Audio Context unlock requirement
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (newState === 'MENU') {
+                document.getElementById('screen-menu').classList.add('active');
+            } else if (newState === 'PLAYER_SETUP') {
+                document.getElementById('screen-setup').classList.add('active');
+                generatePlayerInputs();
+            } else if (newState === 'CALIBRATION') {
+                document.getElementById('screen-calibration').classList.add('active');
+                initAR(); // Start camera and Mediapipe
+            } else if (newState === 'PLAYING') {
+                document.getElementById('screen-play').classList.add('active');
+            } else if (newState === 'LEADERBOARD') {
+                document.getElementById('screen-leaderboard').classList.add('active');
+                renderLeaderboard();
+            } else if (newState === 'QUESTION_MANAGER') {
+                document.getElementById('screen-manager').classList.add('active');
+                renderQuestionManager();
+            } else if (newState === 'DASHBOARD') {
+                document.getElementById('screen-dashboard').classList.add('active');
+                renderTeacherDashboard();
+            }
+        }
+
+        // ==========================================
+        // 4. TEACHER / MANAGER LOGIC
+        // ==========================================
+        function generatePlayerInputs() {
+            const num = document.getElementById('numPlayers').value;
+            const container = document.getElementById('playerInputsContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < num; i++) {
+                container.innerHTML += `
+                    <div class="player-row bg-gray-800 p-3 rounded-lg border border-gray-600">
+                        <div class="w-6 h-6 rounded-full" style="background-color: ${playerColors[i%playerColors.length]}"></div>
+                        <input type="text" id="p_name_${i}" placeholder="ชื่อผู้เล่น ${i+1}" value="ผู้เล่น ${i+1}" required>
+                    </div>
+                `;
+            }
+        }
+
+        function savePlayers() {
+            const num = document.getElementById('numPlayers').value;
+            players = [];
+            for (let i = 0; i < num; i++) {
+                const name = document.getElementById(`p_name_${i}`).value || `Player ${i+1}`;
+                players.push({
+                    id: i,
+                    name: name,
+                    color: playerColors[i%playerColors.length],
+                    score: 0,
+                    correct: 0,
+                    wrong: 0,
+                    missed: 0,
+                    totalTime: 0,
+                    cursor: { x: window.innerWidth/2, y: window.innerHeight/2 } // initial pos
+                });
+            }
+        }
+
+        function renderQuestionManager() {
+            const container = document.getElementById('q-list-container');
+            container.innerHTML = '';
+            questions.forEach((q, idx) => {
+                container.innerHTML += `
+                    <div class="bg-gray-800 p-4 rounded-xl mb-4 border border-gray-600 text-sm">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg text-yellow-400">ข้อ ${idx+1}: ${q.q}</h3>
+                            <button class="btn btn-red text-xs py-1 px-2" onclick="deleteQuestion(${idx})">ลบ</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-2 text-gray-300">
+                            <div class="${q.a === 0 ? 'text-green-400 font-bold' : ''}">A: ${q.c[0]}</div>
+                            <div class="${q.a === 1 ? 'text-green-400 font-bold' : ''}">B: ${q.c[1]}</div>
+                            <div class="${q.a === 2 ? 'text-green-400 font-bold' : ''}">C: ${q.c[2]}</div>
+                            <div class="${q.a === 3 ? 'text-green-400 font-bold' : ''}">D: ${q.c[3]}</div>
+                        </div>
+                        <div class="text-cyan-300 italic mb-2">คำอธิบาย: ${q.exp}</div>
+                        <div class="flex gap-4 text-gray-400">
+                            <span>เวลา: ${q.t} วิ</span>
+                            <span>คะแนนเต็ม: ${q.s}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function resetQuestions() {
+            if(confirm("ยืนยันการรีเซ็ตคำถามกลับเป็นค่าเริ่มต้น?")) {
+                questions = JSON.parse(JSON.stringify(defaultQuestions));
+                renderQuestionManager();
+                showAlert("รีเซ็ตคำถามเรียบร้อย");
+            }
+        }
+
+        function deleteQuestion(idx) {
+            if(confirm("ลบคำถามข้อนี้?")) {
+                questions.splice(idx, 1);
+                renderQuestionManager();
+            }
+        }
+
+        function addNewQuestionUI() {
+            // Simplified prompt for new question for single file constraint.
+            // In a full app, this would be a modal form.
+            const q = prompt("กรุณาระบุคำถาม:");
+            if (!q) return;
+            const a0 = prompt("ตัวเลือก A:");
+            const a1 = prompt("ตัวเลือก B:");
+            const a2 = prompt("ตัวเลือก C:");
+            const a3 = prompt("ตัวเลือก D:");
+            if(!a0 || !a1 || !a2 || !a3) { showAlert("กรอกตัวเลือกไม่ครบ"); return; }
+            const ansStr = prompt("เฉลย (A=0, B=1, C=2, D=3): ใส่เลข 0-3");
+            const ans = parseInt(ansStr);
+            if(isNaN(ans) || ans < 0 || ans > 3) { showAlert("เฉลยไม่ถูกต้อง"); return; }
+            const exp = prompt("คำอธิบายคำตอบ:");
+            
+            questions.push({ q: q, c: [a0, a1, a2, a3], a: ans, exp: exp || "", t: 20, s: 100 });
+            renderQuestionManager();
+            showAlert("เพิ่มคำถามสำเร็จ");
+        }
+
+        function renderTeacherDashboard() {
+            document.getElementById('dash-players').innerText = players.length;
+            
+            if (players.length === 0) return;
+
+            let topScore = 0;
+            let totalAcc = 0;
+            
+            const tbody = document.getElementById('dash-player-body');
+            tbody.innerHTML = '';
+            
+            // Sort by score
+            const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+
+            sortedPlayers.forEach(p => {
+                if (p.score > topScore) topScore = p.score;
+                const totalAnswered = p.correct + p.wrong;
+                const acc = totalAnswered > 0 ? ((p.correct / totalAnswered) * 100).toFixed(1) : 0;
+                totalAcc += parseFloat(acc);
+                const avgTime = totalAnswered > 0 ? (p.totalTime / totalAnswered).toFixed(1) : 0;
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-700">
+                        <td class="p-2"><span class="w-3 h-3 inline-block rounded-full mr-2" style="background:${p.color}"></span>${p.name}</td>
+                        <td class="p-2 text-right text-yellow-400 font-bold">${p.score}</td>
+                        <td class="p-2 text-center text-green-400">${p.correct}</td>
+                        <td class="p-2 text-center text-red-400">${p.wrong}</td>
+                        <td class="p-2 text-center text-gray-400">${p.missed}</td>
+                        <td class="p-2 text-center">${avgTime} วิ</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('dash-topscore').innerText = topScore;
+            document.getElementById('dash-avgacc').innerText = (totalAcc / players.length).toFixed(1) + '%';
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            
+            const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+
+            sortedPlayers.forEach((p, idx) => {
+                const totalAnswered = p.correct + p.wrong;
+                const acc = totalAnswered > 0 ? ((p.correct / totalAnswered) * 100).toFixed(0) : 0;
+                
+                let rankIcon = `${idx+1}`;
+                if(idx === 0) rankIcon = '🥇';
+                if(idx === 1) rankIcon = '🥈';
+                if(idx === 2) rankIcon = '🥉';
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-700 bg-gray-800 bg-opacity-40">
+                        <td class="p-3 text-2xl">${rankIcon}</td>
+                        <td class="p-3 font-bold text-xl" style="color:${p.color}">${p.name}</td>
+                        <td class="p-3 text-right text-yellow-400 font-bold text-2xl">${p.score}</td>
+                        <td class="p-3 text-center">${p.correct} / ${p.wrong}</td>
+                        <td class="p-3 text-center">${acc}%</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ==========================================
+        // 5. 3D ENGINE (THREE.JS)
+        // ==========================================
+        const threeCanvas = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+        // Background transparent to see camera
+        const camera3D = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera3D.position.z = 5;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(0, 10, 5);
+        scene.add(dirLight);
+
+        // Particles System
+        let particles = [];
+        const particleGeo = new THREE.SphereGeometry(0.05, 8, 8);
+
+        function spawnParticles(x, y, colorStr, count=30) {
+            // Convert screen coord to 3D roughly
+            const vec = new THREE.Vector3(
+                (x / window.innerWidth) * 2 - 1,
+                -(y / window.innerHeight) * 2 + 1,
+                0.5
+            );
+            vec.unproject(camera3D);
+            const dir = vec.sub(camera3D.position).normalize();
+            const distance = -camera3D.position.z / dir.z;
+            const pos = camera3D.position.clone().add(dir.multiplyScalar(distance));
+
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color(colorStr), 
+                emissive: new THREE.Color(colorStr),
+                emissiveIntensity: 0.8
+            });
+
+            for(let i=0; i<count; i++) {
+                const mesh = new THREE.Mesh(particleGeo, mat);
+                mesh.position.copy(pos);
+                
+                // Random velocity
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2
+                );
+
+                particles.push({ mesh, vel, life: 1.0 });
+                scene.add(mesh);
+            }
+        }
+
+        function updateThreeJS() {
+            for(let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.mesh.position.add(p.vel);
+                p.vel.y -= 0.005; // gravity
+                p.life -= 0.02;
+                p.mesh.scale.setScalar(p.life);
+                if(p.life <= 0) {
+                    scene.remove(p.mesh);
+                    particles.splice(i, 1);
+                }
+            }
+            renderer.render(scene, camera3D);
+        }
+
+
+        // ==========================================
+        // 6. AR & HAND TRACKING SYSTEM
+        // ==========================================
+        const videoElement = document.getElementById('input_video');
+        const bgCanvas = document.getElementById('camera-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const cursorCanvas = document.getElementById('cursor-canvas');
+        const cursorCtx = cursorCanvas.getContext('2d');
+
+        let handsAI;
+        let camera;
+        let isARInit = false;
+        let handTrackResults = null;
+
+        function resizeCanvases() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            cursorCanvas.width = window.innerWidth;
+            cursorCanvas.height = window.innerHeight;
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera3D.aspect = window.innerWidth / window.innerHeight;
+            camera3D.updateProjectionMatrix();
+        }
+        window.addEventListener('resize', resizeCanvases);
+
+        async function initAR() {
+            savePlayers(); // Save setup data
+            if(isARInit) return;
+            
+            document.getElementById('calib-status').innerText = "กำลังเปิดกล้องและ AI...";
+            resizeCanvases();
+
+            handsAI = new Hands({locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }});
+            
+            handsAI.setOptions({
+                maxNumHands: 4, // Track up to 4 hands
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+            
+            handsAI.onResults(onHandResults);
+
+            camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await handsAI.send({image: videoElement});
+                },
+                width: 1280,
+                height: 720
+            });
+            
+            await camera.start();
+            isARInit = true;
+            document.getElementById('calib-status').innerText = "พร้อมแล้ว! กรุณาทดสอบขยับนิ้วชี้";
+            document.getElementById('calib-status').classList.remove('text-yellow-400', 'animate-pulse');
+            document.getElementById('calib-status').classList.add('text-green-400');
+            document.getElementById('btn-start-play').disabled = false;
+            document.getElementById('btn-start-play').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Start rendering loop for UI/Cursors independently of MediaPipe frame rate
+            requestAnimationFrame(mainRenderLoop);
+        }
+
+        function onHandResults(results) {
+            handTrackResults = results;
+            
+            // Draw Camera Background Mirrored to prevent user confusion
+            bgCtx.save();
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgCtx.translate(bgCanvas.width, 0);
+            bgCtx.scale(-1, 1); // MIRROR CAMERA visually
+            
+            // Use object-fit cover logic for drawing video
+            const vRatio = results.image.width / results.image.height;
+            const cRatio = bgCanvas.width / bgCanvas.height;
+            let drawW, drawH, drawX, drawY;
+
+            if (vRatio > cRatio) {
+                drawH = bgCanvas.height;
+                drawW = results.image.width * (bgCanvas.height / results.image.height);
+                drawX = (bgCanvas.width - drawW) / 2;
+                drawY = 0;
+            } else {
+                drawW = bgCanvas.width;
+                drawH = results.image.height * (bgCanvas.width / results.image.width);
+                drawX = 0;
+                drawY = (bgCanvas.height - drawH) / 2;
+            }
+
+            bgCtx.drawImage(results.image, drawX, drawY, drawW, drawH);
+            bgCtx.restore();
+
+            // Extract Hand Data and map to players
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                for (let i = 0; i < Math.min(results.multiHandLandmarks.length, players.length); i++) {
+                    const landmarks = results.multiHandLandmarks[i];
+                    const indexFingerTip = landmarks[8]; // Landmark 8 is Index Finger Tip
+
+                    // === DOUBLE FLIP PREVENTION LOGIC ===
+                    // MediaPipe returns 'x' as 0(left) to 1(right) relative to the UNMIRRORED video frame.
+                    // Because we flipped the visual canvas, if the user moves their hand to their physical right,
+                    // the mirrored image shows the hand moving right.
+                    // To make the cursor match the visual screen, we MUST invert the X coordinate.
+                    const targetX = (1 - indexFingerTip.x) * bgCanvas.width; 
+                    const targetY = indexFingerTip.y * bgCanvas.height;
+
+                    // Apply Smoothing (Low Pass Filter)
+                    players[i].cursor.x = players[i].cursor.x * 0.6 + targetX * 0.4;
+                    players[i].cursor.y = players[i].cursor.y * 0.6 + targetY * 0.4;
+                }
+            }
+        }
+
+
+        // ==========================================
+        // 7. GAMEPLAY LOGIC
+        // ==========================================
+        
+        let hoverState = {
+            target: null, // DOM id of hovered choice
+            playerIdx: -1,
+            timer: 0,
+            threshold: 1.0 // 1 second dwell
+        };
+
+        function startCalibration() {
+            changeState('CALIBRATION');
+        }
+
+        function startGameplay() {
+            SoundEngine.startSound();
+            currentQuestionIndex = 0;
+            
+            // Reset player stats
+            players.forEach(p => { p.score=0; p.correct=0; p.wrong=0; p.missed=0; p.totalTime=0; });
+            
+            changeState('PLAYING');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame();
+                return;
+            }
+
+            isAnswering = false;
+            hoverState.target = null;
+            hoverState.timer = 0;
+
+            const q = questions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('choice-text-0').innerText = `A. ${q.c[0]}`;
+            document.getElementById('choice-text-1').innerText = `B. ${q.c[1]}`;
+            document.getElementById('choice-text-2').innerText = `C. ${q.c[2]}`;
+            document.getElementById('choice-text-3').innerText = `D. ${q.c[3]}`;
+            
+            // Reset UI
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`choice-${i}`);
+                btn.className = 'choice-btn'; // reset class
+                document.getElementById(`prog-${i}`).style.width = '0%';
+            }
+            
+            document.getElementById('feedback-overlay').classList.add('hidden');
+            document.getElementById('question-count-badge').innerText = `ข้อที่ ${currentQuestionIndex + 1}/${questions.length}`;
+            document.getElementById('timer-display').innerText = q.t;
+            
+            questionTimer = q.t;
+            lastTime = Date.now();
+            questionStartTime = Date.now();
+        }
+
+        function checkDwellSelection(dt) {
+            if (isAnswering || APP_STATE !== 'PLAYING') return;
+
+            // Get DOM rects for choices
+            const choices = [
+                { id: 0, rect: document.getElementById('choice-0').getBoundingClientRect() },
+                { id: 1, rect: document.getElementById('choice-1').getBoundingClientRect() },
+                { id: 2, rect: document.getElementById('choice-2').getBoundingClientRect() },
+                { id: 3, rect: document.getElementById('choice-3').getBoundingClientRect() }
+            ];
+
+            let currentlyHovering = null;
+            let hoveringPlayer = -1;
+
+            // Check if any player cursor intersects a choice
+            for (let i = 0; i < players.length; i++) {
+                const cx = players[i].cursor.x;
+                const cy = players[i].cursor.y;
+
+                for (let c of choices) {
+                    // Give a little padding for easier selection
+                    if (cx > c.rect.left && cx < c.rect.right && cy > c.rect.top && cy < c.rect.bottom) {
+                        currentlyHovering = c.id;
+                        hoveringPlayer = i;
+                        break;
+                    }
+                }
+                if (currentlyHovering !== null) break; // First player wins the hover for simplicity
+            }
+
+            // Dwell Logic
+            if (currentlyHovering !== null) {
+                if (hoverState.target !== currentlyHovering) {
+                    hoverState.target = currentlyHovering;
+                    hoverState.playerIdx = hoveringPlayer;
+                    hoverState.timer = 0;
+                    SoundEngine.hoverSound();
+                    
+                    // Reset CSS for all
+                    for(let i=0; i<4; i++) document.getElementById(`choice-${i}`).classList.remove('hovered');
+                    document.getElementById(`choice-${currentlyHovering}`).classList.add('hovered');
+                } else {
+                    hoverState.timer += dt;
+                    const progress = Math.min(100, (hoverState.timer / hoverState.threshold) * 100);
+                    document.getElementById(`prog-${currentlyHovering}`).style.width = `${progress}%`;
+                    
+                    if (hoverState.timer >= hoverState.threshold) {
+                        handleAnswer(currentlyHovering, hoveringPlayer);
+                    }
+                }
+            } else {
+                // Not hovering anything
+                if (hoverState.target !== null) {
+                    document.getElementById(`prog-${hoverState.target}`).style.width = '0%';
+                    document.getElementById(`choice-${hoverState.target}`).classList.remove('hovered');
+                }
+                hoverState.target = null;
+                hoverState.timer = 0;
+            }
+        }
+
+        function handleAnswer(choiceIdx, playerIdx) {
+            if (isAnswering) return;
+            isAnswering = true;
+            
+            const q = questions[currentQuestionIndex];
+            const p = players[playerIdx];
+            const isCorrect = (choiceIdx === q.a);
+            
+            const timeTaken = (Date.now() - questionStartTime) / 1000;
+            p.totalTime += timeTaken;
+
+            let earnedScore = 0;
+
+            const choiceBtn = document.getElementById(`choice-${choiceIdx}`);
+            const feedbackOverlay = document.getElementById('feedback-overlay');
+            const feedbackText = document.getElementById('feedback-text');
+            const feedbackScore = document.getElementById('feedback-score');
+            const feedbackExp = document.getElementById('feedback-explanation');
+
+            if (isCorrect) {
+                choiceBtn.classList.add('selected-correct');
+                SoundEngine.correctSound();
+                earnedScore = q.s;
+                // Time Bonus (Max 50 points if answered < 5 seconds)
+                if (timeTaken < 5) earnedScore += 50;
+                else if (timeTaken < 10) earnedScore += 25;
+                
+                p.score += earnedScore;
+                p.correct++;
+
+                // 3D Effects!
+                const rect = choiceBtn.getBoundingClientRect();
+                const centerX = rect.left + rect.width/2;
+                const centerY = rect.top + rect.height/2;
+                spawnParticles(centerX, centerY, '#00ff00', 50);
+
+                feedbackText.innerText = "ถูกต้อง!";
+                feedbackText.className = "text-6xl font-bold mb-4 text-green-400";
+                feedbackScore.innerText = `+${earnedScore} คะแนน (ตอบโดย ${p.name})`;
+            } else {
+                choiceBtn.classList.add('selected-wrong');
+                // Highlight correct answer
+                document.getElementById(`choice-${q.a}`).classList.add('selected-correct');
+                SoundEngine.wrongSound();
+                p.wrong++;
+                
+                const rect = choiceBtn.getBoundingClientRect();
+                spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#ff0000', 30);
+
+                feedbackText.innerText = "ยังไม่ถูกต้อง";
+                feedbackText.className = "text-6xl font-bold mb-4 text-red-500";
+                feedbackScore.innerText = `ตอบโดย ${p.name}`;
+            }
+
+            // Update UI Score
+            document.getElementById('score-badge').innerText = `คะแนนรวม: ${p.score}`;
+            
+            // Show Feedback Overlay
+            feedbackExp.innerText = q.exp;
+            feedbackOverlay.classList.remove('hidden');
+
+            // Wait 4 seconds then next
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 4000);
+        }
+
+        function handleTimeout() {
+            if (isAnswering) return;
+            isAnswering = true;
+            SoundEngine.timeoutSound();
+            
+            const q = questions[currentQuestionIndex];
+            document.getElementById(`choice-${q.a}`).classList.add('selected-correct');
+            
+            // Register as missed for Player 1 (or all in team mode)
+            players[0].missed++; 
+
+            const feedbackOverlay = document.getElementById('feedback-overlay');
+            document.getElementById('feedback-text').innerText = "หมดเวลา!";
+            document.getElementById('feedback-text').className = "text-6xl font-bold mb-4 text-yellow-500";
+            document.getElementById('feedback-score').innerText = "";
+            document.getElementById('feedback-explanation').innerText = q.exp;
+            feedbackOverlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 4000);
+        }
+
+        function endGame() {
+            SoundEngine.startSound();
+            changeState('LEADERBOARD');
+        }
+
+        // ==========================================
+        // 8. MAIN RENDER LOOP
+        // ==========================================
+        function mainRenderLoop() {
+            const now = Date.now();
+            const dt = (now - lastTime) / 1000; // delta time in seconds
+            lastTime = now;
+
+            // 1. Clear Cursor Canvas
+            cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+
+            if (APP_STATE === 'PLAYING') {
+                // Game Timer Logic
+                if (!isAnswering) {
+                    questionTimer -= dt;
+                    if (questionTimer <= 0) {
+                        questionTimer = 0;
+                        handleTimeout();
+                    } else if (questionTimer <= 3 && Math.floor(questionTimer) !== Math.floor(questionTimer+dt)) {
+                        SoundEngine.countdownSound(); // Beep on 3, 2, 1
+                    }
+                    document.getElementById('timer-display').innerText = Math.ceil(questionTimer);
+                }
+
+                // Dwell Selection Hit Testing
+                checkDwellSelection(dt);
+            }
+
+            // 2. Draw Cursors for active players (Calibration or Playing)
+            if (APP_STATE === 'PLAYING' || APP_STATE === 'CALIBRATION') {
+                
+                // Determine how many hands are actually detected
+                let handsDetected = (handTrackResults && handTrackResults.multiHandLandmarks) ? handTrackResults.multiHandLandmarks.length : 0;
+                
+                for (let i = 0; i < Math.min(handsDetected, players.length); i++) {
+                    const cx = players[i].cursor.x;
+                    const cy = players[i].cursor.y;
+                    const color = players[i].color;
+
+                    // Glow
+                    cursorCtx.shadowBlur = 20;
+                    cursorCtx.shadowColor = color;
+                    
+                    // Outer Ring
+                    cursorCtx.beginPath();
+                    cursorCtx.arc(cx, cy, 20, 0, 2 * Math.PI);
+                    cursorCtx.lineWidth = 4;
+                    cursorCtx.strokeStyle = color;
+                    cursorCtx.stroke();
+
+                    // Inner Dot
+                    cursorCtx.beginPath();
+                    cursorCtx.arc(cx, cy, 8, 0, 2 * Math.PI);
+                    cursorCtx.fillStyle = 'white';
+                    cursorCtx.fill();
+
+                    // Player Name Label
+                    cursorCtx.shadowBlur = 0;
+                    cursorCtx.font = "16px Mitr";
+                    cursorCtx.fillStyle = color;
+                    cursorCtx.textAlign = "center";
+                    // Add text stroke for visibility
+                    cursorCtx.lineWidth = 3;
+                    cursorCtx.strokeStyle = 'black';
+                    cursorCtx.strokeText(players[i].name, cx, cy - 30);
+                    cursorCtx.fillText(players[i].name, cx, cy - 30);
+                }
+
+                if (handsDetected === 0 && APP_STATE === 'PLAYING' && !isAnswering) {
+                    cursorCtx.font = "24px Mitr";
+                    cursorCtx.fillStyle = "red";
+                    cursorCtx.textAlign = "center";
+                    cursorCtx.fillText("ไม่พบมือ กรุณายกมือขึ้น", cursorCanvas.width/2, cursorCanvas.height - 50);
+                }
+            }
+
+            // 3. Update Three.js particles/3D objects
+            updateThreeJS();
+
+            requestAnimationFrame(mainRenderLoop);
+        }
+
+    </script>
+</body>
+</html>
