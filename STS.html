@@ -45,11 +45,6 @@
 
         /* Video Input (Hidden) */
         #input_video {
-            display: none;
-        }
-
-        /* Canvas Layers */
-        #camera-canvas {
             position: fixed;
             top: 0;
             left: 0;
@@ -57,9 +52,11 @@
             height: 100vh;
             object-fit: cover;
             z-index: 1;
-            /* ห้ามใช้ transform: scaleX(-1) ตรงนี้ เพราะเราวาดกลับด้านใน Canvas Context แล้ว */
+            transform: scaleX(-1); /* กลับด้านวิดีโอด้วย GPU ทันที ลดภาระ CPU */
         }
 
+        /* Canvas Layers */
+        /* ยกเลิก camera-canvas เพราะเราใช้วิดีโอตรงๆ แล้ว */
         #three-canvas {
             position: fixed;
             top: 0;
@@ -285,7 +282,7 @@
     <video id="input_video" autoplay playsinline></video>
 
     <!-- Canvas Layers -->
-    <canvas id="camera-canvas"></canvas>
+    <!-- เอา id="camera-canvas" ออก -->
     <canvas id="three-canvas"></canvas>
     
     <!-- Custom Alert -->
@@ -313,11 +310,30 @@
         <!-- 2. PLAYER SETUP -->
         <div id="screen-setup" class="screen">
             <div class="glass-panel p-8 max-w-2xl w-full mx-4 pointer-events-auto">
-                <h2 class="text-3xl font-bold mb-6 text-center text-cyan-400">ตั้งค่าผู้เล่น</h2>
+                <h2 class="text-3xl font-bold mb-6 text-center text-cyan-400">ตั้งค่าก่อนเริ่มเกม</h2>
                 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block mb-2 text-yellow-300">เลือกกล้อง (Camera):</label>
+                        <select id="cameraSelect" class="w-full">
+                            <option value="">กำลังค้นหากล้อง...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-yellow-300">จำนวนคำถาม (สุ่ม):</label>
+                        <select id="questionCount" class="w-full">
+                            <option value="5">5 ข้อ</option>
+                            <option value="10" selected>10 ข้อ</option>
+                            <option value="15">15 ข้อ</option>
+                            <option value="20">20 ข้อ</option>
+                            <option value="ALL">ทั้งหมดในคลัง</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="mb-4">
-                    <label class="block mb-2">จำนวนผู้เล่น (1-4 คนแนะนำ สำหรับ 1 กล้อง):</label>
-                    <input type="number" id="numPlayers" min="1" max="12" value="1" onchange="generatePlayerInputs()">
+                    <label class="block mb-2">จำนวนผู้เล่น (1-15 คน): <span class="text-xs text-red-400">*ผู้เล่นเยอะควรใช้กล้องมุมกว้าง</span></label>
+                    <input type="number" id="numPlayers" min="1" max="15" value="1" onchange="generatePlayerInputs()">
                 </div>
 
                 <div id="playerInputsContainer" class="scrollable mb-6 p-2">
@@ -485,12 +501,12 @@
 
         // Player Data Model
         let players = [];
-        let playerColors = ['#00d2ff', '#38ef7d', '#ffeb3b', '#ff416c', '#b100ff', '#ff9800', '#00e5ff', '#76ff03', '#f50057', '#d50000', '#00b0ff', '#1de9b6'];
+        // เพิ่มชุดสีให้รองรับถึง 15 คน
+        let playerColors = ['#00d2ff', '#38ef7d', '#ffeb3b', '#ff416c', '#b100ff', '#ff9800', '#00e5ff', '#76ff03', '#f50057', '#d50000', '#00b0ff', '#1de9b6', '#ff00ff', '#ffffff', '#8bc34a'];
         let currentPlayerTurn = 0; // Index of player currently answering (for turn-based if > hands)
-        // Note: Realistically, AR multiplayer works best if we map Hands to Players.
-        // We will try to map detected hand index to player index.
 
         // Game State variables
+        let activeQuestions = []; // เก็บคำถามที่ถูกสุ่มมาเล่นในรอบนี้
         let currentQuestionIndex = 0;
         let questionTimer = 0;
         let lastTime = 0;
@@ -598,6 +614,7 @@
             } else if (newState === 'PLAYER_SETUP') {
                 document.getElementById('screen-setup').classList.add('active');
                 generatePlayerInputs();
+                fetchCameras(); // ดึงรายชื่อกล้องเมื่อเปิดหน้านี้
             } else if (newState === 'CALIBRATION') {
                 document.getElementById('screen-calibration').classList.add('active');
                 initAR(); // Start camera and Mediapipe
@@ -618,8 +635,31 @@
         // ==========================================
         // 4. TEACHER / MANAGER LOGIC
         // ==========================================
+        
+        // ฟังก์ชันดึงรายชื่อกล้อง
+        async function fetchCameras() {
+            const cameraSelect = document.getElementById('cameraSelect');
+            try {
+                // ขออนุญาตใช้กล้องเบื้องต้นก่อน เพื่อให้เห็นรายชื่ออุปกรณ์ทั้งหมด
+                await navigator.mediaDevices.getUserMedia({ video: true });
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                
+                cameraSelect.innerHTML = '';
+                videoDevices.forEach((device, index) => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `กล้อง ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Error fetching cameras:", err);
+                cameraSelect.innerHTML = '<option value="">ไม่สามารถเข้าถึงกล้องได้</option>';
+            }
+        }
+
         function generatePlayerInputs() {
-            const num = document.getElementById('numPlayers').value;
+            const num = parseInt(document.getElementById('numPlayers').value, 10) || 1;
             const container = document.getElementById('playerInputsContainer');
             container.innerHTML = '';
             for (let i = 0; i < num; i++) {
@@ -633,10 +673,11 @@
         }
 
         function savePlayers() {
-            const num = document.getElementById('numPlayers').value;
+            const num = parseInt(document.getElementById('numPlayers').value, 10) || 1;
             players = [];
             for (let i = 0; i < num; i++) {
-                const name = document.getElementById(`p_name_${i}`).value || `Player ${i+1}`;
+                const nameEl = document.getElementById(`p_name_${i}`);
+                const name = nameEl ? (nameEl.value || `ผู้เล่น ${i+1}`) : `ผู้เล่น ${i+1}`;
                 players.push({
                     id: i,
                     name: name,
@@ -852,19 +893,16 @@
         // 6. AR & HAND TRACKING SYSTEM
         // ==========================================
         const videoElement = document.getElementById('input_video');
-        const bgCanvas = document.getElementById('camera-canvas');
-        const bgCtx = bgCanvas.getContext('2d');
         const cursorCanvas = document.getElementById('cursor-canvas');
         const cursorCtx = cursorCanvas.getContext('2d');
 
         let handsAI;
-        let camera;
         let isARInit = false;
         let handTrackResults = null;
+        let stream = null;
+        let detectionLoopRunning = false;
 
         function resizeCanvases() {
-            bgCanvas.width = window.innerWidth;
-            bgCanvas.height = window.innerHeight;
             cursorCanvas.width = window.innerWidth;
             cursorCanvas.height = window.innerHeight;
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -873,74 +911,104 @@
         }
         window.addEventListener('resize', resizeCanvases);
 
+        // วงลูปสำหรับส่งภาพวิดีโอเข้า AI MediaPipe
+        async function detectionLoop() {
+            if (!detectionLoopRunning || videoElement.paused || videoElement.ended) return;
+            
+            // ตรวจสอบว่าวิดีโอพร้อมส่งเฟรมภาพ (HAVE_CURRENT_DATA) และมีมิติภาพจริง
+            if (handsAI && videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
+                try {
+                    await handsAI.send({image: videoElement});
+                } catch (err) {
+                    console.warn("MediaPipe frame processing warning:", err);
+                }
+            }
+            // ใช้ requestAnimationFrame แทน Timeout เพื่อความลื่นไหลสูงสุดของจอภาพ
+            requestAnimationFrame(detectionLoop);
+        }
+
         async function initAR() {
             savePlayers(); // Save setup data
-            if(isARInit) return;
             
             document.getElementById('calib-status').innerText = "กำลังเปิดกล้องและ AI...";
+            document.getElementById('calib-status').classList.add('text-yellow-400', 'animate-pulse');
+            document.getElementById('btn-start-play').disabled = true;
+            document.getElementById('btn-start-play').classList.add('opacity-50', 'cursor-not-allowed');
+
             resizeCanvases();
 
-            handsAI = new Hands({locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-            }});
-            
-            handsAI.setOptions({
-                maxNumHands: 4, // Track up to 4 hands
-                modelComplexity: 1,
-                minDetectionConfidence: 0.6,
-                minTrackingConfidence: 0.6
-            });
-            
-            handsAI.onResults(onHandResults);
+            // หยุดกล้องเก่าหากมีการสลับกล้อง
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
 
-            camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await handsAI.send({image: videoElement});
-                },
-                width: 1280,
-                height: 720
-            });
-            
-            await camera.start();
-            isARInit = true;
-            document.getElementById('calib-status').innerText = "พร้อมแล้ว! กรุณาทดสอบขยับนิ้วชี้";
-            document.getElementById('calib-status').classList.remove('text-yellow-400', 'animate-pulse');
-            document.getElementById('calib-status').classList.add('text-green-400');
-            document.getElementById('btn-start-play').disabled = false;
-            document.getElementById('btn-start-play').classList.remove('opacity-50', 'cursor-not-allowed');
-            
-            // Start rendering loop for UI/Cursors independently of MediaPipe frame rate
-            requestAnimationFrame(mainRenderLoop);
+            // เลือกกล้องตามที่ผู้ใช้กำหนด
+            const selectedCameraId = document.getElementById('cameraSelect').value;
+            const constraints = {
+                video: (selectedCameraId && selectedCameraId !== "") 
+                    ? { deviceId: { exact: selectedCameraId }, width: { ideal: 1280 }, height: { ideal: 720 } } 
+                    : { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+            };
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = stream;
+            } catch (err) {
+                showAlert("ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาต");
+                return;
+            }
+
+            // แปลงค่าจำนวนผู้เล่นจากข้อความ (String) เป็นตัวเลข (Number) เพื่อป้องกัน WASM TypeError
+            const numPlayersCount = parseInt(document.getElementById('numPlayers').value, 10) || 1;
+
+            // Initialize MediaPipe Only Once
+            if (!handsAI) {
+                handsAI = new Hands({locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }});
+                
+                handsAI.setOptions({
+                    maxNumHands: numPlayersCount, // ส่งค่าเป็น Number ดั้งเดิมเพื่อแมปกับ WASM bindings
+                    modelComplexity: 0, // 0 = โหมดประมวลผลเร็วสุด เพื่อลดความหน่วง
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                handsAI.onResults(onHandResults);
+            } else {
+                // อัปเดตจำนวนมือตามการตั้งค่าใหม่
+                handsAI.setOptions({
+                    maxNumHands: numPlayersCount
+                });
+            }
+
+            // เริ่มวงลูปเมื่อวิดีโอพร้อมเล่น
+            videoElement.onloadedmetadata = () => {
+                videoElement.play();
+                if (!detectionLoopRunning) {
+                    detectionLoopRunning = true;
+                    detectionLoop();
+                }
+
+                isARInit = true;
+                document.getElementById('calib-status').innerText = "พร้อมแล้ว! กรุณาทดสอบขยับนิ้วชี้";
+                document.getElementById('calib-status').classList.remove('text-yellow-400', 'animate-pulse');
+                document.getElementById('calib-status').classList.add('text-green-400');
+                document.getElementById('btn-start-play').disabled = false;
+                document.getElementById('btn-start-play').classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                // เริ่ม UI Render Loop (ถ้ายังไม่เคยเริ่ม)
+                if(!window.renderLoopStarted) {
+                    window.renderLoopStarted = true;
+                    requestAnimationFrame(mainRenderLoop);
+                }
+            };
         }
 
         function onHandResults(results) {
             handTrackResults = results;
             
-            // Draw Camera Background Mirrored to prevent user confusion
-            bgCtx.save();
-            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-            bgCtx.translate(bgCanvas.width, 0);
-            bgCtx.scale(-1, 1); // MIRROR CAMERA visually
-            
-            // Use object-fit cover logic for drawing video
-            const vRatio = results.image.width / results.image.height;
-            const cRatio = bgCanvas.width / bgCanvas.height;
-            let drawW, drawH, drawX, drawY;
-
-            if (vRatio > cRatio) {
-                drawH = bgCanvas.height;
-                drawW = results.image.width * (bgCanvas.height / results.image.height);
-                drawX = (bgCanvas.width - drawW) / 2;
-                drawY = 0;
-            } else {
-                drawW = bgCanvas.width;
-                drawH = results.image.height * (bgCanvas.width / results.image.width);
-                drawX = 0;
-                drawY = (bgCanvas.height - drawH) / 2;
-            }
-
-            bgCtx.drawImage(results.image, drawX, drawY, drawW, drawH);
-            bgCtx.restore();
+            // หมายเหตุ: ตัดโค้ดวาดวิดีโอลง Canvas ออก เพื่อให้ CSS Video จัดการแทน ทำให้ลดการใช้ CPU มหาศาล
 
             // Extract Hand Data and map to players
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -948,17 +1016,13 @@
                     const landmarks = results.multiHandLandmarks[i];
                     const indexFingerTip = landmarks[8]; // Landmark 8 is Index Finger Tip
 
-                    // === DOUBLE FLIP PREVENTION LOGIC ===
-                    // MediaPipe returns 'x' as 0(left) to 1(right) relative to the UNMIRRORED video frame.
-                    // Because we flipped the visual canvas, if the user moves their hand to their physical right,
-                    // the mirrored image shows the hand moving right.
-                    // To make the cursor match the visual screen, we MUST invert the X coordinate.
-                    const targetX = (1 - indexFingerTip.x) * bgCanvas.width; 
-                    const targetY = indexFingerTip.y * bgCanvas.height;
+                    // คำนวณพิกัดให้ตรงกับวิดีโอที่ถูกกลับด้านด้วย CSS
+                    const targetX = (1 - indexFingerTip.x) * window.innerWidth; 
+                    const targetY = indexFingerTip.y * window.innerHeight;
 
-                    // Apply Smoothing (Low Pass Filter)
-                    players[i].cursor.x = players[i].cursor.x * 0.6 + targetX * 0.4;
-                    players[i].cursor.y = players[i].cursor.y * 0.6 + targetY * 0.4;
+                    // Apply Smoothing (Low Pass Filter) เพื่อให้เคอร์เซอร์นิ่ง ไม่สั่น
+                    players[i].cursor.x = players[i].cursor.x * 0.7 + targetX * 0.3;
+                    players[i].cursor.y = players[i].cursor.y * 0.7 + targetY * 0.3;
                 }
             }
         }
@@ -979,6 +1043,19 @@
             changeState('CALIBRATION');
         }
 
+        // ฟังก์ชันสำหรับสุ่ม Array
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
         function startGameplay() {
             SoundEngine.startSound();
             currentQuestionIndex = 0;
@@ -986,12 +1063,24 @@
             // Reset player stats
             players.forEach(p => { p.score=0; p.correct=0; p.wrong=0; p.missed=0; p.totalTime=0; });
             
+            // จัดการสุ่มคำถาม
+            let qCountSelect = document.getElementById('questionCount').value;
+            let tempQuestions = JSON.parse(JSON.stringify(questions));
+            tempQuestions = shuffleArray(tempQuestions); // สุ่มลำดับคำถาม
+            
+            if(qCountSelect !== 'ALL') {
+                let count = parseInt(qCountSelect);
+                activeQuestions = tempQuestions.slice(0, count); // ตัดเอาเฉพาะจำนวนที่เลือก
+            } else {
+                activeQuestions = tempQuestions;
+            }
+
             changeState('PLAYING');
             loadQuestion();
         }
 
         function loadQuestion() {
-            if (currentQuestionIndex >= questions.length) {
+            if (currentQuestionIndex >= activeQuestions.length) {
                 endGame();
                 return;
             }
@@ -1000,7 +1089,7 @@
             hoverState.target = null;
             hoverState.timer = 0;
 
-            const q = questions[currentQuestionIndex];
+            const q = activeQuestions[currentQuestionIndex];
             document.getElementById('question-text').innerText = q.q;
             document.getElementById('choice-text-0').innerText = `A. ${q.c[0]}`;
             document.getElementById('choice-text-1').innerText = `B. ${q.c[1]}`;
@@ -1015,7 +1104,7 @@
             }
             
             document.getElementById('feedback-overlay').classList.add('hidden');
-            document.getElementById('question-count-badge').innerText = `ข้อที่ ${currentQuestionIndex + 1}/${questions.length}`;
+            document.getElementById('question-count-badge').innerText = `ข้อที่ ${currentQuestionIndex + 1}/${activeQuestions.length}`;
             document.getElementById('timer-display').innerText = q.t;
             
             questionTimer = q.t;
@@ -1088,7 +1177,7 @@
             if (isAnswering) return;
             isAnswering = true;
             
-            const q = questions[currentQuestionIndex];
+            const q = activeQuestions[currentQuestionIndex];
             const p = players[playerIdx];
             const isCorrect = (choiceIdx === q.a);
             
@@ -1157,7 +1246,7 @@
             isAnswering = true;
             SoundEngine.timeoutSound();
             
-            const q = questions[currentQuestionIndex];
+            const q = activeQuestions[currentQuestionIndex];
             document.getElementById(`choice-${q.a}`).classList.add('selected-correct');
             
             // Register as missed for Player 1 (or all in team mode)
