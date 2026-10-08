@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEDICINE SAFETY AR - เกมเรียนรู้เรื่องอันตรายจากการใช้ยา</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Kanit',sans-serif;background:#0b1120;color:#f8fafc;overflow-x:hidden;user-select:none;margin:0}
+#webcamVideo{transform:scaleX(-1);object-fit:cover;width:100vw;height:100vh;position:absolute;top:0;left:0;z-index:1}
+#arCanvas{position:absolute;top:0;left:0;width:100vw;height:100vh;z-index:2;pointer-events:none}
+.player-cursor{position:fixed;width:56px;height:56px;border-radius:50%;border:4px solid currentColor;z-index:9999;pointer-events:none;transition:left 0.05s linear,top 0.05s linear;display:none;box-shadow:0 0 35px currentColor,inset 0 0 25px currentColor}
+.player-cursor.active{display:block}
+.player-cursor::before{content:attr(data-label);position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:900;color:currentColor;text-shadow:0 0 12px currentColor;white-space:nowrap;background:rgba(0,0,0,0.7);padding:2px 10px;border-radius:10px;border:1px solid currentColor}
+.player-cursor::after{content:'';position:absolute;top:50%;left:50%;width:16px;height:16px;background:currentColor;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 20px currentColor}
+.player-cursor.hovering{animation:cursorPulse 0.5s infinite}
+@keyframes cursorPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+.dwell-ring{position:fixed;width:76px;height:76px;border-radius:50%;z-index:9998;pointer-events:none;display:none}
+.dwell-ring.active{display:block}
+.dwell-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.dwell-ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.glass-panel{background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);box-shadow:0 8px 32px 0 rgba(0,0,0,0.37)}
+.glass-button{background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);transition:all 0.2s ease;cursor:pointer}
+.glass-button:hover,.glass-button.hovered{background:rgba(56,189,248,0.3);border-color:#38bdf8;transform:translateY(-2px);box-shadow:0 0 20px rgba(56,189,248,0.4)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes floatUp{0%{transform:translateY(100vh) rotate(0deg);opacity:1}100%{transform:translateY(-200px) rotate(10deg);opacity:0.9}}
+@keyframes countPulse{0%{transform:scale(2);opacity:0}50%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0.8}}
+@keyframes catchFall{0%{top:-80px}100%{top:110%}}
+.animate-fade-in{animation:fadeIn 0.4s ease-out}
+.balloon-float{animation:floatUp 6s linear infinite}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:rgba(15,23,42,0.6)}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+.sort-card-item{cursor:grab;transition:all 0.2s}
+.sort-card-item:active{cursor:grabbing;transform:scale(1.05)}
+.sort-card-item.placed{opacity:0.3;pointer-events:none}
+.countdown-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center}
+.countdown-number{font-size:10rem;font-weight:900;color:#06b6d4;text-shadow:0 0 60px rgba(6,182,212,0.6);animation:countPulse 1s ease-out}
+.catch-item{animation:catchFall linear forwards;position:absolute}
+.interactive-choice{position:relative;overflow:hidden;cursor:pointer}
+.hand-status-bar{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:8px;padding:10px 16px;background:rgba(15,23,42,0.9);backdrop-filter:blur(12px);border-radius:20px;border:1px solid rgba(255,255,255,0.15)}
+.hand-indicator{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);opacity:0.35;transition:all 0.3s}
+.hand-indicator.detected{opacity:1;border-color:currentColor;box-shadow:0 0 20px currentColor;background:rgba(255,255,255,0.1)}
+.hand-indicator .dot{width:10px;height:10px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.loading-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.loading-spinner{width:60px;height:60px;border:4px solid rgba(6,182,212,0.2);border-top-color:#06b6d4;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display:none">
+<div class="loading-spinner"></div>
+<div class="text-xl font-bold text-cyan-400" id="loadingText">กำลังโหลดระบบตรวจจับนิ้วชี้...</div>
+<div class="text-sm text-slate-400" id="loadingSubtext">กรุณารอสักครู่</div>
+</div>
+
+<!-- Player Cursors -->
+<div id="cursor-p1" class="player-cursor" style="color:#06b6d4" data-label="P1 ☝️"></div>
+<div id="cursor-p2" class="player-cursor" style="color:#10b981" data-label="P2 ☝️"></div>
+<div id="cursor-p3" class="player-cursor" style="color:#f97316" data-label="P3 ☝️"></div>
+<div id="cursor-p4" class="player-cursor" style="color:#a855f7" data-label="P4 ☝️"></div>
+<div id="cursor-p5" class="player-cursor" style="color:#ec4899" data-label="P5 ☝️"></div>
+<div id="cursor-p6" class="player-cursor" style="color:#eab308" data-label="P6 ☝️"></div>
+
+<!-- Dwell Rings -->
+<div id="dwell-p1" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#06b6d4" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+<div id="dwell-p2" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#10b981" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+<div id="dwell-p3" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#f97316" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+<div id="dwell-p4" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#a855f7" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+<div id="dwell-p5" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#ec4899" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+<div id="dwell-p6" class="dwell-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="32" stroke="rgba(255,255,255,0.15)"/><circle class="dwell-progress" cx="38" cy="38" r="32" stroke="#eab308" stroke-dasharray="201" stroke-dashoffset="201"/></svg></div>
+
+<!-- Hand Status Bar -->
+<div id="handStatusBar" class="hand-status-bar">
+<div class="hand-indicator" id="hand-ind-1" style="color:#06b6d4"><span class="dot"></span>P1 ☝️</div>
+<div class="hand-indicator" id="hand-ind-2" style="color:#10b981"><span class="dot"></span>P2 ☝️</div>
+<div class="hand-indicator" id="hand-ind-3" style="color:#f97316"><span class="dot"></span>P3 ☝️</div>
+<div class="hand-indicator" id="hand-ind-4" style="color:#a855f7"><span class="dot"></span>P4 ☝️</div>
+<div class="hand-indicator" id="hand-ind-5" style="color:#ec4899"><span class="dot"></span>P5 ☝️</div>
+<div class="hand-indicator" id="hand-ind-6" style="color:#eab308"><span class="dot"></span>P6 ☝️</div>
+</div>
+
+<div id="app" class="relative w-full min-h-screen overflow-hidden flex flex-col">
+
+<header id="mainHeader" class="sticky top-0 z-40 w-full glass-panel border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center space-x-3 cursor-pointer" onclick="app.navigateTo('home')">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl font-extrabold shadow-lg shadow-cyan-500/30">💊</div>
+<div>
+<h1 class="text-xl font-black bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">MEDICINE SAFETY AR</h1>
+<p class="text-xs text-slate-400">เกมเรียนรู้เรื่องอันตรายจากการใช้ยา • ใช้นิ้วชี้ควบคุม</p>
+</div>
+</div>
+<nav class="hidden md:flex items-center space-x-2">
+<button onclick="app.navigateTo('home')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition">หน้าหลัก</button>
+<button onclick="app.navigateTo('games')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition">เลือกเกม</button>
+<button onclick="app.navigateTo('ranking')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition">อันดับ</button>
+<button onclick="app.navigateTo('howToPlay')" class="px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition">วิธีเล่น</button>
+<button onclick="app.navigateTo('teacherLogin')" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-600/30 border border-purple-500/50 text-purple-200 hover:bg-purple-600/50 transition"><i class="fa-solid fa-chalkboard-user mr-1.5"></i>ครู</button>
+</nav>
+<div class="flex items-center space-x-2">
+<button onclick="audioEngine.toggleSound()" class="w-9 h-9 rounded-lg glass-button flex items-center justify-center text-slate-300"><i class="fa-solid fa-volume-high" id="soundIcon"></i></button>
+<button onclick="app.toggleFullscreen()" class="w-9 h-9 rounded-lg glass-button flex items-center justify-center text-slate-300"><i class="fa-solid fa-expand"></i></button>
+</div>
+</header>
+
+<!-- AR GAME VIEW -->
+<div id="view-arGame" class="view-screen hidden fixed inset-0 z-50 bg-black">
+<video id="webcamVideo" autoplay playsinline muted></video>
+<canvas id="arCanvas"></canvas>
+<div id="arHud" class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-4 md:p-6">
+<div class="flex justify-between items-start">
+<div class="glass-panel rounded-2xl p-3 flex items-center space-x-4 pointer-events-auto">
+<button onclick="arEngine.exitGame()" class="px-3 py-1.5 rounded-lg bg-rose-500/30 border border-rose-500/50 text-rose-200 hover:bg-rose-600 transition text-xs font-bold"><i class="fa-solid fa-arrow-left mr-1"></i>ออก</button>
+<div>
+<span id="hudGameTitle" class="text-xs uppercase tracking-wider text-cyan-400 font-bold block">QUIZ RUSH</span>
+<span id="hudQuestionProgress" class="text-lg font-black text-white">ข้อ 1 / 10</span>
+</div>
+</div>
+<div class="glass-panel rounded-2xl px-6 py-2 flex flex-col items-center pointer-events-auto border-2 border-cyan-500/50">
+<span class="text-xs text-slate-400 font-semibold uppercase">เวลาที่เหลือ</span>
+<span id="hudTimer" class="text-3xl font-black text-amber-400">15</span>
+</div>
+<div class="glass-panel rounded-2xl p-3 flex items-center space-x-4 pointer-events-auto">
+<div class="text-right">
+<span class="text-xs text-slate-400 font-semibold block">คะแนน</span>
+<span id="hudScore" class="text-2xl font-black text-emerald-400">0</span>
+</div>
+<div id="hudComboBadge" class="hidden px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black text-sm animate-bounce">🔥 x<span id="hudComboCount">2</span></div>
+</div>
+</div>
+<div id="arPromptContainer" class="w-full max-w-3xl mx-auto my-auto pointer-events-auto transition-all duration-300"></div>
+<div class="flex justify-between items-end">
+<div id="hudPowerups" class="glass-panel rounded-2xl p-2 flex items-center space-x-2 pointer-events-auto">
+<button onclick="gameEngine.usePowerup('hint')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/40 transition">💡 (<span id="countHint">1</span>)</button>
+<button onclick="gameEngine.usePowerup('freeze')" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold hover:bg-cyan-500/40 transition">⏰ (<span id="countFreeze">1</span>)</button>
+<button onclick="gameEngine.usePowerup('double')" class="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-bold hover:bg-purple-500/40 transition">⭐x2 (<span id="countDouble">1</span>)</button>
+</div>
+<div class="glass-panel rounded-xl px-3 py-1.5 flex items-center space-x-2 text-xs text-slate-300 pointer-events-auto">
+<span id="handStatusDot" class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+<span id="handStatusText">☝️ โหมดนิ้วชี้</span>
+</div>
+</div>
+</div>
+<div id="feedbackModal" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+<div class="max-w-md w-full rounded-3xl bg-slate-900/95 border border-slate-700 p-6 text-center shadow-2xl space-y-4 animate-fade-in">
+<div id="feedbackIcon" class="text-6xl">✅</div>
+<h3 id="feedbackTitle" class="text-2xl font-black text-emerald-400">ถูกต้อง!</h3>
+<div id="feedbackPoints" class="text-lg font-bold text-amber-400">+150 คะแนน</div>
+<div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 text-left space-y-2">
+<p id="feedbackExplanation" class="text-sm text-slate-200">📘 คำอธิบาย</p>
+<div class="p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-800/50 text-xs text-cyan-300 font-medium">💡 <strong id="feedbackTip">สิ่งที่ควรจำ</strong></div>
+</div>
+<button onclick="gameEngine.nextQuestion()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-base hover:opacity-90 transition interactive-choice">ข้อถัดไป <i class="fa-solid fa-arrow-right ml-1"></i></button>
+</div>
+</div>
+<div id="gameOverModal" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.8);backdrop-filter:blur(10px)">
+<div class="max-w-lg w-full rounded-3xl bg-slate-900/95 border border-cyan-500/40 p-8 text-center shadow-2xl space-y-5 animate-fade-in">
+<div class="text-6xl">🏆</div>
+<h2 class="text-3xl font-black bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">จบเกม!</h2>
+<div id="multiplayerScores" class="space-y-2 mb-4"></div>
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700"><div class="text-2xl font-black text-emerald-400" id="goScore">0</div><div class="text-xs text-slate-400">คะแนนรวม</div></div>
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700"><div class="text-2xl font-black text-cyan-400" id="goAccuracy">0%</div><div class="text-xs text-slate-400">ความถูกต้อง</div></div>
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700"><div class="text-2xl font-black text-amber-400" id="goCorrect">0/10</div><div class="text-xs text-slate-400">ตอบถูก</div></div>
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700"><div class="text-2xl font-black text-rose-400" id="goCombo">0</div><div class="text-xs text-slate-400">Combo สูงสุด</div></div>
+</div>
+<div class="flex gap-3">
+<button onclick="gameEngine.restartGame()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold interactive-choice">🔄 เล่นอีกครั้ง</button>
+<button onclick="arEngine.exitGame()" class="flex-1 py-3 rounded-xl glass-button text-white font-bold">🏠 หน้าหลัก</button>
+</div>
+</div>
+</div>
+</div>
+
+<main class="flex-1 relative z-10 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+<!-- HOME -->
+<div id="view-home" class="view-screen space-y-8 py-4">
+<div class="relative rounded-3xl glass-panel p-8 md:p-12 overflow-hidden border border-cyan-500/30">
+<div class="absolute -right-10 -bottom-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-2xl space-y-4">
+<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-bold">☝️ ใช้นิ้วชี้ควบคุม • รองรับ 6 ผู้เล่น</div>
+<h2 class="text-4xl md:text-5xl font-black tracking-tight leading-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+เรียนรู้เรื่อง <span class="text-cyan-400">"อันตรายจากการใช้ยา"</span> ผ่านเกม AR
+</h2>
+<p class="text-slate-300 text-base leading-relaxed">
+ใช้ <strong class="text-cyan-300">"นิ้วชี้"</strong> ผ่านกล้องเว็บแคมควบคุมเกม! ชูนิ้วชี้แล้วระบบจะตรวจจับตำแหน่งปลายนิ้วเป็น Cursor รองรับผู้เล่นหลายคนพร้อมกัน
+</p>
+<div class="flex flex-wrap gap-3 pt-2">
+<button onclick="app.startQuickPlay()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 text-white font-extrabold text-lg shadow-xl shadow-cyan-500/30 hover:scale-105 transition interactive-choice">☝️ เริ่มเล่น (นิ้วชี้)</button>
+<button onclick="app.startMultiplayer()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-lg shadow-xl shadow-emerald-500/30 hover:scale-105 transition interactive-choice">👥 หลายคน (AR)</button>
+<button onclick="app.navigateTo('games')" class="px-6 py-3.5 rounded-2xl glass-button text-white font-bold text-lg hover:border-cyan-400 transition">🎮 เลือกโหมดเกม</button>
+<button onclick="app.navigateTo('cameraSetup')" class="px-6 py-3.5 rounded-2xl bg-slate-800 border border-slate-700 text-slate-200 font-semibold hover:bg-slate-700 transition">📷 ทดสอบกล้อง</button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div onclick="app.navigateTo('joinRoom')" class="glass-panel rounded-3xl p-6 cursor-pointer hover:border-cyan-500/50 transition group space-y-3">
+<div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition">👥</div>
+<h3 class="text-xl font-bold text-white">เข้าร่วมห้องเรียน</h3>
+<p class="text-sm text-slate-400">กรอกรหัส Room Code เพื่อเข้าร่วมห้องเรียนที่ครูสร้างขึ้น</p>
+</div>
+<div onclick="app.navigateTo('teacherLogin')" class="glass-panel rounded-3xl p-6 cursor-pointer hover:border-purple-500/50 transition group space-y-3">
+<div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition">📊</div>
+<h3 class="text-xl font-bold text-white">Teacher Dashboard</h3>
+<p class="text-sm text-slate-400">ระบบคุณครู สร้างห้องเรียน จัดการข้อสอบ วิเคราะห์ผลการเรียนรู้</p>
+</div>
+<div onclick="app.navigateTo('ranking')" class="glass-panel rounded-3xl p-6 cursor-pointer hover:border-amber-500/50 transition group space-y-3">
+<div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition">🏆</div>
+<h3 class="text-xl font-bold text-white">กระดานผู้นำ</h3>
+<p class="text-sm text-slate-400">เช็คอันดับคะแนน Combo Master และรางวัลเกียรติยศ</p>
+</div>
+</div>
+</div>
+
+<!-- GAMES -->
+<div id="view-games" class="view-screen hidden space-y-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div><h2 class="text-3xl font-black text-white">🎮 เลือกโหมดเกม (12 Game Modes)</h2><p class="text-slate-400 text-sm">เลือกรูปแบบการเล่นเพื่อเรียนรู้การใช้ยาอย่างถูกวิธี</p></div>
+<button onclick="app.navigateTo('home')" class="px-4 py-2 rounded-xl glass-button text-sm font-semibold"><i class="fa-solid fa-arrow-left mr-1.5"></i>กลับ</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gameCardsGrid"></div>
+</div>
+
+<!-- CAMERA SETUP -->
+<div id="view-cameraSetup" class="view-screen hidden space-y-6">
+<div class="glass-panel rounded-3xl p-6 md:p-8 space-y-6 max-w-4xl mx-auto border border-cyan-500/30">
+<div class="text-center space-y-2">
+<h2 class="text-3xl font-black text-white">☝️ ทดสอบการตรวจจับนิ้วชี้</h2>
+<p class="text-slate-300 text-sm">ชูนิ้วชี้หน้ากล้อง ระบบจะจับตำแหน่งปลายนิ้วเป็น Cursor</p>
+</div>
+<div class="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-slate-700 bg-black flex items-center justify-center">
+<video id="testWebcam" class="w-full h-full object-cover" style="transform:scaleX(-1)" autoplay playsinline muted></video>
+<canvas id="testCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+<div class="absolute top-4 left-4 glass-panel px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-300"><span id="testDetectedCount">0</span> นิ้วชี้ถูกตรวจจับ</div>
+<div class="absolute bottom-4 left-4 right-4 glass-panel p-3 rounded-xl text-center text-sm text-cyan-300 font-bold">☝️ ชูนิ้วชี้ขึ้นหน้ากล้อง — วงกลม Cursor จะตามปลายนิ้ว</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-xs space-y-1"><span class="text-slate-400 font-semibold block">สถานะ:</span><span id="testHandStatus" class="text-emerald-400 font-bold">กำลังเริ่มต้น...</span></div>
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-xs space-y-1"><span class="text-slate-400 font-semibold block">เทคโนโลยี:</span><span id="testTech" class="text-cyan-400 font-bold">-</span></div>
+<div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-xs space-y-1"><span class="text-slate-400 font-semibold block">พิกัด P1:</span><span id="testFingerCoords" class="text-cyan-400 font-mono font-bold">(-, -)</span></div>
+</div>
+<div class="glass-panel p-4 rounded-2xl border border-emerald-500/30 text-sm text-emerald-200">
+<strong>☝️ วิธีใช้:</strong> ชู <strong>นิ้วชี้</strong> ขึ้นหน้ากล้อง ระบบจะตรวจจับตำแหน่งปลายนิ้วเป็น Cursor<br>
+<strong>👥 หลายคน:</strong> แต่ละคนชูนิ้วชี้ ระบบจะแยกเป็น P1, P2, P3... สีต่างกัน<br>
+<strong>🎯 เลือก:</strong> ชี้ค้างบนปุ่ม 0.8 วินาที = เลือกอัตโนมัติ
+</div>
+<div class="flex justify-between items-center pt-2">
+<button onclick="app.navigateTo('home')" class="px-5 py-2.5 rounded-xl glass-button text-sm font-semibold">ยกเลิก</button>
+<button onclick="app.startCalibratedGame()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-sm shadow-lg hover:scale-105 transition interactive-choice">✅ เริ่มเล่นเกม!</button>
+</div>
+</div>
+</div>
+
+<!-- JOIN ROOM -->
+<div id="view-joinRoom" class="view-screen hidden max-w-md mx-auto space-y-6 py-8">
+<div class="glass-panel rounded-3xl p-8 border border-cyan-500/30 text-center space-y-6">
+<div class="w-16 h-16 rounded-3xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 mx-auto flex items-center justify-center text-3xl">🔑</div>
+<div><h2 class="text-2xl font-black text-white">เข้าร่วมห้องเรียน</h2><p class="text-slate-400 text-sm">ใส่ Room Code 5 หลักจากครู</p></div>
+<div class="space-y-4">
+<div><label class="block text-xs font-semibold text-slate-300 text-left mb-1">ROOM CODE</label><input type="text" id="inputRoomCode" placeholder="เช่น 8F4K2" class="w-full text-center tracking-widest text-2xl font-black py-3 rounded-2xl bg-slate-900 border border-slate-700 text-cyan-400 focus:outline-none focus:border-cyan-500 uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+<div><label class="block text-xs font-semibold text-slate-300 text-left mb-1">ชื่อผู้เล่น</label><input type="text" id="inputPlayerName" placeholder="ระบุชื่อของคุณ" class="w-full text-center text-lg font-bold py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-cyan-500"></div>
+</div>
+<button onclick="roomEngine.joinRoom()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-extrabold text-base shadow-lg hover:scale-105 transition interactive-choice">🚀 เข้าร่วมเกม</button>
+</div>
+</div>
+
+<!-- TEACHER LOGIN -->
+<div id="view-teacherLogin" class="view-screen hidden max-w-md mx-auto py-8">
+<div class="glass-panel rounded-3xl p-8 border border-purple-500/30 text-center space-y-6">
+<div class="w-16 h-16 rounded-3xl bg-purple-500/20 text-purple-300 border border-purple-500/30 mx-auto flex items-center justify-center text-3xl">👨‍🏫</div>
+<div><h2 class="text-2xl font-black text-white">เข้าสู่ระบบคุณครู</h2><p class="text-slate-400 text-sm">จัดการห้องเรียนและบทเรียน</p></div>
+<div class="space-y-3 text-left">
+<div><label class="block text-xs text-slate-300 mb-1">Username</label><input type="text" value="teacher" id="teacherUsername" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm"></div>
+<div><label class="block text-xs text-slate-300 mb-1">Password</label><input type="password" value="1234" id="teacherPassword" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm"></div>
+</div>
+<div class="space-y-2">
+<button onclick="teacherEngine.login()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-lg transition interactive-choice">เข้าสู่ระบบ</button>
+<button onclick="teacherEngine.demoLogin()" class="w-full py-2.5 rounded-xl glass-button text-xs font-semibold text-slate-300">⚡ Demo Mode</button>
+</div>
+</div>
+</div>
+
+<!-- TEACHER DASHBOARD -->
+<div id="view-teacherDashboard" class="view-screen hidden space-y-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-panel p-6 rounded-3xl border border-purple-500/30">
+<div>
+<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold mb-2">🎓 Teacher Command Center</div>
+<h2 class="text-3xl font-black text-white">ระบบจัดการห้องเรียน & แดชบอร์ด</h2>
+</div>
+<div class="flex items-center space-x-3">
+<button onclick="teacherEngine.showCreateRoomModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg hover:scale-105 transition interactive-choice">➕ สร้างห้องเรียน</button>
+<button onclick="app.navigateTo('home')" class="px-4 py-2.5 rounded-xl glass-button text-xs font-semibold">ออก</button>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">👥 นักเรียน</span><span class="text-2xl font-black text-white">128</span></div>
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">🎮 เกมที่เล่น</span><span class="text-2xl font-black text-cyan-400">42</span></div>
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">❓ คำถาม</span><span class="text-2xl font-black text-purple-400">840</span></div>
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">🎯 ความถูกต้อง</span><span class="text-2xl font-black text-emerald-400">82.4%</span></div>
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">🏆 คะแนนเฉลี่ย</span><span class="text-2xl font-black text-amber-400">1,150</span></div>
+<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-1"><span class="text-xs text-slate-400 font-semibold block">🔥 Combo</span><span class="text-2xl font-black text-rose-400">12</span></div>
+</div>
+<div class="flex border-b border-slate-800 space-x-4 text-sm font-bold overflow-x-auto">
+<button onclick="teacherEngine.switchTab('analytics')" class="pb-3 border-b-2 border-cyan-400 text-cyan-400 whitespace-nowrap" id="tabBtnAnalytics">📊 วิเคราะห์</button>
+<button onclick="teacherEngine.switchTab('questions')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-white whitespace-nowrap" id="tabBtnQuestions">📚 คลังข้อสอบ</button>
+<button onclick="teacherEngine.switchTab('students')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-white whitespace-nowrap" id="tabBtnStudents">👨‍🎓 นักเรียน</button>
+</div>
+<div id="teacherTabAnalytics" class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="glass-panel p-5 rounded-3xl space-y-3"><h3 class="text-base font-bold text-white">📈 สถิติรายวัน</h3><div class="h-64"><canvas id="chartDailyPlays"></canvas></div></div>
+<div class="glass-panel p-5 rounded-3xl space-y-3"><h3 class="text-base font-bold text-white">🎯 ความถูกต้องแยกหมวด</h3><div class="h-64"><canvas id="chartTopicAccuracy"></canvas></div></div>
+</div>
+<div class="glass-panel p-6 rounded-3xl space-y-4">
+<div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">⚠️ คำถามที่ตอบผิดบ่อย</h3><button onclick="teacherEngine.exportCSV()" class="px-3 py-1.5 rounded-lg bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold">📥 CSV</button></div>
+<div class="overflow-x-auto"><table class="w-full text-left text-sm text-slate-300"><thead class="bg-slate-900/80 text-xs text-slate-400 uppercase"><tr><th class="p-3">ID</th><th class="p-3">หมวด</th><th class="p-3">คำถาม</th><th class="p-3">ถูก</th><th class="p-3">ผิด</th><th class="p-3">Acc</th><th class="p-3">สถานะ</th></tr></thead><tbody id="tableWeakQuestions"></tbody></table></div>
+</div>
+</div>
+<div id="teacherTabQuestions" class="hidden space-y-4">
+<div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">คลังข้อสอบ (30 ข้อ)</h3><button onclick="teacherEngine.openAddQuestionModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs">➕ เพิ่ม</button></div>
+<div class="glass-panel rounded-3xl p-4 overflow-x-auto"><table class="w-full text-left text-xs text-slate-300"><thead class="bg-slate-900 text-slate-400 uppercase"><tr><th class="p-3">#</th><th class="p-3">หมวด</th><th class="p-3">ระดับ</th><th class="p-3">คำถาม</th><th class="p-3">เฉลย</th></tr></thead><tbody id="tableQuestionBankList"></tbody></table></div>
+</div>
+<div id="teacherTabStudents" class="hidden space-y-4"><h3 class="text-lg font-bold text-white">รายชื่อนักเรียน</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="studentCardsGrid"></div></div>
+</div>
+
+<!-- RANKING -->
+<div id="view-ranking" class="view-screen hidden space-y-6 max-w-3xl mx-auto py-4">
+<div class="text-center space-y-2"><h2 class="text-3xl font-black text-white">🏆 กระดานผู้นำ</h2><p class="text-slate-400 text-sm">อันดับผู้ทำคะแนนสูงสุด</p></div>
+<div class="glass-panel rounded-3xl p-6 border border-amber-500/30 space-y-4" id="leaderboardList"></div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="view-howToPlay" class="view-screen hidden max-w-3xl mx-auto space-y-6 py-4">
+<div class="glass-panel rounded-3xl p-8 border border-slate-800 space-y-6">
+<h2 class="text-3xl font-black text-white text-center">☝️ วิธีเล่นเกม AR ใช้นิ้วชี้</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300">
+<div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2"><h3 class="text-base font-bold text-cyan-400">1. เปิดกล้อง 📷</h3><p>ระบบเปิดกล้องเว็บแคมอัตโนมัติ ตรวจจับมือที่ชูนิ้วชี้</p></div>
+<div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2"><h3 class="text-base font-bold text-emerald-400">2. ชูนิ้วชี้ ☝️</h3><p>ปลายนิ้วชี้ = ตำแหน่ง Cursor แต่ละมือ = ผู้เล่นแยกกัน</p></div>
+<div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2"><h3 class="text-base font-bold text-amber-400">3. ชี้ค้าง = เลือก 🎯</h3><p>ชี้ค้างบนปุ่ม 0.8 วินาที วงแหวนเต็ม = เลือกอัตโนมัติ</p></div>
+<div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2"><h3 class="text-base font-bold text-purple-400">4. แข่งกันตอบ! 🏆</h3><p>ใครตอบถูกก่อนได้คะแนนสะสม Combo สูงสุด</p></div>
+</div>
+<div class="glass-panel p-4 rounded-2xl border border-amber-500/30 text-sm text-amber-200">
+<strong>⚠️ สำคัญ:</strong> ต้องเปิดผ่าน <strong>Web Server</strong> เพื่อใช้ AI ตรวจจับนิ้ว<br>
+• VS Code → Live Server extension → คลิกขวา Open with Live Server<br>
+• Python → <code>python -m http.server 8000</code><br>
+• Node.js → <code>npx serve</code><br>
+• ถ้าเปิดจาก file:// จะใช้เมาส์แทน
+</div>
+</div>
+</div>
+</main>
+
+<!-- MODALS -->
+<div id="modalCreateRoom" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+<div class="max-w-lg w-full bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-5">
+<div class="flex justify-between items-center"><h3 class="text-xl font-bold text-white">➕ สร้างห้องเรียนใหม่</h3><button onclick="teacherEngine.closeCreateRoomModal()" class="text-slate-400 hover:text-white text-lg">✕</button></div>
+<div class="space-y-4 text-xs">
+<div><label class="block text-slate-300 font-semibold mb-1">ชื่อห้องเรียน</label><input type="text" id="roomTitle" value="ห้องเรียน ม.1/1 - การใช้ยาอย่างปลอดภัย" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm"></div>
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-slate-300 font-semibold mb-1">โหมดเกม</label><select id="roomGameMode" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"><option value="quiz">🎯 Quiz Rush</option><option value="balloon">🎈 Balloon</option><option value="truefalse">✅ True/False</option><option value="match">🧩 Match</option><option value="sort">🗂 Sort</option><option value="memory">🧠 Memory</option><option value="survival">❤️ Survival</option><option value="boss">👑 Boss</option><option value="speed">⚡ Speed</option><option value="team">⚔ Team</option><option value="catch">🍎 Catch</option><option value="random">🎲 Random</option></select></div>
+<div><label class="block text-slate-300 font-semibold mb-1">จำนวนข้อ</label><select id="roomQuestionCount" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-slate-300 font-semibold mb-1">เวลา/ข้อ</label><select id="roomTimePerQuestion" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"><option value="10">10 วิ</option><option value="15" selected>15 วิ</option><option value="20">20 วิ</option><option value="30">30 วิ</option></select></div>
+<div><label class="block text-slate-300 font-semibold mb-1">ความยาก</label><select id="roomDifficulty" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white"><option value="easy">ง่าย</option><option value="medium" selected>ปานกลาง</option><option value="hard">ยาก</option></select></div>
+</div>
+</div>
+<div class="pt-2 flex justify-end space-x-3">
+<button onclick="teacherEngine.closeCreateRoomModal()" class="px-4 py-2 rounded-xl glass-button text-xs font-bold text-slate-300">ยกเลิก</button>
+<button onclick="teacherEngine.generateRoom()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg interactive-choice">สร้างห้อง & QR</button>
+</div>
+</div>
+</div>
+
+<div id="modalRoomLobby" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+<div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-3xl p-6 text-center space-y-5">
+<h3 class="text-2xl font-black text-white">💊 ROOM LOBBY</h3>
+<div class="p-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 space-y-2"><span class="text-xs text-cyan-300 font-bold block">ROOM CODE</span><span id="lobbyRoomCode" class="text-4xl font-black tracking-widest text-emerald-400">8F4K2</span></div>
+<div class="flex justify-center p-3 bg-white rounded-2xl w-44 h-44 mx-auto" id="qrcodeContainer"></div>
+<p class="text-xs text-slate-400">สแกน QR Code เพื่อเข้าร่วมห้อง</p>
+<div class="text-left space-y-2"><span class="text-xs text-slate-400 font-bold block">ผู้เล่น (<span id="lobbyCount">3</span> คน):</span><div id="lobbyPlayerList" class="flex flex-wrap gap-2"></div></div>
+<div class="pt-2 flex justify-between space-x-3">
+<button onclick="document.getElementById('modalRoomLobby').classList.add('hidden')" class="px-4 py-2.5 rounded-xl glass-button text-xs font-bold text-slate-300">ปิด</button>
+<button onclick="teacherEngine.startLobbyGame()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-sm shadow-lg hover:scale-105 transition interactive-choice">▶️ เริ่มเกม</button>
+</div>
+</div>
+</div>
+
+<div id="countdownOverlay" class="countdown-overlay hidden"><div id="countdownNumber" class="countdown-number">3</div></div>
+
+<footer class="relative z-10 glass-panel border-t border-slate-800 px-4 py-3 text-center text-xs text-slate-400">💊 MEDICINE SAFETY AR — เกมการเรียนรู้เพื่อส่งเสริมความรู้ด้านการใช้ยาอย่างปลอดภัย</footer>
+</div>
+
+<script>
+// ==========================================
+// LOAD MEDIAPIPE DYNAMICALLY
+// ==========================================
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.crossOrigin = 'anonymous';
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error('Failed to load: ' + src));
+    document.head.appendChild(script);
+  });
+}
+
+async function loadMediaPipe() {
+  const loading = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  const loadingSubtext = document.getElementById('loadingSubtext');
+  loading.style.display = 'flex';
+  
+  const cdnSources = [
+    'https://unpkg.com/@mediapipe/hands@0.4.1675469240/hands.js',
+    'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js',
+    'https://cdn.skypack.dev/@mediapipe/hands@0.4.1675469240'
+  ];
+
+  for (let i = 0; i < cdnSources.length; i++) {
+    try {
+      loadingText.textContent = `กำลังโหลดระบบตรวจจับนิ้วชี้... (${i+1}/${cdnSources.length})`;
+      loadingSubtext.textContent = `ลองจาก: ${new URL(cdnSources[i]).hostname}`;
+      await loadScript(cdnSources[i]);
+      if (typeof Hands !== 'undefined') {
+        loadingText.textContent = '✅ โหลดระบบสำเร็จ!';
+        loadingSubtext.textContent = 'กำลังเริ่มต้น...';
+        await new Promise(r => setTimeout(r, 500));
+        loading.style.display = 'none';
+        console.log('✅ MediaPipe Hands loaded from:', cdnSources[i]);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Failed to load from', cdnSources[i], e);
+    }
+  }
+  
+  loadingText.textContent = '⚠️ ไม่สามารถโหลดระบบ AI ได้';
+  loadingSubtext.textContent = 'จะใช้เมาส์/สัมผัสแทน';
+  await new Promise(r => setTimeout(r, 1500));
+  loading.style.display = 'none';
+  return false;
+}
+
+// ==========================================
+// QUESTION BANK (30 Questions)
+// ==========================================
+const QUESTION_BANK=[
+{id:1,category:'การใช้ยาอย่างปลอดภัย',difficulty:'easy',question:'ก่อนใช้ยาควรทำสิ่งใดก่อน?',choices:['อ่านฉลากยาและคำแนะนำ','กินยาตามเพื่อน','เพิ่มขนาดยาเอง','กินทันทีโดยไม่ตรวจสอบ'],correctAnswer:0,explanation:'ควรตรวจสอบฉลากและคำแนะนำก่อนใช้ยาเพื่อความปลอดภัย',tip:'อ่านฉลากยาทุกครั้งก่อนใช้',points:100},
+{id:2,category:'การใช้ยาอย่างปลอดภัย',difficulty:'easy',question:'ควรใช้ยาอย่างไร?',choices:['ใช้ตามคำแนะนำที่ได้รับ','ใช้มากกว่าที่กำหนด','ใช้น้อยกว่าทุกครั้ง','ใช้ตามคนอื่น'],correctAnswer:0,explanation:'รับประทานยาตามขนาดและเวลาที่แพทย์หรือเภสัชกรระบุ',tip:'ใช้ยาตามคำแนะนำเท่านั้น',points:100},
+{id:3,category:'การใช้ยาอย่างปลอดภัย',difficulty:'medium',question:'สามารถใช้ยาของเพื่อนได้หรือไม่?',choices:['ได้เสมอ','ได้ถ้าอาการเหมือนกัน','ไม่ควรใช้โดยไม่ปรึกษาผู้เชี่ยวชาญ','ได้ถ้าเพื่อนบอกว่าไม่อันตราย'],correctAnswer:2,explanation:'สภาพร่างกายและข้อห้ามใช้ยาของแต่ละคนแตกต่างกัน',tip:'ห้ามใช้ยาของผู้อื่น',points:100},
+{id:4,category:'การใช้ยาอย่างปลอดภัย',difficulty:'easy',question:'การเพิ่มขนาดยาเองอาจเกิดอะไรขึ้น?',choices:['ไม่มีผลอะไร','อาจเพิ่มความเสี่ยงจากยาและอันตราย','ทำให้ปลอดภัยขึ้น','ทำให้ยาหมดเร็วอย่างเดียว'],correctAnswer:1,explanation:'การกินยาเกินขนาดอาจทำให้เกิดพิษต่อตับ ไต หรืออันตรายถึงชีวิต',tip:'ห้ามเพิ่มขนาดยาเอง',points:100},
+{id:5,category:'การใช้ยาอย่างปลอดภัย',difficulty:'easy',question:'สิ่งใดควรตรวจสอบก่อนใช้ยา?',choices:['ฉลากและวันหมดอายุ','สีของกล่องอย่างเดียว','ราคายาอย่างเดียว','ความชอบของเพื่อน'],correctAnswer:0,explanation:'การดูวันหมดอายุและฉลากช่วยป้องกันการใช้ยาเสื่อมสภาพ',tip:'ตรวจฉลาก+วันหมดอายุก่อนใช้',points:100},
+{id:6,category:'ฉลากและวันหมดอายุ',difficulty:'easy',question:'ถ้ายาหมดอายุแล้วควรทำอย่างไร?',choices:['ใช้ต่อให้หมด','เพิ่มขนาดยา','หลีกเลี่ยงการใช้และสอบถามวิธีกำจัด','ให้เพื่อนใช้'],correctAnswer:2,explanation:'ยาหมดอายุสารสำคัญจะเสื่อมสภาพหรืออาจเกิดสารพิษ',tip:'ทิ้งยาหมดอายุอย่างถูกวิธี',points:100},
+{id:7,category:'ฉลากและวันหมดอายุ',difficulty:'easy',question:'ฉลากยามีประโยชน์อย่างไร?',choices:['ใช้ดูข้อมูลสำคัญเกี่ยวกับยา','ใช้ตกแต่งกล่อง','ใช้ดูราคาอย่างเดียว','ไม่มีความสำคัญ'],correctAnswer:0,explanation:'ฉลากยาบอกชื่อยา วิธีใช้ ข้อควรระวัง และวันหมดอายุ',tip:'ฉลากยามีข้อมูลสำคัญ',points:100},
+{id:8,category:'ฉลากและวันหมดอายุ',difficulty:'medium',question:'หากอ่านฉลากยาไม่เข้าใจ ควรทำอย่างไร?',choices:['เดาเอาเอง','ถามบุคลากรสุขภาพ/เภสัชกร','กินยาเพิ่ม','ถามเพื่อนอย่างเดียว'],correctAnswer:1,explanation:'บุคลากรทางการแพทย์สามารถให้คำแนะนำเรื่องยาที่ถูกต้อง',tip:'ไม่เข้าใจให้ถามเภสัชกร',points:100},
+{id:9,category:'การเก็บรักษายา',difficulty:'easy',question:'ควรเก็บยาอย่างไร?',choices:['ตามคำแนะนำบนฉลาก','วางตากแดด','วางไว้ในที่ร้อนเสมอ','วางใกล้สารเคมี'],correctAnswer:0,explanation:'แสงแดดและความร้อนทำลายโครงสร้างทางเคมีของยา',tip:'เก็บยาตามฉลากกำหนด',points:100},
+{id:10,category:'การเก็บรักษายา',difficulty:'easy',question:'ยาควรเก็บให้พ้นมือใคร?',choices:['เด็กเล็กหรือผู้ที่อาจหยิบใช้โดยไม่ตั้งใจ','ผู้ใหญ่ทุกคน','เภสัชกร','ครู'],correctAnswer:0,explanation:'ป้องกันเด็กเล็กหยิบยารับประทานเองจนเกิดอันตราย',tip:'เก็บยาพ้นมือเด็ก',points:100},
+{id:11,category:'การใช้ยาปฏิชีวนะ',difficulty:'hard',question:'ยาปฏิชีวนะควรใช้เมื่อใด?',choices:['เมื่อได้รับการประเมินจากแพทย์/เภสัชกร','ทุกครั้งที่เป็นหวัด','กินเพื่อป้องกันทุกโรค','ยิ่งกินมากยิ่งดี'],correctAnswer:0,explanation:'ยาปฏิชีวนะใช้รักษาเชื้อแบคทีเรีย ไม่ใช่ไวรัสหวัด',tip:'ใช้ยาปฏิชีวนะตามแพทย์สั่ง',points:150},
+{id:12,category:'การใช้ยาปฏิชีวนะ',difficulty:'hard',question:'การใช้ยาปฏิชีวนะไม่เหมาะสมอาจเกิดปัญหาใด?',choices:['เชื้อดื้อยา','ทำให้หนังสือหนักขึ้น','ทำให้หิวเสมอ','ทำให้ยาอร่อยขึ้น'],correctAnswer:0,explanation:'กินยาปฏิชีวนะไม่ครบทำให้เชื้อดื้อยา',tip:'เชื้อดื้อยา = อันตราย',points:150},
+{id:13,category:'อาการผิดปกติจากยา',difficulty:'medium',question:'หากหลังใช้ยามีอาการผิดปกติรุนแรง ควรทำอย่างไร?',choices:['เพิ่มยาเอง','ขอความช่วยเหลือจากบุคลากรสุขภาพทันที','ซ่อนอาการ','ให้เพื่อนลองยา'],correctAnswer:1,explanation:'หยุดยาและนำซองยาไปพบแพทย์ทันที',tip:'พบแพทย์ทันทีเมื่อแพ้ยา',points:100},
+{id:14,category:'อาการผิดปกติจากยา',difficulty:'medium',question:'หากสงสัยว่าแพ้ยา ควรทำอย่างไร?',choices:['ใช้ต่อเพื่อทดสอบ','ขอคำแนะนำจากบุคลากรสุขภาพ','เพิ่มขนาดยา','แบ่งยาให้เพื่อน'],correctAnswer:1,explanation:'การรับประทานยาที่แพ้ซ้ำอาจเกิดช็อกได้',tip:'หยุดยา+ปรึกษาแพทย์',points:100},
+{id:15,category:'การแบ่งยา',difficulty:'easy',question:'ควรแบ่งยาให้เพื่อนหรือไม่?',choices:['ควรเสมอ','ไม่ควรแบ่งยาโดยไม่ประเมินความเหมาะสม','ควรแบ่งครึ่งทุกครั้ง','ให้เพื่อนเลือกเอง'],correctAnswer:1,explanation:'น้ำหนักและประวัติการแพ้ยาของแต่ละคนไม่เท่ากัน',tip:'ห้ามแบ่งยาให้ผู้อื่น',points:100},
+{id:16,category:'การแบ่งยา',difficulty:'medium',question:'ทำไมไม่ควรใช้ยาของคนอื่น?',choices:['เพราะยาแต่ละคนมีความเหมาะสมต่างกัน','เพราะกล่องไม่สวย','เพราะรสชาติไม่ดี','เพราะยาแพง'],correctAnswer:0,explanation:'ขนาดยาต้องสั่งเฉพาะบุคคลตามน้ำหนักและโรคประจำตัว',tip:'ยาแต่ละคนไม่เหมือนกัน',points:100},
+{id:17,category:'เด็กและวัยเรียน',difficulty:'easy',question:'เด็กควรใช้ยาอย่างไร?',choices:['ใช้ตามคำแนะนำสำหรับเด็กและผู้เชี่ยวชาญ','ใช้ขนาดเดียวกับผู้ใหญ่เสมอ','เพิ่มยาเอง','ใช้ของเพื่อน'],correctAnswer:0,explanation:'เด็กมีตับและไตที่ยังพัฒนาไม่เต็มที่ ต้องใช้ขนาดยาเฉพาะเด็ก',tip:'ใช้ยาตามขนาดเด็ก',points:100},
+{id:18,category:'เด็กและวัยเรียน',difficulty:'easy',question:'เมื่อไม่แน่ใจเกี่ยวกับยา ควรถามใคร?',choices:['แพทย์หรือเภสัชกร','เพื่อน','คนที่ไม่เกี่ยวข้อง','อินเทอร์เน็ตอย่างเดียว'],correctAnswer:0,explanation:'ปรึกษาเภสัชกรหรือแพทย์เพื่อความปลอดภัย',tip:'ถามผู้เชี่ยวชาญ',points:100},
+{id:19,category:'พฤติกรรมเสี่ยง',difficulty:'easy',question:'ข้อใดเป็นพฤติกรรมเสี่ยงจากการใช้ยา?',choices:['อ่านฉลาก','ตรวจวันหมดอายุ','เพิ่มขนาดยาเอง','ถามเภสัชกร'],correctAnswer:2,explanation:'การเพิ่มขนาดยาเองทำให้เกิดพิษจากยา',tip:'เพิ่มขนาดยา = อันตราย',points:100},
+{id:20,category:'พฤติกรรมเสี่ยง',difficulty:'easy',question:'ข้อใดปลอดภัยที่สุดในการใช้ยา?',choices:['กินยาโดยไม่อ่านฉลาก','ใช้ยาของเพื่อน','อ่านฉลากและใช้ตามคำแนะนำ','กินยาเพิ่มเมื่อไม่ดีขึ้นทันที'],correctAnswer:2,explanation:'ปฏิบัติตามคำเตือนบนฉลากช่วยลดอันตราย',tip:'อ่านฉลาก = ปลอดภัย',points:100},
+{id:21,category:'พฤติกรรมเสี่ยง',difficulty:'easy',question:'ควรเก็บยาไว้ในภาชนะที่มีฉลากหรือไม่?',choices:['ควร','ไม่จำเป็น','ทิ้งฉลาก','เปลี่ยนภาชนะโดยไม่ระบุข้อมูล'],correctAnswer:0,explanation:'การย้ายซองยาทำให้สับสนชนิดยา',tip:'เก็บยาในภาชนะมีฉลาก',points:100},
+{id:22,category:'พฤติกรรมเสี่ยง',difficulty:'medium',question:'หากลืมว่าต้องใช้ยาอย่างไร ควรทำอย่างไร?',choices:['เดาเอาเอง','ตรวจสอบฉลากหรือถามเภสัชกร','เพิ่มขนาดยา','ไม่สนใจ'],correctAnswer:1,explanation:'ตรวจสอบฉลากยาเพื่อยืนยันวิธีใช้ก่อนรับประทาน',tip:'ลืม = อ่านฉลากใหม่',points:100},
+{id:23,category:'พฤติกรรมเสี่ยง',difficulty:'easy',question:'ข้อใดเป็นการใช้ยาอย่างมีความรับผิดชอบ?',choices:['ใช้ตามคำแนะนำ','ใช้ตามเพื่อน','เพิ่มยาเอง','ใช้ยาหมดอายุ'],correctAnswer:0,explanation:'ปฏิบัติตนตามคำสั่งแพทย์เพื่อผลการรักษาที่ดีที่สุด',tip:'ใช้ตามคำแนะนำ = รับผิดชอบ',points:100},
+{id:24,category:'ฉลากและวันหมดอายุ',difficulty:'easy',question:'ทำไมต้องตรวจวันหมดอายุ?',choices:['เพื่อหลีกเลี่ยงการใช้ยาเสื่อมสภาพ','เพื่อดูสีของกล่อง','เพื่อดูราคา','เพื่อเก็บคะแนน'],correctAnswer:0,explanation:'ยาเสื่อมสภาพนอกจากไม่รักษาโรคแล้วอาจเป็นอันตราย',tip:'ยาหมดอายุ = อันตราย',points:100},
+{id:25,category:'พฤติกรรมเสี่ยง',difficulty:'medium',question:'ถ้าไม่รู้ว่ายาคือยาอะไร ควรทำอย่างไร?',choices:['ทดลองกิน','ถามผู้เชี่ยวชาญก่อนใช้','ให้เพื่อนกิน','เพิ่มจำนวนเม็ด'],correctAnswer:1,explanation:'ห้ามรับประทานยาที่ไม่ทราบชื่อโดยเด็ดขาด',tip:'ไม่รู้จัก = ห้ามกิน',points:100},
+{id:26,category:'พฤติกรรมเสี่ยง',difficulty:'hard',question:'การใช้ยาหลายชนิดพร้อมกันควรทำอย่างไร?',choices:['ตรวจสอบกับเภสัชกรว่ากินร่วมกันได้หรือไม่','ใช้พร้อมกันทุกชนิด','เพิ่มขนาดยา','ให้เพื่อนตัดสินใจ'],correctAnswer:0,explanation:'ยาบางชนิดอาจเกิดปฏิกิริยาต้านกันหรือเพิ่มพิษ',tip:'ถามเภสัชกรก่อนใช้หลายยา',points:150},
+{id:27,category:'พฤติกรรมเสี่ยง',difficulty:'medium',question:'ยาบางชนิดอาจทำให้ง่วงนอน ข้อใดเหมาะสม?',choices:['อ่านคำเตือนและหลีกเลี่ยงการขับขี่','ขับรถทันที','ออกกำลังหนักทันที','เพิ่มยา'],correctAnswer:0,explanation:'ยาลดน้ำมูกหรือยาแก้แพ้มักทำให้ง่วง ป้องกันอุบัติเหตุ',tip:'ง่วง = ห้ามขับรถ',points:100},
+{id:28,category:'พฤติกรรมเสี่ยง',difficulty:'easy',question:'ข้อใดไม่ควรทำอย่างยิ่ง?',choices:['อ่านฉลาก','เก็บยาเหมาะสม','ใช้ยาโดยไม่รู้ข้อมูล','สอบถามเภสัชกร'],correctAnswer:2,explanation:'การกินยาโดยไม่มีความรู้อาจเกิดผลข้างเคียงรุนแรง',tip:'ห้ามใช้ยาโดยไม่รู้ข้อมูล',points:100},
+{id:29,category:'พฤติกรรมเสี่ยง',difficulty:'medium',question:'การซื้อยาจากแหล่งไม่น่าเชื่อถือมีความเสี่ยงอย่างไร?',choices:['อาจได้รับยาปลอมหรือปนสารอันตราย','ถูกกว่าอย่างเดียว','ปลอดภัยกว่าเสมอ','ไม่มีความเสี่ยง'],correctAnswer:0,explanation:'ยาปลอมมักผสมสเตียรอยด์และอันตราย',tip:'ซื้อยาจากร้านที่น่าเชื่อถือ',points:100},
+{id:30,category:'การใช้ยาอย่างปลอดภัย',difficulty:'easy',question:'หากมีข้อสงสัยเกี่ยวกับการใช้ยา สิ่งใดเหมาะสมที่สุด?',choices:['เดาเอง','ถามบุคลากรสุขภาพหรือเภสัชกร','ถามเพื่อนเพียงอย่างเดียว','เพิ่มขนาดยา'],correctAnswer:1,explanation:'เภสัชกรเป็นผู้เชี่ยวชาญด้านยาโดยตรง',tip:'สงสัย = ถามเภสัชกร',points:100}
+];
+
+const MATCH_DATA=[
+{text:'อ่านฉลากก่อนใช้ยา',category:'safe'},{text:'ใช้ยาตามคำแนะนำ',category:'safe'},{text:'ตรวจวันหมดอายุ',category:'safe'},
+{text:'ถามเภสัชกรเมื่อไม่แน่ใจ',category:'safe'},{text:'เก็บยาพ้นมือเด็ก',category:'safe'},
+{text:'เพิ่มขนาดยาเอง',category:'risky'},{text:'ใช้ยาของเพื่อน',category:'risky'},{text:'แบ่งยาให้คนอื่น',category:'risky'},
+{text:'ซื้อยาจากแหล่งไม่น่าเชื่อถือ',category:'risky'},{text:'ใช้ยาหมดอายุ',category:'risky'}
+];
+
+const DEMO_STUDENTS=[];
+const CLASSROOMS=['ม.1/1','ม.1/2','ม.2/1','ม.2/2','ม.3/1'];
+const THAI_NAMES=['สมชาย','สมหญิง','วิชัย','พรทิพย์','อนุชา','กนกพร','ธนากร','สุภาพร','พิชัย','มนทนา','รัฐ','จิรา','กิตติ','นภา','สุรชัย','ปิยะ','วันชัย','อรุณ','ประเสริฐ','กัลยา','ณัฐ','ศิริ','วรา','พิมพ์','กฤต','นุช','ธน','ชุตินันท์','พิชิต','ศศิ'];
+for(let i=0;i<30;i++){const total=Math.floor(Math.random()*130)+30;const correct=Math.floor(Math.random()*100)+20;DEMO_STUDENTS.push({id:i+1,name:THAI_NAMES[i]||'นักเรียน'+(i+1),class:CLASSROOMS[i%5],score:Math.floor(Math.random()*3000)+500,games:Math.floor(Math.random()*20)+1,correct,total,accuracy:Math.round(correct/total*100),level:Math.floor(Math.random()*5)+1,xp:Math.floor(Math.random()*5000),badges:['🎯','🔥','⚡','🧠'].slice(0,Math.floor(Math.random()*4))});}
+
+const GAME_MODES=[
+{id:'quiz',name:'🎯 Quiz Rush',desc:'ตอบคำถามอย่างรวดเร็ว',difficulty:'Easy',color:'from-cyan-500 to-blue-600',players:'1-6 คน'},
+{id:'match',name:'🧩 Category Match',desc:'แยกหมวดหมู่ ปลอดภัย vs เสี่ยง',difficulty:'Medium',color:'from-emerald-500 to-teal-600',players:'1-4 คน'},
+{id:'balloon',name:'🎈 Balloon Pop',desc:'ใช้นิ้วชี้ยิงลูกโป่งคำตอบ',difficulty:'Easy',color:'from-sky-400 to-blue-600',players:'1-6 คน'},
+{id:'truefalse',name:'✅ True / False',desc:'ตัดสินใจจริงหรือเท็จ',difficulty:'Easy',color:'from-green-500 to-emerald-600',players:'1-6 คน'},
+{id:'sort',name:'🗂 Sort & Drop',desc:'จัดหมวดหมู่พฤติกรรม',difficulty:'Medium',color:'from-amber-500 to-orange-600',players:'1-4 คน'},
+{id:'memory',name:'🧠 Memory Match',desc:'เปิดการ์ดจับคู่',difficulty:'Hard',color:'from-purple-500 to-indigo-600',players:'1-2 คน'},
+{id:'catch',name:'🍎 Catch Safe',desc:'จับคำตอบที่ปลอดภัย',difficulty:'Easy',color:'from-rose-500 to-pink-600',players:'1-4 คน'},
+{id:'runner',name:'🏃 Medicine Runner',desc:'วิ่งเลือกเลนคำตอบ',difficulty:'Hard',color:'from-yellow-500 to-amber-600',players:'1-2 คน'},
+{id:'boss',name:'👑 Boss Quiz',desc:'ปราบจอมมารยาอันตราย',difficulty:'Hard',color:'from-red-500 to-rose-600',players:'1 คน'},
+{id:'team',name:'⚔ Team Battle',desc:'แข่งขันสะสมคะแนนทีม',difficulty:'Medium',color:'from-indigo-500 to-purple-600',players:'2-4 ทีม'},
+{id:'survival',name:'❤️ Survival',desc:'ตอบต่อเนื่อง ห้ามผิดเกิน 3',difficulty:'Hard',color:'from-pink-500 to-rose-600',players:'1 คน'},
+{id:'random',name:'🎲 Random Mode',desc:'สุ่มโหมดเกมทุกข้อ',difficulty:'Mixed',color:'from-violet-500 to-fuchsia-600',players:'ทุกคน'}
+];
+
+const PLAYER_COLORS=['#06b6d4','#10b981','#f97316','#a855f7','#ec4899','#eab308'];
+
+// ==========================================
+// AUDIO ENGINE
+// ==========================================
+class SynthesizedAudioEngine{
+constructor(){this.audioCtx=null;this.soundEnabled=true}
+init(){if(!this.audioCtx){try{this.audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}}
+toggleSound(){this.soundEnabled=!this.soundEnabled;document.getElementById('soundIcon').className=this.soundEnabled?'fa-solid fa-volume-high':'fa-solid fa-volume-xmark'}
+playCorrect(){if(!this.soundEnabled)return;this.init();if(!this.audioCtx)return;try{const now=this.audioCtx.currentTime;const o=this.audioCtx.createOscillator();const g=this.audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(523.25,now);o.frequency.exponentialRampToValueAtTime(880,now+0.2);g.gain.setValueAtTime(0.3,now);g.gain.exponentialRampToValueAtTime(0.01,now+0.3);o.connect(g);g.connect(this.audioCtx.destination);o.start(now);o.stop(now+0.3)}catch(e){}}
+playWrong(){if(!this.soundEnabled)return;this.init();if(!this.audioCtx)return;try{const now=this.audioCtx.currentTime;const o=this.audioCtx.createOscillator();const g=this.audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,now);o.frequency.setValueAtTime(164.81,now+0.15);g.gain.setValueAtTime(0.3,now);g.gain.exponentialRampToValueAtTime(0.01,now+0.4);o.connect(g);g.connect(this.audioCtx.destination);o.start(now);o.stop(now+0.4)}catch(e){}}
+playPop(){if(!this.soundEnabled)return;this.init();if(!this.audioCtx)return;try{const now=this.audioCtx.currentTime;const o=this.audioCtx.createOscillator();const g=this.audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(400,now);o.frequency.exponentialRampToValueAtTime(800,now+0.08);g.gain.setValueAtTime(0.4,now);g.gain.exponentialRampToValueAtTime(0.01,now+0.08);o.connect(g);g.connect(this.audioCtx.destination);o.start(now);o.stop(now+0.08)}catch(e){}}
+playCountdown(){if(!this.soundEnabled)return;this.init();if(!this.audioCtx)return;try{const now=this.audioCtx.currentTime;const o=this.audioCtx.createOscillator();const g=this.audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(660,now);g.gain.setValueAtTime(0.2,now);g.gain.exponentialRampToValueAtTime(0.01,now+0.15);o.connect(g);g.connect(this.audioCtx.destination);o.start(now);o.stop(now+0.15)}catch(e){}}
+}
+const audioEngine=new SynthesizedAudioEngine();
+
+// ==========================================
+// FINGER TRACKING ENGINE
+// ==========================================
+class FingerTracker{
+constructor(){
+this.videoEl=null;this.canvasEl=null;this.ctx=null;
+this.hands=null;this.isCameraActive=false;this.mediaPipeLoaded=false;
+this.animFrameId=null;this.isSending=false;this.lastSendTime=0;this.sendInterval=100;
+this.players=[];
+this.DWELL_CIRC=201;
+for(let i=0;i<6;i++){
+this.players.push({
+id:i+1,x:-100,y:-100,smoothX:-100,smoothY:-100,detected:false,
+cursorEl:document.getElementById('cursor-p'+(i+1)),
+dwellEl:document.getElementById('dwell-p'+(i+1)),
+dwellCircle:document.querySelector('#dwell-p'+(i+1)+' .dwell-progress'),
+indicatorEl:document.getElementById('hand-ind-'+(i+1)),
+hoverTarget:null,hoverStartTime:0,hoverProgress:0,lastClickTime:0
+});
+}
+this.mousePos={x:window.innerWidth/2,y:window.innerHeight/2};
+this.setupMouse();
+}
+
+setupMouse(){
+document.addEventListener('mousemove',(e)=>{this.mousePos={x:e.clientX,y:e.clientY}},{passive:true});
+document.addEventListener('touchmove',(e)=>{if(e.touches&&e.touches[0]){this.mousePos={x:e.touches[0].clientX,y:e.touches[0].clientY}}},{passive:true});
+document.addEventListener('touchstart',(e)=>{if(e.touches&&e.touches[0]){this.mousePos={x:e.touches[0].clientX,y:e.touches[0].clientY}}},{passive:true});
+}
+
+async init(vidId,canvId){
+this.videoEl=document.getElementById(vidId);
+this.canvasEl=document.getElementById(canvId);
+if(this.canvasEl){
+this.ctx=this.canvasEl.getContext('2d');
+this.resizeCanvas();
+window.addEventListener('resize',()=>this.resizeCanvas());
+}
+
+// Check if MediaPipe is loaded
+if(typeof Hands==='undefined'){
+console.warn('⚠️ MediaPipe Hands not loaded - using mouse fallback');
+this.mediaPipeLoaded=false;
+this.updateStatus();
+return;
+}
+
+try{
+this.hands=new Hands({
+locateFile:(file)=>{
+return `https://unpkg.com/@mediapipe/hands@0.4.1675469240/${file}`;
+}
+});
+this.hands.setOptions({
+maxNumHands:6,
+modelComplexity:0,
+minDetectionConfidence:0.6,
+minTrackingConfidence:0.5,
+selfieMode:true
+});
+this.hands.onResults((r)=>{
+this.isSending=false;
+try{this.processResults(r)}catch(e){console.warn('processResults err:',e)}
+});
+this.mediaPipeLoaded=true;
+console.log('✅ MediaPipe Hands initialized successfully');
+}catch(e){
+console.error('❌ MediaPipe init failed:',e);
+this.mediaPipeLoaded=false;
+}
+this.updateStatus();
+}
+
+async startCamera(){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{width:{ideal:640},height:{ideal:480},facingMode:'user'}
+});
+if(this.videoEl){
+this.videoEl.srcObject=stream;
+await this.videoEl.play().catch(()=>{});
+}
+this.isCameraActive=true;
+console.log('✅ Camera started');
+}catch(e){
+console.warn('❌ Camera error:',e);
+this.isCameraActive=false;
+}
+this.updateStatus();
+this.startLoop();
+}
+
+startLoop(){
+if(this.animFrameId)cancelAnimationFrame(this.animFrameId);
+const loop=()=>{
+try{
+if(this.ctx&&this.canvasEl){
+this.ctx.clearRect(0,0,this.canvasEl.width,this.canvasEl.height);
+}
+
+// Send to MediaPipe
+if(this.isCameraActive&&this.mediaPipeLoaded&&this.hands&&!this.isSending){
+const now=Date.now();
+if(now-this.lastSendTime>=this.sendInterval){
+if(this.videoEl&&this.videoEl.readyState>=2&&this.videoEl.videoWidth>0){
+this.isSending=true;
+this.lastSendTime=now;
+try{
+this.hands.send({image:this.videoEl});
+}catch(err){
+this.isSending=false;
+console.warn('Send error:',err.message);
+}
+}
+}
+}
+
+// Mouse fallback for P1
+const anyDetected=this.players.some(p=>p.detected);
+if(!anyDetected||!this.isCameraActive||!this.mediaPipeLoaded){
+this.players[0].x=this.mousePos.x;
+this.players[0].y=this.mousePos.y;
+this.players[0].smoothX=this.mousePos.x;
+this.players[0].smoothY=this.mousePos.y;
+this.players[0].detected=true;
+}
+
+// Update all players
+for(let i=0;i<6;i++){
+const p=this.players[i];
+if(p.detected){
+p.smoothX+=(p.x-p.smoothX)*0.4;
+p.smoothY+=(p.y-p.smoothY)*0.4;
+p.x=p.smoothX;
+p.y=p.smoothY;
+this.updateCursor(i);
+this.checkHover(i);
+}
+}
+}catch(e){
+console.warn('Loop err:',e);
+}
+this.animFrameId=requestAnimationFrame(loop);
+};
+loop();
+}
+
+resizeCanvas(){
+if(this.canvasEl){this.canvasEl.width=window.innerWidth;this.canvasEl.height=window.innerHeight}
+}
+
+updateStatus(){
+const st=document.getElementById('handStatusText');
+const ts=document.getElementById('testHandStatus');
+const tech=document.getElementById('testTech');
+let msg='🖱️ โหมดเมาส์ (P1)';let techMsg='เมาส์/สัมผัส';
+if(this.isCameraActive&&this.mediaPipeLoaded){msg='☝️ ตรวจจับนิ้วชี้ (6 มือ)';techMsg='MediaPipe Hands'}
+else if(this.isCameraActive){msg='📷 กล้องเปิด (ใช้เมาส์)';techMsg='กล้อง'}
+if(st)st.innerText=msg;if(ts)ts.innerText=msg;if(tech)tech.innerText=techMsg;
+}
+
+processResults(results){
+for(let i=0;i<6;i++)this.players[i].detected=false;
+
+if(results&&results.multiHandLandmarks&&results.multiHandLandmarks.length>0){
+const count=Math.min(results.multiHandLandmarks.length,6);
+for(let i=0;i<count;i++){
+try{
+const lm=results.multiHandLandmarks[i];
+const tip=lm[8];
+const x=tip.x*this.canvasEl.width;
+const y=tip.y*this.canvasEl.height;
+this.players[i].x=x;
+this.players[i].y=y;
+this.players[i].detected=true;
+this.drawHand(lm,PLAYER_COLORS[i]);
+}catch(e){}
+}
+const countEl=document.getElementById('testDetectedCount');
+if(countEl)countEl.innerText=count;
+const coordsEl=document.getElementById('testFingerCoords');
+if(coordsEl&&this.players[0].detected)coordsEl.innerText=`(${Math.round(this.players[0].x)}, ${Math.round(this.players[0].y)})`;
+}
+
+for(let i=0;i<6;i++){
+const ind=this.players[i].indicatorEl;
+if(ind){
+if(this.players[i].detected)ind.classList.add('detected');
+else ind.classList.remove('detected');
+}
+}
+}
+
+drawHand(lm,color){
+if(!this.ctx)return;
+try{
+this.ctx.save();
+this.ctx.strokeStyle=color;
+this.ctx.lineWidth=2;
+this.ctx.globalAlpha=0.5;
+const conns=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+conns.forEach(([a,b])=>{
+this.ctx.beginPath();
+this.ctx.moveTo(lm[a].x*this.canvasEl.width,lm[a].y*this.canvasEl.height);
+this.ctx.lineTo(lm[b].x*this.canvasEl.width,lm[b].y*this.canvasEl.height);
+this.ctx.stroke();
+});
+[4,8,12,16,20].forEach(idx=>{
+this.ctx.beginPath();
+const fx=lm[idx].x*this.canvasEl.width;
+const fy=lm[idx].y*this.canvasEl.height;
+const r=idx===8?10:5;
+this.ctx.arc(fx,fy,r,0,Math.PI*2);
+this.ctx.fillStyle=color;
+this.ctx.globalAlpha=idx===8?1:0.7;
+this.ctx.fill();
+if(idx===8){
+this.ctx.beginPath();
+this.ctx.arc(fx,fy,20,0,Math.PI*2);
+this.ctx.fillStyle=color+'22';
+this.ctx.fill();
+}
+});
+this.ctx.restore();
+}catch(e){}
+}
+
+updateCursor(idx){
+const p=this.players[idx];
+const el=p.cursorEl;
+el.classList.add('active');
+el.style.left=(p.x-28)+'px';
+el.style.top=(p.y-28)+'px';
+const dwellEl=p.dwellEl;
+dwellEl.classList.add('active');
+dwellEl.style.left=(p.x-38)+'px';
+dwellEl.style.top=(p.y-38)+'px';
+}
+
+checkHover(idx){
+const p=this.players[idx];
+const els=document.querySelectorAll('.interactive-choice,.glass-button,.hoverable-btn');
+let found=null;
+els.forEach(el=>{
+const r=el.getBoundingClientRect();
+if(p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom)found=el;
+});
+if(found!==p.hoverTarget){
+p.hoverTarget=found;
+p.hoverStartTime=Date.now();
+p.hoverProgress=0;
+if(found)p.cursorEl.classList.add('hovering');
+else p.cursorEl.classList.remove('hovering');
+p.dwellCircle.style.strokeDashoffset=String(this.DWELL_CIRC);
+}
+if(p.hoverTarget){
+const elapsed=Date.now()-p.hoverStartTime;
+p.hoverProgress=Math.min(elapsed/800,1);
+const offset=this.DWELL_CIRC*(1-p.hoverProgress);
+p.dwellCircle.style.strokeDashoffset=String(offset);
+if(p.hoverProgress>=1){
+const now=Date.now();
+if(now-p.lastClickTime>1200){
+try{audioEngine.playPop()}catch(e){}
+try{p.hoverTarget.click()}catch(e){}
+p.lastClickTime=now;
+p.hoverTarget=null;
+p.hoverProgress=0;
+p.cursorEl.classList.remove('hovering');
+p.dwellCircle.style.strokeDashoffset=String(this.DWELL_CIRC);
+}
+}
+}
+}
+
+stop(){
+if(this.animFrameId){cancelAnimationFrame(this.animFrameId);this.animFrameId=null}
+if(this.videoEl&&this.videoEl.srcObject){this.videoEl.srcObject.getTracks().forEach(t=>t.stop());this.videoEl.srcObject=null}
+this.isCameraActive=false;
+this.isSending=false;
+for(let i=0;i<6;i++){
+this.players[i].cursorEl.classList.remove('active');
+this.players[i].dwellEl.classList.remove('active');
+this.players[i].indicatorEl.classList.remove('detected');
+this.players[i].detected=false;
+}
+}
+}
+const fingerTracker=new FingerTracker();
+
+// ==========================================
+// GAME ENGINE
+// ==========================================
+class GameEngine{
+constructor(){
+this.currentMode='quiz';this.questions=[];this.currentIndex=0;
+this.score=0;this.combo=0;this.maxCombo=0;this.correctCount=0;this.wrongCount=0;
+this.timer=15;this.timerInterval=null;this.timePerQ=15;
+this.powerups={hint:1,freeze:1,double:1};
+this.isDoubleScore=false;this.isPaused=false;
+this.bossHP=5;this.survivalLives=3;
+this.matchSelected=null;this.sortItems=[];this.sortPlaced=0;
+this.memoryCards=[];this.memoryFlipped=[];this.memoryMatched=0;
+this.multiplayer=false;this.playerScores=[0,0,0,0,0,0];this.playerCorrect=[0,0,0,0,0,0];
+}
+startGame(mode,multiplayer=false){
+this.multiplayer=multiplayer;
+this.currentMode=mode==='random'?['quiz','balloon','truefalse','match','sort','survival','speed'][Math.floor(Math.random()*7)]:mode;
+this.questions=[...QUESTION_BANK].sort(()=>0.5-Math.random()).slice(0,parseInt(document.getElementById('roomQuestionCount')?.value||10));
+this.currentIndex=0;this.score=0;this.combo=0;this.maxCombo=0;this.correctCount=0;this.wrongCount=0;
+this.powerups={hint:1,freeze:1,double:1};
+this.isDoubleScore=false;this.isPaused=false;this.bossHP=5;this.survivalLives=3;
+this.timePerQ=parseInt(document.getElementById('roomTimePerQuestion')?.value||15);
+this.playerScores=[0,0,0,0,0,0];this.playerCorrect=[0,0,0,0,0,0];
+document.getElementById('countHint').innerText=this.powerups.hint;
+document.getElementById('countFreeze').innerText=this.powerups.freeze;
+document.getElementById('countDouble').innerText=this.powerups.double;
+document.getElementById('gameOverModal').classList.add('hidden');
+document.getElementById('feedbackModal').classList.add('hidden');
+app.showCountdown(async()=>{
+app.navigateToView('view-arGame');
+await fingerTracker.init('webcamVideo','arCanvas');
+await fingerTracker.startCamera();
+document.getElementById('hudGameTitle').innerText=this.currentMode.toUpperCase()+(multiplayer?' 👥':'');
+this.loadQuestion();
+});
+}
+restartGame(){this.startGame(this.currentMode,this.multiplayer)}
+loadQuestion(){
+if(this.currentMode==='survival'&&this.survivalLives<=0){this.endGame();return}
+if(this.currentMode==='boss'&&this.bossHP<=0){this.endGame();return}
+if(this.currentIndex>=this.questions.length&&!['survival','speed'].includes(this.currentMode)){this.endGame();return}
+const q=this.currentMode==='survival'?QUESTION_BANK[Math.floor(Math.random()*QUESTION_BANK.length)]:this.questions[this.currentIndex];
+document.getElementById('hudQuestionProgress').innerText=this.currentMode==='survival'?`❤️ x${this.survivalLives} | ถูก: ${this.correctCount}`:`ข้อ ${this.currentIndex+1} / ${this.questions.length}`;
+document.getElementById('hudScore').innerText=this.score;
+this.resetTimer();
+const c=document.getElementById('arPromptContainer');
+switch(this.currentMode){
+case'balloon':this.renderBalloon(q,c);break;
+case'truefalse':this.renderTrueFalse(q,c);break;
+case'match':this.renderMatch(c);return;
+case'sort':this.renderSort(c);return;
+case'memory':this.renderMemory(c);return;
+case'boss':this.renderBoss(q,c);break;
+case'catch':this.renderCatch(q,c);break;
+case'speed':this.renderSpeed(q,c);break;
+case'team':this.renderTeam(q,c);break;
+default:this.renderQuiz(q,c);
+}
+}
+resetTimer(){
+clearInterval(this.timerInterval);
+this.timer=this.currentMode==='speed'?60:this.timePerQ;
+document.getElementById('hudTimer').innerText=this.timer;
+document.getElementById('hudTimer').classList.remove('text-rose-400');
+document.getElementById('hudTimer').classList.add('text-amber-400');
+this.timerInterval=setInterval(()=>{
+if(this.isPaused)return;
+this.timer--;
+document.getElementById('hudTimer').innerText=this.timer;
+if(this.timer<=5){document.getElementById('hudTimer').classList.remove('text-amber-400');document.getElementById('hudTimer').classList.add('text-rose-400')}
+if(this.timer<=0){clearInterval(this.timerInterval);this.handleAnswer(-1)}
+},1000);
+}
+renderQuiz(q,c){
+c.innerHTML=`<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 space-y-5 animate-fade-in">
+<div class="flex items-center gap-2 mb-2"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${q.difficulty==='easy'?'bg-emerald-500/20 text-emerald-300':q.difficulty==='medium'?'bg-amber-500/20 text-amber-300':'bg-rose-500/20 text-rose-300'}">${q.difficulty}</span><span class="text-xs text-slate-400">${q.category}</span>${this.multiplayer?'<span class="ml-auto text-xs text-cyan-400 font-bold">👥 หลายคน</span>':''}</div>
+<div class="p-4 rounded-2xl bg-cyan-950/60 border border-cyan-800 text-cyan-200 text-lg font-extrabold text-center">${q.question}</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${q.choices.map((ch,i)=>`
+<button onclick="gameEngine.handleAnswer(${i})" class="interactive-choice p-4 rounded-2xl glass-button text-left font-bold text-base text-slate-100 hover:border-cyan-400 flex items-center space-x-3">
+<span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center font-black flex-shrink-0">${String.fromCharCode(65+i)}</span><span>${ch}</span></button>`).join('')}</div></div>`;
+}
+renderTrueFalse(q,c){
+const isTrue=Math.random()>0.5;
+const statement=isTrue?q.choices[q.correctAnswer]:q.choices[(q.correctAnswer+1)%4];
+this._tfAnswer=isTrue;
+c.innerHTML=`<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 space-y-6 text-center animate-fade-in">
+<div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700"><p class="text-lg font-bold text-white">${q.question}</p></div>
+<div class="p-6 rounded-2xl bg-cyan-950/40 border border-cyan-500/30"><p class="text-2xl font-black text-white">"${statement}"</p></div>
+<div class="grid grid-cols-2 gap-6 max-w-md mx-auto">
+<button onclick="gameEngine.handleTF(true)" class="interactive-choice p-6 rounded-3xl bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 font-black text-2xl hover:bg-emerald-500/40 transition">✅ จริง</button>
+<button onclick="gameEngine.handleTF(false)" class="interactive-choice p-6 rounded-3xl bg-rose-500/20 border-2 border-rose-500 text-rose-300 font-black text-2xl hover:bg-rose-500/40 transition">❌ เท็จ</button>
+</div></div>`;
+}
+handleTF(answer){this.processResult(answer===this._tfAnswer,QUESTION_BANK[0])}
+renderBalloon(q,c){
+const colors=['from-sky-400 to-blue-600','from-rose-400 to-pink-600','from-emerald-400 to-green-600','from-amber-400 to-orange-600'];
+c.innerHTML=`<div class="space-y-4 text-center animate-fade-in">
+<div class="glass-panel p-4 rounded-2xl text-xl font-black text-amber-300">🎈 ยิงลูกโป่งคำตอบที่ถูก: ${q.question}</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 py-8">${q.choices.map((ch,i)=>`
+<button onclick="gameEngine.handleAnswer(${i})" class="interactive-choice balloon-float p-6 rounded-full bg-gradient-to-b ${colors[i]} border-2 border-white/60 text-white font-extrabold text-sm shadow-xl flex flex-col items-center justify-center h-32 w-32 mx-auto hover:scale-110 transition" style="animation-delay:${i*0.5}s"><span class="text-2xl">🎈</span><span class="text-xs text-center mt-1">${ch}</span></button>`).join('')}</div></div>`;
+}
+renderMatch(c){
+const items=[...MATCH_DATA].sort(()=>0.5-Math.random()).slice(0,8);
+this.sortItems=items;this.sortPlaced=0;this.matchSelected=null;
+const left=[...items].sort(()=>0.5-Math.random());
+c.innerHTML=`<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 animate-fade-in">
+<p class="text-center text-slate-400 mb-4 text-sm">เลือกการ์ด แล้วเลือกหมวดที่ถูกต้อง</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div><h3 class="font-bold text-indigo-400 mb-3 text-center text-sm">📖 พฤติกรรม</h3><div class="space-y-2">${left.map(it=>`
+<button onclick="gameEngine.selectMatch('left','${it.category}',this)" class="match-left w-full text-left glass-button rounded-xl px-4 py-3 text-sm font-bold hover:border-indigo-400 transition" data-cat="${it.category}">${it.text}</button>`).join('')}</div></div>
+<div><h3 class="font-bold text-emerald-400 mb-3 text-center text-sm">📝 หมวด</h3><div class="space-y-2">
+<button onclick="gameEngine.selectMatch('right','safe',this)" class="match-right w-full text-left glass-button rounded-xl px-4 py-3 text-sm font-bold hover:border-emerald-400 transition bg-emerald-500/10 border border-emerald-500/30">✅ ปลอดภัย</button>
+<button onclick="gameEngine.selectMatch('right','risky',this)" class="match-right w-full text-left glass-button rounded-xl px-4 py-3 text-sm font-bold hover:border-rose-400 transition bg-rose-500/10 border border-rose-500/30">⚠️ เสี่ยง</button>
+</div></div></div>
+<div class="text-center mt-4 text-sm text-slate-400">จับคู่แล้ว: <span id="matchProgress" class="text-cyan-400 font-bold">0</span>/${items.length}</div></div>`;
+this.resetTimer();
+}
+selectMatch(side,cat,el){
+if(side==='left'){
+document.querySelectorAll('.match-left').forEach(e=>{e.classList.remove('border-indigo-400','bg-indigo-500/20')});
+el.classList.add('border-indigo-400','bg-indigo-500/20');
+this.matchSelected=cat;
+}else if(this.matchSelected){
+const isCorrect=this.matchSelected===cat;
+if(isCorrect){
+audioEngine.playCorrect();
+const leftEl=document.querySelector('.match-left.border-indigo-400');
+if(leftEl){leftEl.classList.add('opacity-30','pointer-events-none');leftEl.classList.remove('border-indigo-400','bg-indigo-500/20')}
+this.sortPlaced++;this.correctCount++;this.score+=100+this.timer*5;
+document.getElementById('hudScore').innerText=this.score;
+const mp=document.getElementById('matchProgress');if(mp)mp.innerText=this.sortPlaced;
+if(this.sortPlaced>=this.sortItems.length){clearInterval(this.timerInterval);setTimeout(()=>this.endGame(),500)}
+}else{audioEngine.playWrong();this.wrongCount++;this.combo=0}
+this.matchSelected=null;
+document.querySelectorAll('.match-left').forEach(e=>e.classList.remove('border-indigo-400','bg-indigo-500/20'));
+}
+}
+renderSort(c){
+const items=[...MATCH_DATA].sort(()=>0.5-Math.random());
+this.sortItems=items;this.sortPlaced=0;
+c.innerHTML=`<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 animate-fade-in">
+<p class="text-center text-slate-400 mb-4 text-sm">เลือกการ์ด แล้วกดหมวดที่ถูกต้อง</p>
+<div class="flex flex-wrap justify-center gap-2 mb-6">${items.map((it,i)=>`
+<button onclick="gameEngine.selectSortCard(${i},this)" class="sort-card-item glass-button px-4 py-2 rounded-xl text-sm font-bold" data-idx="${i}" data-cat="${it.category}">${it.text}</button>`).join('')}</div>
+<div class="grid grid-cols-2 gap-4">
+<button onclick="gameEngine.dropSort('safe')" class="interactive-choice p-6 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/40 text-center hover:bg-emerald-500/20 transition"><div class="text-3xl mb-1">✅</div><div class="font-bold text-emerald-400">ปลอดภัย</div></button>
+<button onclick="gameEngine.dropSort('risky')" class="interactive-choice p-6 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 text-center hover:bg-rose-500/20 transition"><div class="text-3xl mb-1">⚠️</div><div class="font-bold text-rose-400">เสี่ยง</div></button>
+</div>
+<div class="text-center mt-4 text-sm text-slate-400">จัดแล้ว: <span id="sortProgress" class="text-cyan-400 font-bold">0</span>/${items.length}</div></div>`;
+this._selectedSortIdx=null;this.resetTimer();
+}
+selectSortCard(idx,el){
+document.querySelectorAll('.sort-card-item').forEach(e=>e.classList.remove('border-cyan-400','bg-cyan-500/20'));
+if(el&&!el.classList.contains('placed')){el.classList.add('border-cyan-400','bg-cyan-500/20');this._selectedSortIdx=idx}
+}
+dropSort(zone){
+if(this._selectedSortIdx===null)return;
+const item=this.sortItems[this._selectedSortIdx];
+const isCorrect=item.category===zone;
+const el=document.querySelector(`.sort-card-item[data-idx="${this._selectedSortIdx}"]`);
+if(isCorrect){
+audioEngine.playCorrect();el.classList.add('placed');
+this.sortPlaced++;this.correctCount++;this.score+=100+this.timer*3;
+document.getElementById('hudScore').innerText=this.score;
+document.getElementById('sortProgress').innerText=this.sortPlaced;
+if(this.sortPlaced>=this.sortItems.length){clearInterval(this.timerInterval);setTimeout(()=>this.endGame(),500)}
+}else{audioEngine.playWrong();this.wrongCount++;this.combo=0;el.classList.add('border-rose-500');setTimeout(()=>el.classList.remove('border-rose-500'),500)}
+this._selectedSortIdx=null;
+document.querySelectorAll('.sort-card-item').forEach(e=>e.classList.remove('border-cyan-400','bg-cyan-500/20'));
+}
+renderMemory(c){
+const pairs=[...QUESTION_BANK].sort(()=>0.5-Math.random()).slice(0,6);
+const cards=[];pairs.forEach((q,i)=>{cards.push({pairId:i,text:q.question.substring(0,20)+'...',type:'q'});cards.push({pairId:i,text:q.choices[q.correctAnswer],type:'a'})});
+this.memoryCards=cards.sort(()=>0.5-Math.random());this.memoryFlipped=[];this.memoryMatched=0;
+c.innerHTML=`<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 animate-fade-in">
+<p class="text-center text-slate-400 mb-4 text-sm">เปิดการ์ดจับคู่คำถามกับคำตอบ</p>
+<div class="grid grid-cols-3 md:grid-cols-4 gap-3">${this.memoryCards.map((card,i)=>`
+<div onclick="gameEngine.flipMemory(${i})" class="memory-card-el glass-button rounded-xl aspect-square flex items-center justify-center p-2 text-center cursor-pointer hover:bg-white/10 transition text-xs font-bold" data-idx="${i}" data-pair="${card.pairId}" data-type="${card.type}">
+<span class="mem-content hidden">${card.text}</span><span class="mem-back text-2xl">❓</span></div>`).join('')}</div>
+<div class="text-center mt-4 text-sm text-slate-400">จับคู่แล้ว: <span id="memProgress" class="text-cyan-400 font-bold">0</span>/${pairs.length}</div></div>`;
+this.resetTimer();
+}
+flipMemory(idx){
+const el=document.querySelectorAll('.memory-card-el')[idx];
+if(el.classList.contains('matched')||this.memoryFlipped.includes(idx)||this.memoryFlipped.length>=2)return;
+el.querySelector('.mem-content').classList.remove('hidden');el.querySelector('.mem-back').classList.add('hidden');
+el.style.borderColor='#06b6d4';this.memoryFlipped.push(idx);
+if(this.memoryFlipped.length===2){
+const[a,b]=this.memoryFlipped;
+const ca=this.memoryCards[a],cb=this.memoryCards[b];
+if(ca.pairId===cb.pairId&&ca.type!==cb.type){
+setTimeout(()=>{
+document.querySelectorAll('.memory-card-el')[a].classList.add('matched');document.querySelectorAll('.memory-card-el')[a].style.borderColor='#10b981';
+document.querySelectorAll('.memory-card-el')[b].classList.add('matched');document.querySelectorAll('.memory-card-el')[b].style.borderColor='#10b981';
+this.memoryMatched++;this.correctCount++;this.score+=150;
+document.getElementById('hudScore').innerText=this.score;
+document.getElementById('memProgress').innerText=this.memoryMatched;
+this.memoryFlipped=[];audioEngine.playCorrect();
+if(this.memoryMatched>=this.memoryCards.length/2){clearInterval(this.timerInterval);setTimeout(()=>this.endGame(),500)}
+},400);
+}else{
+setTimeout(()=>{
+[a,b].forEach(i=>{const e=document.querySelectorAll('.memory-card-el')[i];e.querySelector('.mem-content').classList.add('hidden');e.querySelector('.mem-back').classList.remove('hidden');e.style.borderColor=''});
+this.wrongCount++;this.memoryFlipped=[];audioEngine.playWrong();
+},800);
+}
+}
+}
+renderBoss(q,c){
+c.innerHTML=`<div class="text-center space-y-4 animate-fade-in">
+<div class="text-6xl">👹</div><div class="font-bold text-rose-400 text-lg">จอมมารยาอันตราย</div>
+<div class="flex gap-2 justify-center">${Array(5).fill(0).map((_,i)=>`<div class="w-8 h-8 rounded-full ${i<this.bossHP?'bg-rose-500':'bg-slate-700'} transition-all"></div>`).join('')}</div>
+<div class="glass-panel p-6 rounded-3xl border border-rose-500/40">
+<p class="text-lg font-bold mb-4 text-white">${q.question}</p>
+<div class="grid grid-cols-2 gap-3">${q.choices.map((ch,i)=>`
+<button onclick="gameEngine.handleBoss(${i})" class="interactive-choice glass-button rounded-xl px-4 py-3 font-bold text-sm hover:border-rose-400 transition">${String.fromCharCode(65+i)}. ${ch}</button>`).join('')}</div></div></div>`;
+}
+handleBoss(idx){
+clearInterval(this.timerInterval);
+const q=this.questions[this.currentIndex];
+const isCorrect=idx===q.correctAnswer;
+if(isCorrect){this.bossHP--;this.correctCount++;this.score+=200+this.timer*10;audioEngine.playCorrect()}
+else{this.wrongCount++;audioEngine.playWrong()}
+document.getElementById('hudScore').innerText=this.score;
+this.showFeedback(isCorrect,q);
+}
+renderCatch(q,c){
+const items=[...q.choices].sort(()=>0.5-Math.random());
+const correctText=q.choices[q.correctAnswer];
+c.innerHTML=`<div class="space-y-4 text-center animate-fade-in">
+<div class="glass-panel p-4 rounded-2xl text-lg font-black text-amber-300">🍎 จับคำตอบที่ถูกต้อง: ${q.question}</div>
+<div class="relative w-full h-64 overflow-hidden rounded-2xl bg-slate-900/50 border border-slate-700">
+${items.map((it,i)=>{const isC=it===correctText;const left=10+i*22;const dur=3+Math.random()*2;
+return`<button onclick="gameEngine.handleCatch(${isC})" class="catch-item interactive-choice px-4 py-3 rounded-xl ${isC?'bg-emerald-500/30 border border-emerald-500':'bg-rose-500/30 border border-rose-500'} text-sm font-bold" style="left:${left}%;animation-duration:${dur}s;animation-delay:${i*0.5}s">${it}</button>`}).join('')}
+</div></div>`;
+setTimeout(()=>{this.currentIndex++;this.loadQuestion()},5000);
+}
+handleCatch(isCorrect){
+if(isCorrect){this.correctCount++;this.score+=150;audioEngine.playCorrect()}
+else{this.wrongCount++;audioEngine.playWrong()}
+document.getElementById('hudScore').innerText=this.score;
+}
+renderSpeed(q,c){this.renderQuiz(q,c)}
+renderTeam(q,c){
+const teams=[{name:'ทีมฟ้า',color:'#3b82f6',score:0},{name:'ทีมเขียว',color:'#22c55e',score:0},{name:'ทีมส้ม',color:'#f97316',score:0},{name:'ทีมม่วง',color:'#8b5cf6',score:0}];
+if(!this._teams)this._teams=teams;
+const tIdx=this.currentIndex%4;const team=this._teams[tIdx];
+c.innerHTML=`<div class="text-center space-y-4 animate-fade-in">
+<div class="text-xl font-bold" style="color:${team.color}">${team.name} ตอบ</div>
+<div class="flex justify-center gap-3 mb-2">${this._teams.map(t=>`<span class="px-3 py-1 rounded-xl glass-panel text-xs font-bold" style="color:${t.color}">${t.name}: ${t.score}</span>`).join('')}</div>
+<div class="glass-panel p-6 rounded-3xl border border-cyan-500/40">
+<p class="text-lg font-bold mb-4">${q.question}</p>
+<div class="grid grid-cols-2 gap-3">${q.choices.map((ch,i)=>`
+<button onclick="gameEngine.handleTeam(${i},${tIdx})" class="interactive-choice glass-button rounded-xl px-4 py-3 font-bold text-sm hover:border-cyan-400 transition">${String.fromCharCode(65+i)}. ${ch}</button>`).join('')}</div></div></div>`;
+}
+handleTeam(idx,tIdx){
+clearInterval(this.timerInterval);
+const q=this.questions[this.currentIndex];
+if(idx===q.correctAnswer){this._teams[tIdx].score+=100+this.timer*5;this.correctCount++;audioEngine.playCorrect()}
+else{this.wrongCount++;audioEngine.playWrong()}
+document.getElementById('hudScore').innerText=this._teams.reduce((s,t)=>s+t.score,0);
+this.currentIndex++;setTimeout(()=>this.loadQuestion(),1200);
+}
+handleAnswer(idx){
+clearInterval(this.timerInterval);
+const q=this.currentMode==='survival'?this.questions[this.currentIndex]||QUESTION_BANK[Math.floor(Math.random()*QUESTION_BANK.length)]:this.questions[this.currentIndex];
+this.processResult(idx===q.correctAnswer,q);
+}
+processResult(isCorrect,q){
+if(isCorrect){
+audioEngine.playCorrect();this.combo++;this.correctCount++;
+if(this.combo>this.maxCombo)this.maxCombo=this.combo;
+let pts=q.points+(this.timer*10);
+if(this.combo>=2)pts+=50;if(this.combo>=5)pts+=100;if(this.combo>=10)pts+=250;
+if(this.isDoubleScore){pts*=2;this.isDoubleScore=false}
+this.score+=pts;
+}else{
+audioEngine.playWrong();this.combo=0;this.wrongCount++;
+if(this.currentMode==='survival')this.survivalLives--;
+}
+document.getElementById('hudScore').innerText=this.score;
+if(this.combo>=2){document.getElementById('hudComboBadge').classList.remove('hidden');document.getElementById('hudComboCount').innerText=this.combo}
+else{document.getElementById('hudComboBadge').classList.add('hidden')}
+this.showFeedback(isCorrect,q);
+}
+showFeedback(isCorrect,q){
+document.getElementById('feedbackIcon').innerText=isCorrect?'🎉':'⚠️';
+document.getElementById('feedbackTitle').innerText=isCorrect?'ถูกต้อง!':'ยังไม่ถูกต้อง';
+document.getElementById('feedbackTitle').className=`text-2xl font-black ${isCorrect?'text-emerald-400':'text-rose-400'}`;
+document.getElementById('feedbackExplanation').innerText=`📘 ${q.explanation}`;
+document.getElementById('feedbackTip').innerText=`💡 ${q.tip||'สิ่งที่ควรจำ'}`;
+document.getElementById('feedbackModal').classList.remove('hidden');
+}
+nextQuestion(){document.getElementById('feedbackModal').classList.add('hidden');this.currentIndex++;this.loadQuestion()}
+usePowerup(type){
+if(this.powerups[type]<=0)return;
+this.powerups[type]--;
+document.getElementById(`count${type.charAt(0).toUpperCase()+type.slice(1)}`).innerText=this.powerups[type];
+if(type==='freeze'){this.timer+=5;document.getElementById('hudTimer').innerText=this.timer}
+else if(type==='double'){this.isDoubleScore=true}
+else if(type==='hint'){const btns=document.querySelectorAll('.interactive-choice');let h=0;btns.forEach(b=>{if(h<1){b.style.opacity='0.2';b.style.pointerEvents='none';h++}})}
+audioEngine.playPop();
+}
+endGame(){
+clearInterval(this.timerInterval);
+fingerTracker.stop();
+const total=this.correctCount+this.wrongCount;
+const acc=total>0?Math.round(this.correctCount/total*100):0;
+document.getElementById('goScore').innerText=this.score.toLocaleString();
+document.getElementById('goAccuracy').innerText=acc+'%';
+document.getElementById('goCorrect').innerText=`${this.correctCount}/${total}`;
+document.getElementById('goCombo').innerText=this.maxCombo;
+const mpDiv=document.getElementById('multiplayerScores');
+if(this.multiplayer){
+const detected=fingerTracker.players.filter(p=>p.detected);
+if(detected.length>1){
+mpDiv.innerHTML='<h3 class="font-bold text-white mb-2">🏆 คะแนนแต่ละผู้เล่น</h3>'+
+fingerTracker.players.map((p,i)=>{
+if(!p.detected)return'';
+return`<div class="flex items-center justify-between p-2 rounded-xl glass-panel" style="border:1px solid ${PLAYER_COLORS[i]}"><span style="color:${PLAYER_COLORS[i]}" class="font-bold">P${i+1}</span><span class="text-yellow-400 font-bold">${this.playerScores[i]} คะแนน</span></div>`;
+}).join('');
+}else{mpDiv.innerHTML=''}
+}else{mpDiv.innerHTML=''}
+document.getElementById('feedbackModal').classList.add('hidden');
+document.getElementById('gameOverModal').classList.remove('hidden');
+if(typeof confetti==='function'&&acc>=60){try{confetti({particleCount:100,spread:70,origin:{y:0.6}})}catch(e){}}
+try{const history=JSON.parse(localStorage.getItem('gameHistory')||'[]');
+history.push({date:new Date().toISOString(),mode:this.currentMode,score:this.score,correct:this.correctCount,total,time:this.timePerQ*total,combo:this.maxCombo,accuracy:acc,multiplayer:this.multiplayer});
+localStorage.setItem('gameHistory',JSON.stringify(history))}catch(e){}
+}
+}
+const gameEngine=new GameEngine();
+
+const arEngine={
+exitGame(){
+clearInterval(gameEngine.timerInterval);
+fingerTracker.stop();
+document.getElementById('feedbackModal').classList.add('hidden');
+document.getElementById('gameOverModal').classList.add('hidden');
+app.navigateTo('home');
+}
+};
+
+const roomEngine={
+joinRoom(){
+const code=document.getElementById('inputRoomCode').value.trim();
+const name=document.getElementById('inputPlayerName').value.trim();
+if(!code||!name){alert('กรุณากรอกรหัสห้องและชื่อ');return}
+gameEngine.startGame('quiz',true);
+}
+};
+
+// ==========================================
+// TEACHER ENGINE
+// ==========================================
+class TeacherEngine{
+constructor(){this.isAuthenticated=false;this.charts={}}
+login(){this.isAuthenticated=true;app.navigateToView('view-teacherDashboard');this.initDashboard()}
+demoLogin(){this.login()}
+initDashboard(){setTimeout(()=>{this.initCharts();this.populateTables();this.populateStudents()},100)}
+switchTab(tab){
+['Analytics','Questions','Students'].forEach(t=>{
+document.getElementById('teacherTab'+t).classList.add('hidden');
+document.getElementById('tabBtn'+t).className="pb-3 border-b-2 border-transparent text-slate-400 hover:text-white whitespace-nowrap";
+});
+const capTab=tab.charAt(0).toUpperCase()+tab.slice(1);
+document.getElementById('teacherTab'+capTab).classList.remove('hidden');
+document.getElementById('tabBtn'+capTab).className="pb-3 border-b-2 border-cyan-400 text-cyan-400 font-bold whitespace-nowrap";
+}
+initCharts(){
+const ctx1=document.getElementById('chartDailyPlays');
+if(!ctx1)return;
+if(this.charts.d)this.charts.d.destroy();
+this.charts.d=new Chart(ctx1.getContext('2d'),{type:'bar',data:{labels:['จ','อ','พ','พฤ','ศ','ส','อา'],datasets:[{label:'การเล่น',data:[12,19,28,35,42,30,25],backgroundColor:'rgba(6,182,212,0.6)',borderColor:'#06b6d4',borderWidth:2,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8'}},x:{ticks:{color:'#94a3b8'}}}}});
+const ctx2=document.getElementById('chartTopicAccuracy');
+if(!ctx2)return;
+if(this.charts.t)this.charts.t.destroy();
+this.charts.t=new Chart(ctx2.getContext('2d'),{type:'radar',data:{labels:['ใช้ยาปลอดภัย','อ่านฉลาก','เก็บรักษายา','ยาปฏิชีวนะ','แพ้ยา','พฤติกรรมเสี่ยง'],datasets:[{label:'ความถูกต้อง %',data:[88,92,85,45,60,78],backgroundColor:'rgba(139,92,246,0.3)',borderColor:'#8b5cf6',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,max:100,ticks:{color:'#94a3b8',backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.1)'},angleLines:{color:'rgba(255,255,255,0.1)'},pointLabels:{color:'#94a3b8'}}},plugins:{legend:{labels:{color:'#94a3b8'}}}}});
+}
+populateTables(){
+const weak=[{id:11,cat:'ยาปฏิชีวนะ',text:'ยาปฏิชีวนะควรใช้เมื่อใด?',c:32,w:68,acc:'32%',st:'🔴 ต้องทบทวน'},{id:12,cat:'ยาปฏิชีวนะ',text:'ผลจากการใช้ยาปฏิชีวนะไม่ถูกต้อง?',c:41,w:59,acc:'41%',st:'🔴 ต้องทบทวน'},{id:26,cat:'พฤติกรรมเสี่ยง',text:'การใช้ยาหลายชนิดร่วมกัน?',c:58,w:42,acc:'58%',st:'🟡 ปานกลาง'},{id:14,cat:'อาการผิดปกติ',text:'หากสงสัยว่าแพ้ยา?',c:62,w:38,acc:'62%',st:'🟡 ปานกลาง'},{id:3,cat:'การใช้ยาปลอดภัย',text:'สามารถใช้ยาของเพื่อนได้หรือไม่?',c:71,w:29,acc:'71%',st:'🟢 ดี'}];
+document.getElementById('tableWeakQuestions').innerHTML=weak.map(w=>`<tr class="border-b border-slate-800 hover:bg-slate-800/40"><td class="p-3">#${w.id}</td><td class="p-3">${w.cat}</td><td class="p-3 font-semibold text-white">${w.text}</td><td class="p-3 text-emerald-400 font-bold">${w.c}</td><td class="p-3 text-rose-400 font-bold">${w.w}</td><td class="p-3 font-bold">${w.acc}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-bold bg-slate-800 border border-slate-700">${w.st}</span></td></tr>`).join('');
+document.getElementById('tableQuestionBankList').innerHTML=QUESTION_BANK.map(q=>`<tr class="border-b border-slate-800 hover:bg-slate-800/40"><td class="p-3">${q.id}</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 font-semibold text-xs">${q.category}</span></td><td class="p-3"><span class="px-2 py-0.5 rounded ${q.difficulty==='easy'?'bg-emerald-950 text-emerald-300':q.difficulty==='medium'?'bg-amber-950 text-amber-300':'bg-rose-950 text-rose-300'} text-xs">${q.difficulty}</span></td><td class="p-3 text-white font-medium max-w-xs truncate">${q.question}</td><td class="p-3 text-emerald-400 font-bold text-xs">${q.choices[q.correctAnswer]}</td></tr>`).join('');
+}
+populateStudents(){
+document.getElementById('studentCardsGrid').innerHTML=DEMO_STUDENTS.slice(0,12).map(s=>`<div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-2 hover:border-cyan-500/30 transition">
+<div class="flex items-center space-x-3"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white text-sm">${s.name[0]}</div><div><div class="font-bold text-white text-sm">${s.name}</div><div class="text-xs text-slate-400">${s.class} | Lv.${s.level}</div></div></div>
+<div class="flex justify-between text-xs"><span class="text-emerald-400 font-bold">${s.accuracy}% ถูก</span><span class="text-amber-400 font-bold">⭐ ${s.score.toLocaleString()}</span></div>
+<div class="flex gap-1">${s.badges.map(b=>`<span class="text-sm">${b}</span>`).join('')}</div></div>`).join('');
+}
+showCreateRoomModal(){document.getElementById('modalCreateRoom').classList.remove('hidden')}
+closeCreateRoomModal(){document.getElementById('modalCreateRoom').classList.add('hidden')}
+generateRoom(){
+this.closeCreateRoomModal();
+const code=Array(5).fill(0).map(()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*31)]).join('');
+document.getElementById('lobbyRoomCode').innerText=code;
+document.getElementById('modalRoomLobby').classList.remove('hidden');
+const qr=document.getElementById('qrcodeContainer');qr.innerHTML='';
+try{new QRCode(qr,{text:window.location.href+'#join?code='+code,width:160,height:160})}catch(e){qr.innerHTML='<p class="text-xs text-slate-500 p-4">QR: '+code+'</p>'}
+const names=['Ahmad','Fatimah','Ali','Nur','Hassan'];
+const colors=['blue','emerald','purple','amber','rose'];
+document.getElementById('lobbyCount').innerText=names.length;
+document.getElementById('lobbyPlayerList').innerHTML=names.map((n,i)=>`<span class="px-3 py-1 rounded-full bg-${colors[i]}-500/20 text-${colors[i]}-300 text-xs font-bold border border-${colors[i]}-500/40">🟦 ${n}</span>`).join('');
+}
+startLobbyGame(){document.getElementById('modalRoomLobby').classList.add('hidden');gameEngine.startGame(document.getElementById('roomGameMode').value,true)}
+openAddQuestionModal(){alert('ฟีเจอร์เพิ่มคำถาม - เปิดฟอร์มเพิ่มคำถามใหม่')}
+exportCSV(){
+let csv='ID,Category,Question,Correct,Wrong,Accuracy\n';
+QUESTION_BANK.forEach(q=>{csv+=`${q.id},${q.category},"${q.question}",${Math.floor(Math.random()*80)+20},${Math.floor(Math.random()*50)+10},${Math.floor(Math.random()*60)+40}%\n`});
+const blob=new Blob([csv],{type:'text/csv'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='medicine_safety_data.csv';a.click();
+}
+}
+const teacherEngine=new TeacherEngine();
+
+// ==========================================
+// APP ROUTER
+// ==========================================
+class App{
+constructor(){this.currentView='home';this.mediaPipeReady=false}
+async init(){
+this.renderGameCards();
+this.renderLeaderboard();
+// Pre-load MediaPipe
+this.mediaPipeReady=await loadMediaPipe();
+}
+async navigateTo(viewId){
+document.querySelectorAll('.view-screen').forEach(v=>v.classList.add('hidden'));
+const target=document.getElementById('view-'+viewId);
+if(target)target.classList.remove('hidden');
+this.currentView=viewId;
+if(viewId==='cameraSetup'){
+setTimeout(async()=>{
+if(!this.mediaPipeReady){
+this.mediaPipeReady=await loadMediaPipe();
+}
+await fingerTracker.init('testWebcam','testCanvas');
+await fingerTracker.startCamera();
+},200);
+}else if(viewId!=='arGame'){fingerTracker.stop()}
+if(viewId==='teacherDashboard'){teacherEngine.initDashboard()}
+if(viewId==='ranking'){this.renderLeaderboard()}
+window.scrollTo(0,0);
+}
+navigateToView(fullId){document.querySelectorAll('.view-screen').forEach(v=>v.classList.add('hidden'));const t=document.getElementById(fullId);if(t)t.classList.remove('hidden')}
+renderGameCards(){
+const grid=document.getElementById('gameCardsGrid');if(!grid)return;
+grid.innerHTML=GAME_MODES.map(m=>`<div onclick="app.launchGame('${m.id}')" class="glass-panel rounded-3xl p-6 cursor-pointer hover:border-cyan-500/50 transition group space-y-3 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br ${m.color} opacity-0 group-hover:opacity-10 transition"></div>
+<div class="relative z-10 space-y-3"><div class="flex justify-between items-start"><h3 class="text-xl font-bold text-white">${m.name}</h3><span class="px-2 py-0.5 rounded-full text-xs font-bold ${m.difficulty==='Easy'?'bg-emerald-500/20 text-emerald-300':m.difficulty==='Medium'?'bg-amber-500/20 text-amber-300':m.difficulty==='Hard'?'bg-rose-500/20 text-rose-300':'bg-purple-500/20 text-purple-300'}">${m.difficulty}</span></div>
+<p class="text-sm text-slate-400">${m.desc}</p>
+<div class="flex justify-between items-center pt-2"><span class="text-xs text-slate-500"><i class="fa-solid fa-users mr-1"></i>${m.players}</span><button class="px-4 py-1.5 rounded-xl bg-gradient-to-r ${m.color} text-white text-xs font-bold shadow-lg group-hover:scale-105 transition">เล่นเลย</button></div></div></div>`).join('');
+}
+async launchGame(mode){
+if(!this.mediaPipeReady){
+this.mediaPipeReady=await loadMediaPipe();
+}
+gameEngine.startGame(mode,false);
+}
+async startQuickPlay(){
+if(!this.mediaPipeReady){this.mediaPipeReady=await loadMediaPipe()}
+gameEngine.startGame('quiz',false);
+}
+async startMultiplayer(){
+if(!this.mediaPipeReady){this.mediaPipeReady=await loadMediaPipe()}
+gameEngine.startGame('quiz',true);
+}
+async startCalibratedGame(){
+if(!this.mediaPipeReady){this.mediaPipeReady=await loadMediaPipe()}
+gameEngine.startGame('quiz',true);
+}
+showCountdown(callback){
+const overlay=document.getElementById('countdownOverlay');
+const num=document.getElementById('countdownNumber');
+overlay.classList.remove('hidden');
+let count=3;num.innerText=count;audioEngine.playCountdown();
+const interval=setInterval(()=>{
+count--;
+if(count>0){num.innerText=count;num.style.animation='none';num.offsetHeight;num.style.animation='countPulse 1s ease-out';audioEngine.playCountdown()}
+else if(count===0){num.innerText='GO!';num.style.color='#10b981';num.style.animation='none';num.offsetHeight;num.style.animation='countPulse 1s ease-out';audioEngine.playCorrect()}
+else{clearInterval(interval);overlay.classList.add('hidden');num.style.color='#06b6d4';callback()}
+},1000);
+}
+toggleFullscreen(){if(!document.fullscreenElement){document.documentElement.requestFullscreen().catch(()=>{})}else{document.exitFullscreen()}}
+renderLeaderboard(){
+const list=document.getElementById('leaderboardList');if(!list)return;
+const sorted=[...DEMO_STUDENTS].sort((a,b)=>b.score-a.score).slice(0,15);
+const medals=['🥇','🥈','🥉'];
+list.innerHTML=sorted.map((s,i)=>`<div class="flex items-center justify-between p-3 rounded-xl ${i<3?'bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20':'bg-slate-800/30'} hover:bg-slate-800/50 transition">
+<div class="flex items-center space-x-3"><span class="text-xl font-black ${i<3?'text-amber-400':'text-slate-500'} w-8 text-center">${i<3?medals[i]:i+1}</span><div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white text-xs">${s.name[0]}</div><div><div class="font-bold text-white text-sm">${s.name}</div><div class="text-xs text-slate-400">${s.class} | Lv.${s.level}</div></div></div>
+<div class="text-right"><div class="text-lg font-black text-amber-400">${s.score.toLocaleString()}</div><div class="text-xs text-slate-400">${s.accuracy}% ถูก | ${s.games} เกม</div></div></div>`).join('');
+}
+}
+const app=new App();
+
+window.onload=()=>app.init();
+</script>
+</body>
+</html>
