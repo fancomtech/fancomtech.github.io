@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AR EDU GAME · รู้ทันยา & คลังคำถามกลาง</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="cam-wrap">
+    <video id="cam" autoplay playsinline muted></video>
+    <canvas id="hand-canvas"></canvas>
+    <div class="vignette"></div>
+  </div>
+
+  <div id="app">
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="panel hero">
+        <div class="badge">AR EDU · FINGER CONTROL</div>
+        <h1>AR EDU GAME</h1>
+        <p class="sub">คลังคำถามกลาง · หลายหมวด · หลายโหมด<br>ควบคุมด้วยนิ้วชี้ผ่านเว็บแคม</p>
+        <button class="btn primary" onclick="chooseRole('student')" data-finger>🎓 นักเรียน — เริ่มเล่น</button>
+        <button class="btn ghost" onclick="chooseRole('teacher')" data-finger>👩‍🏫 ครู — จัดการหมวด & คำถาม</button>
+        <button class="btn ghost" onclick="showHowTo()" data-finger>📖 วิธีใช้</button>
+      </div>
+    </section>
+
+    <!-- TEACHER -->
+    <section id="screen-teacher" class="screen">
+      <div class="panel wide">
+        <div class="head-row">
+          <h2>👩‍🏫 แดชบอร์ดครู</h2>
+          <button class="btn-sm" onclick="goHome()">ออก</button>
+        </div>
+        <div class="tabs">
+          <button class="ttab active" data-tab="dash" onclick="switchTeacherTab('dash')">สถิติ</button>
+          <button class="ttab" data-tab="cats" onclick="switchTeacherTab('cats')">หมวด</button>
+          <button class="ttab" data-tab="qs" onclick="switchTeacherTab('qs')">คำถาม</button>
+          <button class="ttab" data-tab="hist" onclick="switchTeacherTab('hist')">ประวัติ</button>
+          <button class="ttab" data-tab="data" onclick="switchTeacherTab('data')">ข้อมูล</button>
+        </div>
+
+        <div id="tp-dash" class="tpanel active">
+          <div id="dash-stats" class="stats-grid"></div>
+          <div class="two-col">
+            <div><h3>คำถามต่อหมวด</h3><div id="dash-cats" class="mini-list"></div></div>
+            <div><h3>โหมดยอดนิยม</h3><div id="dash-modes" class="mini-list"></div></div>
+          </div>
+        </div>
+
+        <div id="tp-cats" class="tpanel">
+          <div class="head-row"><h3>จัดการหมวดหมู่</h3>
+            <button class="btn primary btn-sm" onclick="Admin.addCat()">+ เพิ่มหมวด</button></div>
+          <div id="cat-summary" class="stats-grid" style="margin-bottom:12px"></div>
+          <div class="filters">
+            <select id="cat-sort" onchange="Admin.setSort(this.value)" class="input" style="width:auto;margin:0">
+              <option value="order">ลำดับที่จัดไว้</option>
+              <option value="name">เรียงตามชื่อ</option>
+              <option value="count">เรียงตามจำนวนคำถาม</option>
+              <option value="newest">แก้ไขล่าสุด</option>
+            </select>
+          </div>
+          <div id="cat-list" class="list-box admin-list"></div>
+        </div>
+
+        <div id="tp-qs" class="tpanel">
+          <div class="head-row"><h3>คลังคำถามกลาง</h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn primary btn-sm" onclick="Admin.addQ()">+ เพิ่มคำถาม</button>
+              <button class="btn-sm" onclick="Admin.findDuplicates()">ตรวจซ้ำ</button>
+              <button class="btn-sm" onclick="Admin.validateAll()">ตรวจความครบ</button>
+              <button class="btn-sm" onclick="Admin.exportFiltered()">ส่งออกตามกรอง</button>
+              <button class="btn-sm" onclick="Admin.importCSV()">นำเข้า CSV</button>
+              <input type="file" id="csv-import-file" accept=".csv" hidden onchange="Admin.handleCSV(event)">
+            </div>
+          </div>
+          <div class="filters">
+            <input type="text" id="q-search" placeholder="ค้นหาข้อความหรือรหัส..." oninput="Admin.qPage=1;Admin.renderQ()">
+            <select id="q-filter-cat" onchange="Admin.qPage=1;Admin.renderQ()"><option value="">ทุกหมวด</option></select>
+            <select id="q-filter-diff" onchange="Admin.qPage=1;Admin.renderQ()">
+              <option value="">ทุกระดับยาก</option>
+              <option value="easy">ง่าย</option>
+              <option value="medium">ปานกลาง</option>
+              <option value="hard">ยาก</option>
+            </select>
+            <select id="q-filter-type" onchange="Admin.qPage=1;Admin.renderQ()">
+              <option value="">ทุกประเภท</option>
+              <option value="mcq">ปรนัย</option>
+              <option value="tf">ถูก/ผิด</option>
+            </select>
+            <select id="q-filter-status" onchange="Admin.qPage=1;Admin.renderQ()">
+              <option value="">ทุกสถานะ</option>
+              <option value="active">เปิดใช้</option>
+              <option value="inactive">ปิดใช้</option>
+            </select>
+            <span id="q-count-label" class="muted"></span>
+          </div>
+          <div id="q-bulk" class="bulk-bar" style="display:none">
+            <span>เลือกแล้ว <b id="q-sel-count">0</b> ข้อ</span>
+            <button class="btn-sm" onclick="Admin.selectAllPage()">เลือกทั้งหน้า</button>
+            <button class="btn-sm" onclick="Admin.bulkStatus('active')">เปิดใช้</button>
+            <button class="btn-sm" onclick="Admin.bulkStatus('inactive')">ปิดใช้</button>
+            <button class="btn-sm" onclick="Admin.bulkMoveCat()">ย้ายหมวด</button>
+            <button class="btn-sm danger" onclick="Admin.bulkDelete()">ลบที่เลือก</button>
+            <button class="btn-sm" onclick="Admin.clearSel()">ยกเลิก</button>
+          </div>
+          <div id="q-list" class="list-box admin-list"></div>
+          <div id="q-pager" class="pager"></div>
+        </div>
+
+        <div id="tp-hist" class="tpanel">
+          <h3>ประวัติการเล่น</h3>
+          <div id="hist-list" class="list-box"></div>
+        </div>
+
+        <div id="tp-data" class="tpanel">
+          <h3>สำรอง / นำเข้าข้อมูล</h3>
+          <p class="muted mb">ข้อมูลเก็บในเบราว์เซอร์ (LocalStorage) · ส่งออกเพื่อย้ายเครื่อง</p>
+          <button class="btn primary" onclick="exportData()">📥 ส่งออก JSON</button>
+          <button class="btn ghost" onclick="exportCSV()">📊 ส่งออก CSV</button>
+          <button class="btn ghost" onclick="importData()">📤 นำเข้า JSON</button>
+          <input type="file" id="import-file" accept=".json" hidden onchange="handleImport(event)">
+          <button class="btn danger-outline mt" onclick="resetData()">คืนค่าเริ่มต้น</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETUP (Student) -->
+    <section id="screen-setup" class="screen">
+      <div class="panel wide">
+        <div class="head-row">
+          <h2>ตั้งค่าเกม</h2>
+          <button class="btn-sm" onclick="goHome()">กลับ</button>
+        </div>
+
+        <label class="lbl">ชื่อผู้เล่น</label>
+        <input type="text" id="player-name" value="ผู้เล่น1" class="input">
+
+        <label class="lbl">รูปแบบเกม</label>
+        <div id="mode-grid" class="mode-grid"></div>
+
+        <label class="lbl">หมวดเนื้อหา (เลือกได้หลายหมวด)</label>
+        <div id="cat-grid" class="cat-grid"></div>
+
+        <label class="lbl">จำนวนข้อ</label>
+        <div class="count-row">
+          <label class="chip"><input type="radio" name="qcount" value="5" checked><span>5</span></label>
+          <label class="chip"><input type="radio" name="qcount" value="10"><span>10</span></label>
+          <label class="chip"><input type="radio" name="qcount" value="15"><span>15</span></label>
+          <label class="chip"><input type="radio" name="qcount" value="20"><span>20</span></label>
+          <label class="chip"><input type="radio" name="qcount" value="custom"><span>กำหนดเอง</span></label>
+        </div>
+        <div id="custom-wrap" style="display:none" class="mb">
+          <input type="number" id="custom-count" min="1" max="100" value="7" class="input" style="max-width:120px">
+        </div>
+
+        <label class="lbl">ระดับความยาก</label>
+        <select id="diff-select" class="input">
+          <option value="all">ทุก수준</option>
+          <option value="easy">ง่าย</option>
+          <option value="medium">ปานกลาง</option>
+          <option value="hard">ยาก</option>
+        </select>
+
+        <p id="avail-count" class="ok-msg">คำถามที่พร้อมเล่น: -</p>
+
+        <button class="btn primary btn-lg" onclick="startPlay()" data-finger>🚀 เริ่มเล่น (เปิดกล้อง)</button>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="screen-game" class="screen">
+      <div class="panel game-panel">
+        <div class="bar">
+          <span id="g-mode">โหมด</span>
+          <span id="g-progress">1/5</span>
+          <span id="g-timer" style="display:none">30s</span>
+          <span id="g-extra"></span>
+          <span class="score-pill">⭐ <b id="g-score">0</b></span>
+        </div>
+        <div class="hint">☝️ ชี้ค้างที่ตัวเลือก ~0.85 วินาที เพื่อเลือก</div>
+        <div id="game-stage"></div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="screen-result" class="screen">
+      <div class="panel hero">
+        <h2>สรุปผล</h2>
+        <div class="big" id="r-score">0</div>
+        <div id="r-detail"></div>
+        <button class="btn primary" onclick="playAgain()" data-finger>เล่นอีกครั้ง</button>
+        <button class="btn ghost" onclick="goHome()" data-finger>หน้าหลัก</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="js/default-data.js?v=5"></script>
+  <script src="js/store.js?v=5"></script>
+  <script src="js/engine.js?v=5"></script>
+  <script src="js/finger.js?v=5"></script>
+  <script src="js/modes.js?v=5"></script>
+  <script src="js/admin.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>
