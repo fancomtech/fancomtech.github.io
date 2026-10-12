@@ -53,15 +53,22 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
-        .light ::-webkit-scrollbar-track {
+        html:not(.dark) ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
-        .light ::-webkit-scrollbar-thumb {
+        html:not(.dark) ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
+        }
+
+        /* Hover active state for AR finger pointing */
+        .ar-hover-active {
+            transform: scale(1.03) !important;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.6) !important;
+            border-color: #38bdf8 !important;
         }
     </style>
 </head>
-<body class="bg-slate-950 dark:bg-slate-950 light:bg-slate-100 text-slate-100 dark:text-slate-100 light:text-slate-800 min-h-screen overflow-x-hidden">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen overflow-x-hidden transition-colors duration-300">
 
     <div id="app-container" class="relative w-full h-screen overflow-hidden flex flex-col justify-between">
 
@@ -70,17 +77,17 @@
         <canvas id="output_canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
 
         <!-- SCREEN 1: MAIN MENU -->
-        <div id="start-screen" class="relative z-20 flex flex-col items-center justify-between h-full p-4 md:p-8 bg-slate-900/90 dark:bg-slate-900/90 light:bg-slate-50/95 backdrop-blur-md overflow-y-auto transition-colors duration-300">
+        <div id="start-screen" class="relative z-20 flex flex-col items-center justify-between h-full p-4 md:p-8 bg-slate-50/95 dark:bg-slate-900/90 backdrop-blur-md overflow-y-auto transition-colors duration-300">
             
             <!-- Top Controls (Theme Switcher) -->
             <div class="w-full max-w-2xl flex justify-between items-center mb-2">
-                <div class="text-xs font-bold px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400">
+                <div class="text-xs font-bold px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-600 dark:text-sky-400">
                     <i class="fa-solid fa-shield-halved"></i> นวัตกรรมสื่อการเรียนรู้การใช้ยา
                 </div>
-                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 px-3 rounded-xl bg-slate-800 dark:bg-slate-800 light:bg-white text-amber-400 dark:text-amber-400 light:text-slate-700 border border-slate-700 dark:border-slate-700 light:border-slate-300 shadow-md flex items-center gap-2 hover:scale-105 transition">
-                    <i class="fa-solid fa-sun text-amber-400 dark:inline light:hidden"></i>
-                    <i class="fa-solid fa-moon text-indigo-600 hidden dark:hidden light:inline"></i>
-                    <span id="theme-text" class="text-xs font-bold text-slate-200 dark:text-slate-200 light:text-slate-700">โหมดมืด</span>
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-amber-400 border border-slate-300 dark:border-slate-700 shadow-md flex items-center gap-2 hover:scale-105 transition">
+                    <i class="fa-solid fa-sun text-amber-500 hidden dark:inline"></i>
+                    <i class="fa-solid fa-moon text-indigo-600 inline dark:hidden"></i>
+                    <span id="theme-text" class="text-xs font-bold text-slate-700 dark:text-slate-200">โหมดมืด</span>
                 </button>
             </div>
 
@@ -88,76 +95,76 @@
                 <div class="inline-block p-4 bg-sky-500/10 rounded-full border border-sky-400/30 mb-3 animate-bounce">
                     <span class="text-5xl md:text-6xl">💊</span>
                 </div>
-                <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-teal-300 to-emerald-400 dark:from-sky-400 dark:via-teal-300 dark:to-emerald-400 light:from-sky-600 light:via-teal-600 light:to-emerald-600 mb-2">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 dark:from-sky-400 dark:via-teal-300 dark:to-emerald-400 mb-2">
                     ภารกิจพิชิตตู้ยา
                 </h1>
-                <p class="text-slate-300 dark:text-slate-300 light:text-slate-600 text-sm md:text-base mb-5">หมอจำเป็นใน 24 ชั่วโมง (AR Interactive Game)</p>
+                <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-5">หมอจำเป็นใน 24 ชั่วโมง (AR Interactive Game)</p>
 
                 <!-- Select Mode Single/Team -->
-                <div class="bg-slate-800/80 dark:bg-slate-800/80 light:bg-white/90 p-4 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 mb-5 shadow-xl">
-                    <label class="block text-sky-400 dark:text-sky-300 light:text-sky-700 text-sm font-semibold mb-3">
+                <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-5 shadow-xl transition-colors">
+                    <label class="block text-sky-700 dark:text-sky-300 text-sm font-semibold mb-3">
                         <i class="fa-solid fa-users"></i> รูปแบบการเล่น (Play Mode)
                     </label>
                     <div class="flex gap-3">
-                        <button id="btn-mode-single" onclick="setPlayMode('single')" class="flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-300 dark:text-sky-300 light:text-sky-700 transition-all shadow-lg scale-105">
+                        <button id="btn-mode-single" onclick="setPlayMode('single')" class="flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105">
                             <i class="fa-solid fa-user"></i> เล่นคนเดียว
                         </button>
-                        <button id="btn-mode-team" onclick="setPlayMode('team')" class="flex-1 py-3 rounded-xl font-bold border-2 border-slate-600 dark:border-slate-600 light:border-slate-300 bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-100 text-slate-400 dark:text-slate-400 light:text-slate-600 transition-all shadow-lg hover:scale-105">
+                        <button id="btn-mode-team" onclick="setPlayMode('team')" class="flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105">
                             <i class="fa-solid fa-users-viewfinder"></i> แข่งเป็นทีม (ซ้าย-ขวา)
                         </button>
                     </div>
                 </div>
 
                 <!-- Select Episode -->
-                <div class="bg-slate-800/80 dark:bg-slate-800/80 light:bg-white/90 p-4 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 mb-5 text-left max-h-64 overflow-y-auto space-y-2.5 shadow-xl">
-                    <label class="block text-sky-400 dark:text-sky-300 light:text-sky-700 text-sm font-semibold mb-2">
+                <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-5 text-left max-h-64 overflow-y-auto space-y-2.5 shadow-xl transition-colors">
+                    <label class="block text-sky-700 dark:text-sky-300 text-sm font-semibold mb-2">
                         <i class="fa-solid fa-book-open"></i> เลือกลองสถานการณ์ (Episodes - ข้อละ 5 สถานการณ์)
                     </label>
                     
-                    <button onclick="selectEpisode('ep1')" id="ep-btn-ep1" class="ep-btn w-full p-3 rounded-xl border border-sky-500/50 bg-sky-950/40 dark:bg-sky-950/40 light:bg-sky-50 hover:bg-sky-900/60 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep1')" id="ep-btn-ep1" class="ep-btn w-full p-3 rounded-xl border border-sky-500/50 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-sky-300 dark:text-sky-300 light:text-sky-800">ตอนที่ 1: เจ็บคอต้องกินยาอะไร? (5 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">การใช้ยาปฏิชีวนะ ยาฆ่าเชื้อ และปัญหาเชื้อดื้อยา</div>
+                            <div class="font-bold text-sky-800 dark:text-sky-300">ตอนที่ 1: เจ็บคอต้องกินยาอะไร? (5 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">การใช้ยาปฏิชีวนะ ยาฆ่าเชื้อ และปัญหาเชื้อดื้อยา</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-sky-400"></i>
+                        <i class="fa-solid fa-chevron-right text-sky-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('ep2')" id="ep-btn-ep2" class="ep-btn w-full p-3 rounded-xl border border-slate-700 dark:border-slate-700 light:border-slate-200 bg-slate-800/40 dark:bg-slate-800/40 light:bg-slate-50 hover:bg-slate-800 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep2')" id="ep-btn-ep2" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-amber-300 dark:text-amber-300 light:text-amber-800">ตอนที่ 2: ยาชุดอันตราย (5 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">อันตรายจากยาสเตียรอยด์สังเคราะห์และการระคายเคืองกระเพาะ</div>
+                            <div class="font-bold text-amber-800 dark:text-amber-300">ตอนที่ 2: ยาชุดอันตราย (5 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">อันตรายจากยาสเตียรอยด์สังเคราะห์และการระคายเคืองกระเพาะ</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-amber-400"></i>
+                        <i class="fa-solid fa-chevron-right text-amber-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('ep3')" id="ep-btn-ep3" class="ep-btn w-full p-3 rounded-xl border border-slate-700 dark:border-slate-700 light:border-slate-200 bg-slate-800/40 dark:bg-slate-800/40 light:bg-slate-50 hover:bg-slate-800 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep3')" id="ep-btn-ep3" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-emerald-300 dark:text-emerald-300 light:text-emerald-800">ตอนที่ 3: ยาสามัญ & การลืมกินยา (5 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">ลืมกินยาทำอย่างไร ยาสามัญประจำบ้าน และการจัดเก็บรักษายา</div>
+                            <div class="font-bold text-emerald-800 dark:text-emerald-300">ตอนที่ 3: ยาสามัญ & การลืมกินยา (5 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">ลืมกินยาทำอย่างไร ยาสามัญประจำบ้าน และการจัดเก็บรักษายา</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-emerald-400"></i>
+                        <i class="fa-solid fa-chevron-right text-emerald-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('ep4')" id="ep-btn-ep4" class="ep-btn w-full p-3 rounded-xl border border-slate-700 dark:border-slate-700 light:border-slate-200 bg-slate-800/40 dark:bg-slate-800/40 light:bg-slate-50 hover:bg-slate-800 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep4')" id="ep-btn-ep4" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-purple-300 dark:text-purple-300 light:text-purple-800">ตอนที่ 4: ความเชื่อ vs ความจริง (5 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">ความเข้าใจผิดเรื่องการทายาสีฟัน แอลกอฮอล์ และการทานยาพร้อมนม</div>
+                            <div class="font-bold text-purple-800 dark:text-purple-300">ตอนที่ 4: ความเชื่อ vs ความจริง (5 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">ความเข้าใจผิดเรื่องการทายาสีฟัน แอลกอฮอล์ และการทานยาพร้อมนม</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-purple-400"></i>
+                        <i class="fa-solid fa-chevron-right text-purple-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('ep5')" id="ep-btn-ep5" class="ep-btn w-full p-3 rounded-xl border border-slate-700 dark:border-slate-700 light:border-slate-200 bg-slate-800/40 dark:bg-slate-800/40 light:bg-slate-50 hover:bg-slate-800 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep5')" id="ep-btn-ep5" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-rose-300 dark:text-rose-300 light:text-rose-800">ตอนที่ 5: อันตรายจากการใช้ยา (5 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">ยาลดไข้เด็ก ปริมาณพาราเซตามอล NSAIDs และอาการแพ้ยา</div>
+                            <div class="font-bold text-rose-800 dark:text-rose-300">ตอนที่ 5: อันตรายจากการใช้ยา (5 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">ยาลดไข้เด็ก ปริมาณพาราเซตามอล NSAIDs และอาการแพ้ยา</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-rose-400"></i>
+                        <i class="fa-solid fa-chevron-right text-rose-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('survival')" id="ep-btn-survival" class="ep-btn w-full p-3 rounded-xl border border-red-500/50 bg-red-950/30 dark:bg-red-950/30 light:bg-red-50 hover:bg-red-900/50 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('survival')" id="ep-btn-survival" class="ep-btn w-full p-3 rounded-xl border border-red-500/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-red-400 dark:text-red-400 light:text-red-700">🔥 โหมดเอาชีวิตรอด (Survival Mode - สุ่ม 25 ข้อ)</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">สุ่มคำถามรวมทุกเรื่อง ตอบผิดหัก HP จนกว่าจะแพ้!</div>
+                            <div class="font-bold text-red-700 dark:text-red-400">🔥 โหมดเอาชีวิตรอด (Survival Mode - สุ่ม 25 ข้อ)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">สุ่มคำถามรวมทุกเรื่อง ตอบผิดหัก HP จนกว่าจะแพ้!</div>
                         </div>
                         <i class="fa-solid fa-fire text-red-500"></i>
                     </button>
@@ -168,14 +175,14 @@
                     <button onclick="startARGame()" class="flex-1 py-4 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-extrabold rounded-2xl shadow-lg shadow-sky-500/25 transition-all text-lg flex items-center justify-center gap-2">
                         <i class="fa-solid fa-camera"></i> เริ่มภารกิจด้วยกล้อง AR
                     </button>
-                    <button onclick="openTeacherDashboard()" class="py-4 px-6 bg-slate-800 dark:bg-slate-800 light:bg-slate-200 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-slate-300 text-slate-200 dark:text-slate-200 light:text-slate-800 font-bold rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-300 transition flex items-center justify-center gap-2">
+                    <button onclick="openTeacherDashboard()" class="py-4 px-6 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-2xl border border-slate-300 dark:border-slate-700 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-sliders"></i> จัดการคำถาม
                     </button>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="text-xs text-slate-500 dark:text-slate-500 light:text-slate-600 text-center pb-2">
+            <div class="text-xs text-slate-600 dark:text-slate-500 text-center pb-2">
                 นวัตกรรมสื่อการเรียนรู้ เรื่อง อันตรายจากการใช้ยา | ชี้คำตอบค้างไว้ 1 วินาทีเพื่อเลือก
             </div>
         </div>
@@ -185,39 +192,39 @@
             <!-- Top Bar HUD -->
             <div class="flex justify-between items-start gap-4 pointer-events-auto">
                 <!-- HP Bar (Single Mode) or Team Scores (Team Mode) -->
-                <div id="hud-single-hp" class="bg-slate-900/80 dark:bg-slate-900/80 light:bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 w-48 md:w-64 shadow-lg">
+                <div id="hud-single-hp" class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200 dark:border-slate-700 w-48 md:w-64 shadow-lg transition-colors">
                     <div class="flex justify-between text-xs font-bold mb-1">
-                        <span class="text-rose-400 dark:text-rose-400 light:text-rose-600"><i class="fa-solid fa-heart"></i> พลังชีวิตชุมชน</span>
-                        <span id="hp-text" class="text-rose-400 dark:text-rose-400 light:text-rose-600">100/100 HP</span>
+                        <span class="text-rose-600 dark:text-rose-400"><i class="fa-solid fa-heart"></i> พลังชีวิตชุมชน</span>
+                        <span id="hp-text" class="text-rose-600 dark:text-rose-400">100/100 HP</span>
                     </div>
-                    <div class="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
                         <div id="hp-bar" class="bg-gradient-to-r from-rose-500 to-emerald-400 h-full w-full transition-all duration-300"></div>
                     </div>
                 </div>
 
-                <div id="hud-team-score" class="hidden bg-slate-900/80 dark:bg-slate-900/80 light:bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 flex gap-6 shadow-lg">
+                <div id="hud-team-score" class="hidden bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 flex gap-6 shadow-lg transition-colors">
                     <div class="text-center">
-                        <div class="text-xs text-sky-400 dark:text-sky-400 light:text-sky-600 font-bold">ทีมซ้าย (A)</div>
-                        <div id="team-a-score" class="text-xl font-black text-sky-300 dark:text-sky-300 light:text-sky-700">0</div>
+                        <div class="text-xs text-sky-600 dark:text-sky-400 font-bold">ทีมซ้าย (A)</div>
+                        <div id="team-a-score" class="text-xl font-black text-sky-700 dark:text-sky-300">0</div>
                     </div>
-                    <div class="w-px bg-slate-700 dark:bg-slate-700 light:bg-slate-300 h-8 self-center"></div>
+                    <div class="w-px bg-slate-300 dark:bg-slate-700 h-8 self-center"></div>
                     <div class="text-center">
-                        <div class="text-xs text-rose-400 dark:text-rose-400 light:text-rose-600 font-bold">ทีมขวา (B)</div>
-                        <div id="team-b-score" class="text-xl font-black text-rose-300 dark:text-rose-300 light:text-rose-700">0</div>
+                        <div class="text-xs text-rose-600 dark:text-rose-400 font-bold">ทีมขวา (B)</div>
+                        <div id="team-b-score" class="text-xl font-black text-rose-700 dark:text-rose-300">0</div>
                     </div>
                 </div>
 
                 <!-- Progress & Timer -->
                 <div class="flex gap-2 items-center">
-                    <div id="timer-ui" class="hidden bg-slate-900/80 dark:bg-slate-900/80 light:bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-amber-500/50 flex flex-col items-center shadow-lg">
-                        <span class="text-xs text-amber-300 dark:text-amber-300 light:text-amber-600"><i class="fa-solid fa-clock"></i> เวลา</span>
-                        <span id="timer-text" class="font-bold text-lg text-amber-400 dark:text-amber-400 light:text-amber-700">15s</span>
+                    <div id="timer-ui" class="hidden bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-amber-500/50 flex flex-col items-center shadow-lg transition-colors">
+                        <span class="text-xs text-amber-600 dark:text-amber-300"><i class="fa-solid fa-clock"></i> เวลา</span>
+                        <span id="timer-text" class="font-bold text-lg text-amber-700 dark:text-amber-400">15s</span>
                     </div>
-                    <div class="bg-slate-900/80 dark:bg-slate-900/80 light:bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 flex flex-col items-center shadow-lg">
-                        <span class="text-xs text-sky-400 dark:text-sky-300 light:text-sky-700">ความคืบหน้า</span>
-                        <span id="progress-text" class="font-bold text-lg text-slate-100 dark:text-slate-100 light:text-slate-800">1/5</span>
+                    <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center shadow-lg transition-colors">
+                        <span class="text-xs text-sky-700 dark:text-sky-300">ความคืบหน้า</span>
+                        <span id="progress-text" class="font-bold text-lg text-slate-800 dark:text-slate-100">1/5</span>
                     </div>
-                    <button onclick="quitGame()" class="bg-red-500/80 hover:bg-red-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg transition pointer-events-auto">
+                    <button onclick="quitGame()" class="bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg transition pointer-events-auto">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -225,68 +232,75 @@
 
             <!-- Dialogue & Question Box -->
             <div class="my-auto max-w-2xl w-full mx-auto space-y-3 pointer-events-auto">
-                <div class="bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/95 backdrop-blur-md p-4 md:p-6 rounded-3xl border border-sky-500/30 dark:border-sky-500/30 light:border-sky-300 shadow-2xl flex gap-4 items-start">
-                    <div id="avatar-container" class="text-4xl md:text-5xl bg-slate-800 dark:bg-slate-800 light:bg-sky-100 p-3 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-sky-200 flex-shrink-0">
+                <div class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md p-4 md:p-6 rounded-3xl border border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-4 items-start transition-colors">
+                    <div id="avatar-container" class="text-4xl md:text-5xl bg-sky-100 dark:bg-slate-800 p-3 rounded-2xl border border-sky-200 dark:border-slate-700 flex-shrink-0">
                         🤒
                     </div>
                     <div>
-                        <div id="speaker-name" class="text-xs font-bold text-sky-400 dark:text-sky-400 light:text-sky-700 mb-1">ผู้ป่วย</div>
-                        <p id="story-text" class="text-slate-100 dark:text-slate-100 light:text-slate-800 font-medium text-sm md:text-base leading-relaxed">
+                        <div id="speaker-name" class="text-xs font-bold text-sky-700 dark:text-sky-400 mb-1">ผู้ป่วย</div>
+                        <p id="story-text" class="text-slate-800 dark:text-slate-100 font-medium text-sm md:text-base leading-relaxed">
                             "กำลังโหลดคำถาม..."
                         </p>
                     </div>
                 </div>
 
-                <!-- Options A, B, C -->
+                <!-- Options A, B, C with Direct Visual Finger Target Indicators -->
                 <div class="grid grid-cols-1 gap-2 md:gap-3">
-                    <button id="btn-option-a" onclick="handleAnswer('A', 'single')" class="group relative w-full p-3 md:p-4 bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/95 backdrop-blur-md hover:bg-sky-900/80 dark:hover:bg-sky-900/80 light:hover:bg-sky-100 rounded-2xl border-2 border-sky-500/50 dark:border-sky-500/50 light:border-sky-300 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
-                        <span class="w-8 h-8 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0">A</span>
-                        <span id="text-option-a" class="text-slate-200 dark:text-slate-200 light:text-slate-800 font-medium text-xs md:text-sm flex-1">ตัวเลือก A</span>
+                    <button id="btn-option-a" onclick="handleAnswer('A', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-sky-50 dark:hover:bg-sky-900/80 rounded-2xl border-2 border-sky-300 dark:border-sky-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
+                        <!-- Progress overlay filling up on hover -->
+                        <div id="progress-bar-a" class="absolute inset-y-0 left-0 bg-sky-400/30 dark:bg-sky-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
+                        <span class="w-8 h-8 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">A</span>
+                        <span id="text-option-a" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก A</span>
+                        <span id="badge-hover-a" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-sky-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
                     </button>
 
-                    <button id="btn-option-b" onclick="handleAnswer('B', 'single')" class="group relative w-full p-3 md:p-4 bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/95 backdrop-blur-md hover:bg-emerald-900/80 dark:hover:bg-emerald-900/80 light:hover:bg-emerald-100 rounded-2xl border-2 border-emerald-500/50 dark:border-emerald-500/50 light:border-emerald-300 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
-                        <span class="w-8 h-8 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0">B</span>
-                        <span id="text-option-b" class="text-slate-200 dark:text-slate-200 light:text-slate-800 font-medium text-xs md:text-sm flex-1">ตัวเลือก B</span>
+                    <button id="btn-option-b" onclick="handleAnswer('B', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-emerald-50 dark:hover:bg-emerald-900/80 rounded-2xl border-2 border-emerald-300 dark:border-emerald-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
+                        <div id="progress-bar-b" class="absolute inset-y-0 left-0 bg-emerald-400/30 dark:bg-emerald-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
+                        <span class="w-8 h-8 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">B</span>
+                        <span id="text-option-b" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก B</span>
+                        <span id="badge-hover-b" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
                     </button>
 
-                    <button id="btn-option-c" onclick="handleAnswer('C', 'single')" class="group relative w-full p-3 md:p-4 bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/95 backdrop-blur-md hover:bg-purple-900/80 dark:hover:bg-purple-900/80 light:hover:bg-purple-100 rounded-2xl border-2 border-purple-500/50 dark:border-purple-500/50 light:border-purple-300 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto hidden">
-                        <span class="w-8 h-8 rounded-xl bg-purple-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0">C</span>
-                        <span id="text-option-c" class="text-slate-200 dark:text-slate-200 light:text-slate-800 font-medium text-xs md:text-sm flex-1">ตัวเลือก C</span>
+                    <button id="btn-option-c" onclick="handleAnswer('C', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-purple-50 dark:hover:bg-purple-900/80 rounded-2xl border-2 border-purple-300 dark:border-purple-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto hidden">
+                        <div id="progress-bar-c" class="absolute inset-y-0 left-0 bg-purple-400/30 dark:bg-purple-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
+                        <span class="w-8 h-8 rounded-xl bg-purple-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">C</span>
+                        <span id="text-option-c" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก C</span>
+                        <span id="badge-hover-c" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
                     </button>
                 </div>
             </div>
 
             <!-- AR Finger Gesture Prompt -->
-            <div class="text-center text-xs text-slate-300 dark:text-slate-300 light:text-slate-700 bg-slate-900/80 dark:bg-slate-900/80 light:bg-white/90 py-2 px-4 rounded-full w-fit mx-auto border border-slate-700 dark:border-slate-700 light:border-slate-300 pointer-events-auto shadow-lg">
-                <i class="fa-solid fa-hand-point-up text-sky-400 animate-bounce"></i> ยกนิ้วชี้ขึ้นเพื่อควบคุมเคอร์เซอร์ และชี้ค้างบนตัวเลือก 1 วินาที
+            <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/80 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 pointer-events-auto shadow-lg transition-colors">
+                <i class="fa-solid fa-hand-point-up text-sky-500 animate-bounce"></i> ยกนิ้วชี้ขึ้นเพื่อควบคุมเคอร์เซอร์ และชี้ค้างบนตัวเลือก 1 วินาที
             </div>
         </div>
 
         <!-- SCREEN 3: RESULT SCREEN -->
-        <div id="result-screen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/95 dark:bg-slate-950/95 light:bg-slate-100/95 backdrop-blur-lg">
-            <div class="bg-slate-900 dark:bg-slate-900 light:bg-white p-8 rounded-3xl border border-slate-800 dark:border-slate-800 light:border-slate-200 max-w-md w-full text-center shadow-2xl space-y-6">
+        <div id="result-screen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-lg transition-colors">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center shadow-2xl space-y-6">
                 <div class="text-6xl animate-bounce" id="result-emoji">🏆</div>
                 <div>
-                    <h2 class="text-2xl font-black text-slate-100 dark:text-slate-100 light:text-slate-800 mb-1" id="result-title">ภารกิจเสร็จสิ้น!</h2>
-                    <p class="text-slate-400 dark:text-slate-400 light:text-slate-600 text-sm" id="result-subtitle">สรุปผลการประเมินทักษะการใช้ยา</p>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1" id="result-title">ภารกิจเสร็จสิ้น!</h2>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm" id="result-subtitle">สรุปผลการประเมินทักษะการใช้ยา</p>
                 </div>
 
-                <div class="bg-slate-800/80 dark:bg-slate-800/80 light:bg-slate-50 p-4 rounded-2xl border border-slate-700 dark:border-slate-700 light:border-slate-200 space-y-3">
+                <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-400 dark:text-slate-400 light:text-slate-600">สถานการณ์ที่ทำสำเร็จ:</span>
-                        <span id="res-total-q" class="font-bold text-sky-400 dark:text-sky-400 light:text-sky-600">5 ข้อ</span>
+                        <span class="text-slate-600 dark:text-slate-400">สถานการณ์ที่ทำสำเร็จ:</span>
+                        <span id="res-total-q" class="font-bold text-sky-600 dark:text-sky-400">5 ข้อ</span>
                     </div>
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-400 dark:text-slate-400 light:text-slate-600">ตอบถูกต้อง:</span>
-                        <span id="res-correct-q" class="font-bold text-emerald-400 dark:text-emerald-400 light:text-emerald-600">5 ข้อ</span>
+                        <span class="text-slate-600 dark:text-slate-400">ตอบถูกต้อง:</span>
+                        <span id="res-correct-q" class="font-bold text-emerald-600 dark:text-emerald-400">5 ข้อ</span>
                     </div>
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-400 dark:text-slate-400 light:text-slate-600">พลังชีวิตชุมชนเหลือ:</span>
-                        <span id="res-hp" class="font-bold text-rose-400 dark:text-rose-400 light:text-rose-600">100/100</span>
+                        <span class="text-slate-600 dark:text-slate-400">พลังชีวิตชุมชนเหลือ:</span>
+                        <span id="res-hp" class="font-bold text-rose-600 dark:text-rose-400">100/100</span>
                     </div>
                 </div>
 
-                <div class="p-3 bg-sky-500/10 dark:bg-sky-500/10 light:bg-sky-100 rounded-xl border border-sky-500/30 dark:border-sky-500/30 light:border-sky-300 text-sky-300 dark:text-sky-300 light:text-sky-800 font-bold text-sm" id="res-badge">
+                <div class="p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl border border-sky-300 dark:border-sky-500/30 text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">
                     🎖️ ระดับความเชี่ยวชาญ: เภสัชกรอัจฉริยะ
                 </div>
 
@@ -294,7 +308,7 @@
                     <button onclick="restartGame()" class="flex-1 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow-lg transition">
                         <i class="fa-solid fa-rotate-right"></i> เล่นอีกครั้ง
                     </button>
-                    <button onclick="quitGame()" class="py-3 px-5 bg-slate-800 dark:bg-slate-800 light:bg-slate-200 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-slate-300 text-slate-300 dark:text-slate-300 light:text-slate-800 font-bold rounded-xl border border-slate-700 dark:border-slate-700 light:border-slate-300 transition">
+                    <button onclick="quitGame()" class="py-3 px-5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-300 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition">
                         หน้าหลัก
                     </button>
                 </div>
@@ -302,24 +316,24 @@
         </div>
 
         <!-- SCREEN 4: TEACHER DASHBOARD -->
-        <div id="teacher-dashboard-screen" class="hidden absolute inset-0 z-50 p-4 md:p-8 bg-slate-900 dark:bg-slate-900 light:bg-slate-100 flex flex-col">
+        <div id="teacher-dashboard-screen" class="hidden absolute inset-0 z-50 p-4 md:p-8 bg-slate-100 dark:bg-slate-900 flex flex-col transition-colors">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-slate-100 dark:text-slate-100 light:text-slate-800">👨‍🏫 Teacher Dashboard</h1>
-                    <p class="text-slate-400 dark:text-slate-400 light:text-slate-600 text-sm">ระบบจัดการคำถามและการตั้งค่าเกม</p>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">👨‍🏫 Teacher Dashboard</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">ระบบจัดการคำถามและการตั้งค่าเกม</p>
                 </div>
-                <button onclick="closeTeacherDashboard()" class="bg-slate-800 dark:bg-slate-800 light:bg-white hover:bg-slate-700 text-slate-100 dark:text-slate-100 light:text-slate-800 px-4 py-2 rounded-xl font-bold border border-slate-700 dark:border-slate-700 light:border-slate-300 flex items-center gap-2">
+                <button onclick="closeTeacherDashboard()" class="bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-4 py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 flex items-center gap-2 shadow">
                     <i class="fa-solid fa-times"></i> ปิดหน้าต่าง
                 </button>
             </div>
 
-            <div class="bg-slate-950 dark:bg-slate-950 light:bg-white rounded-2xl border border-slate-800 dark:border-slate-800 light:border-slate-200 p-4 flex-grow overflow-hidden flex flex-col shadow-xl">
+            <div class="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 flex-grow overflow-hidden flex flex-col shadow-xl transition-colors">
                 <!-- Tab Navigation -->
-                <div class="flex border-b border-slate-800 dark:border-slate-800 light:border-slate-200 mb-4 gap-2">
-                    <button id="tab-btn-questions" onclick="switchTeacherTab('questions')" class="py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-400 transition-all">
+                <div class="flex border-b border-slate-200 dark:border-slate-800 mb-4 gap-2">
+                    <button id="tab-btn-questions" onclick="switchTeacherTab('questions')" class="py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all">
                         <i class="fa-solid fa-list-check"></i> คลังคำถาม (25 ข้อ)
                     </button>
-                    <button id="tab-btn-settings" onclick="switchTeacherTab('settings')" class="py-2 px-4 border-b-2 border-transparent font-medium text-slate-400 dark:text-slate-400 light:text-slate-600 hover:text-slate-200 transition-all">
+                    <button id="tab-btn-settings" onclick="switchTeacherTab('settings')" class="py-2 px-4 border-b-2 border-transparent font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
                         <i class="fa-solid fa-sliders"></i> ตั้งค่าระบบ
                     </button>
                 </div>
@@ -327,8 +341,8 @@
                 <!-- Tab 1: Questions Bank -->
                 <div id="tab-content-questions" class="flex-grow flex flex-col overflow-hidden">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-slate-200 dark:text-slate-200 light:text-slate-800">รายการคำถามทั้งหมดในคลัง (ตอนละ 5 ข้อ)</h2>
-                        <button onclick="resetToDefaultData()" class="text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs border border-red-500/30 transition">
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">รายการคำถามทั้งหมดในคลัง (ตอนละ 5 ข้อ)</h2>
+                        <button onclick="resetToDefaultData()" class="text-red-600 dark:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs border border-red-500/30 transition">
                             <i class="fa-solid fa-rotate-left"></i> คืนค่าข้อสอบเริ่มต้น
                         </button>
                     </div>
@@ -341,44 +355,44 @@
                 <!-- Tab 2: System Settings -->
                 <div id="tab-content-settings" class="hidden flex-grow overflow-y-auto p-2">
                     <form id="settings-form" onsubmit="saveGameSettings(event)" class="max-w-xl space-y-6">
-                        <div class="bg-slate-900 dark:bg-slate-900 light:bg-slate-50 p-4 rounded-xl border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-4">
-                            <h3 class="font-bold text-slate-200 dark:text-slate-200 light:text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-stopwatch text-sky-400"></i> กำหนดเวลาตอบคำถาม
+                        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-stopwatch text-sky-500"></i> กำหนดเวลาตอบคำถาม
                             </h3>
                             <div class="flex items-center justify-between">
-                                <label class="text-sm font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">เปิดใช้งานการนับถอยหลังต่อข้อ</label>
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">เปิดใช้งานการนับถอยหลังต่อข้อ</label>
                                 <input type="checkbox" id="setting-enable-timer" class="w-5 h-5 accent-sky-500 cursor-pointer" onchange="toggleTimerSettings()">
                             </div>
-                            <div id="timer-duration-group" class="flex items-center justify-between pt-2 border-t border-slate-800 dark:border-slate-800 light:border-slate-200">
-                                <label class="text-sm font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">ระยะเวลาต่อข้อ (วินาที)</label>
-                                <input type="number" id="setting-timer-duration" min="5" max="120" class="w-24 p-2 bg-slate-950 dark:bg-slate-950 light:bg-white border border-slate-700 dark:border-slate-700 light:border-slate-300 rounded-lg text-center font-bold text-sky-400">
+                            <div id="timer-duration-group" class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">ระยะเวลาต่อข้อ (วินาที)</label>
+                                <input type="number" id="setting-timer-duration" min="5" max="120" class="w-24 p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-bold text-sky-600 dark:text-sky-400">
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 dark:bg-slate-900 light:bg-slate-50 p-4 rounded-xl border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-4">
-                            <h3 class="font-bold text-slate-200 dark:text-slate-200 light:text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-forward text-emerald-400"></i> การเปลี่ยนไปข้อถัดไป
+                        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-forward text-emerald-500"></i> การเปลี่ยนไปข้อถัดไป
                             </h3>
                             <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 bg-slate-950 dark:bg-slate-950 light:bg-white rounded-xl border border-slate-800 dark:border-slate-800 light:border-slate-200 cursor-pointer hover:border-sky-500/50">
+                                <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-sky-500/50">
                                     <input type="radio" name="next-mode" value="auto" class="accent-sky-500" onchange="toggleNextModeSettings()">
                                     <div>
-                                        <div class="font-bold text-sm text-slate-200 dark:text-slate-200 light:text-slate-800">เปลี่ยนข้อให้อัตโนมัติ (Auto Advance)</div>
-                                        <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">แสดงเฉลยแล้วข้ามไปข้อถัดไปตามเวลาที่กำหนด</div>
+                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-200">เปลี่ยนข้อให้อัตโนมัติ (Auto Advance)</div>
+                                        <div class="text-xs text-slate-600 dark:text-slate-400">แสดงเฉลยแล้วข้ามไปข้อถัดไปตามเวลาที่กำหนด</div>
                                     </div>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 bg-slate-950 dark:bg-slate-950 light:bg-white rounded-xl border border-slate-800 dark:border-slate-800 light:border-slate-200 cursor-pointer hover:border-sky-500/50">
+                                <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-sky-500/50">
                                     <input type="radio" name="next-mode" value="manual" class="accent-sky-500" onchange="toggleNextModeSettings()">
                                     <div>
-                                        <div class="font-bold text-sm text-slate-200 dark:text-slate-200 light:text-slate-800">ใช้นิ้วชี้ / คลิกเปลี่ยนข้อเอง (Manual)</div>
-                                        <div class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600">ใช้นิ้วชี้ปุ่ม "ดำเนินการต่อ" บน SweetAlert เพื่อไปข้อถัดไป</div>
+                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-200">ใช้นิ้วชี้ / คลิกเปลี่ยนข้อเอง (Manual)</div>
+                                        <div class="text-xs text-slate-600 dark:text-slate-400">ใช้นิ้วชี้ปุ่ม "ดำเนินการต่อ" บน SweetAlert เพื่อไปข้อถัดไป</div>
                                     </div>
                                 </label>
                             </div>
 
-                            <div id="auto-delay-group" class="flex items-center justify-between pt-2 border-t border-slate-800 dark:border-slate-800 light:border-slate-200">
-                                <label class="text-sm font-medium text-slate-300 dark:text-slate-300 light:text-slate-700">ระยะเวลาแสดงเฉลยก่อนเปลี่ยนข้อ (วินาที)</label>
-                                <input type="number" id="setting-auto-delay" min="1" max="30" class="w-24 p-2 bg-slate-950 dark:bg-slate-950 light:bg-white border border-slate-700 dark:border-slate-700 light:border-slate-300 rounded-lg text-center font-bold text-emerald-400">
+                            <div id="auto-delay-group" class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">ระยะเวลาแสดงเฉลยก่อนเปลี่ยนข้อ (วินาที)</label>
+                                <input type="number" id="setting-auto-delay" min="1" max="30" class="w-24 p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-bold text-emerald-600 dark:text-emerald-400">
                             </div>
                         </div>
 
@@ -724,8 +738,8 @@
         }
 
         function toggleTheme() {
-            const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
             applyTheme(newTheme);
         }
 
@@ -734,10 +748,8 @@
             const themeBtnText = document.getElementById("theme-text");
             if (theme === 'light') {
                 html.classList.remove('dark');
-                html.classList.add('light');
                 if (themeBtnText) themeBtnText.textContent = "โหมดสว่าง";
             } else {
-                html.classList.remove('light');
                 html.classList.add('dark');
                 if (themeBtnText) themeBtnText.textContent = "โหมดมืด";
             }
@@ -750,11 +762,11 @@
             const btnTeam = document.getElementById("btn-mode-team");
             
             if (mode === 'single') {
-                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-300 dark:text-sky-300 light:text-sky-700 transition-all shadow-lg scale-105";
-                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-600 dark:border-slate-600 light:border-slate-300 bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-100 text-slate-400 dark:text-slate-400 light:text-slate-600 transition-all shadow-lg hover:scale-105";
+                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105";
+                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105";
             } else {
-                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-300 dark:text-sky-300 light:text-sky-700 transition-all shadow-lg scale-105";
-                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-600 dark:border-slate-600 light:border-slate-300 bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-100 text-slate-400 dark:text-slate-400 light:text-slate-600 transition-all shadow-lg hover:scale-105";
+                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105";
+                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105";
             }
         }
 
@@ -1033,6 +1045,11 @@
             if (hitButton) {
                 if (settings.targetButton === hitButton) {
                     const elapsed = performance.now() - settings.hoverStartTime;
+                    const progress = Math.min(elapsed / 1000, 1.0);
+
+                    // Update button UI visual indicator
+                    updateButtonProgressUI(hitButton, progress);
+
                     if (elapsed >= 1000 && !settings.isSelecting) {
                         settings.isSelecting = true;
                         
@@ -1049,15 +1066,50 @@
                     resetHover(team);
                     settings.targetButton = hitButton;
                     settings.hoverStartTime = performance.now();
+                    updateButtonProgressUI(hitButton, 0);
                 }
             } else {
                 resetHover(team);
             }
         }
 
+        function updateButtonProgressUI(btn, progress) {
+            if (!btn) return;
+            
+            let key = '';
+            if (btn.id === 'btn-option-a') key = 'a';
+            else if (btn.id === 'btn-option-b') key = 'b';
+            else if (btn.id === 'btn-option-c') key = 'c';
+
+            if (key) {
+                const progressBar = document.getElementById(`progress-bar-${key}`);
+                const badge = document.getElementById(`badge-hover-${key}`);
+                
+                btn.classList.add('ar-hover-active');
+                if (progressBar) progressBar.style.width = `${progress * 100}%`;
+                if (badge) badge.classList.remove('hidden');
+            } else if (btn.classList.contains('swal2-confirm') || btn.id === 'btn-swal-confirm') {
+                btn.style.transform = 'scale(1.08)';
+                btn.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.8)';
+            }
+        }
+
         function resetHover(team) {
             const settings = teamHoverSettings[team];
             if (settings) {
+                if (settings.targetButton) {
+                    const btn = settings.targetButton;
+                    btn.classList.remove('ar-hover-active');
+                    btn.style.transform = '';
+                    btn.style.boxShadow = '';
+
+                    ['a', 'b', 'c'].forEach(k => {
+                        const progressBar = document.getElementById(`progress-bar-${k}`);
+                        const badge = document.getElementById(`badge-hover-${k}`);
+                        if (progressBar) progressBar.style.width = '0%';
+                        if (badge) badge.classList.add('hidden');
+                    });
+                }
                 settings.targetButton = null;
                 settings.hoverStartTime = 0;
                 settings.isSelecting = false;
@@ -1339,19 +1391,19 @@
             Object.keys(allEpisodesData).forEach(epKey => {
                 const ep = allEpisodesData[epKey];
                 const epHeader = document.createElement("div");
-                epHeader.className = "font-bold text-sky-400 dark:text-sky-400 light:text-sky-700 mt-3 mb-1 text-sm flex items-center gap-2";
+                epHeader.className = "font-bold text-sky-700 dark:text-sky-400 mt-3 mb-1 text-sm flex items-center gap-2";
                 epHeader.innerHTML = `<i class="fa-solid fa-folder-open"></i> ${ep.title}`;
                 container.appendChild(epHeader);
 
                 ep.questions.forEach((q) => {
                     const qCard = document.createElement("div");
-                    qCard.className = "bg-slate-900 dark:bg-slate-900 light:bg-slate-50 p-3 rounded-xl border border-slate-800 dark:border-slate-800 light:border-slate-200 text-xs space-y-1 shadow";
+                    qCard.className = "bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1 shadow";
                     qCard.innerHTML = `
-                        <div class="flex justify-between font-bold text-slate-300 dark:text-slate-300 light:text-slate-700">
+                        <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300">
                             <span>${q.avatar} ${q.speaker} (${q.id})</span>
                             <span class="text-slate-500">${q.options.length} ตัวเลือก</span>
                         </div>
-                        <p class="text-slate-400 dark:text-slate-400 light:text-slate-600">${q.story}</p>
+                        <p class="text-slate-600 dark:text-slate-400">${q.story}</p>
                     `;
                     container.appendChild(qCard);
                 });
