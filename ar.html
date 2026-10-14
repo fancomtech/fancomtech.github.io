@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Fixed)</title>
+    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Realistic)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -58,7 +58,6 @@
         
         .game-canvas { touch-action: none; }
         
-        /* FIXED: Option buttons - responsive & larger */
         .option-btn { 
             transition: all 0.2s ease; 
             position: relative;
@@ -66,7 +65,6 @@
             touch-action: manipulation;
         }
         
-        /* iPad/Mobile specific */
         @media (max-width: 768px) {
             .option-btn {
                 min-height: 80px;
@@ -81,7 +79,6 @@
             }
         }
         
-        /* Visual feedback when hovering */
         .option-btn:hover {
             transform: scale(1.02);
             box-shadow: 0 4px 12px rgba(56,189,248,0.4);
@@ -91,7 +88,6 @@
             transform: scale(0.98);
         }
         
-        /* Highlight when being pointed at */
         .option-btn.pointed-at {
             border-color: #38bdf8 !important;
             background: rgba(56,189,248,0.1) !important;
@@ -167,7 +163,6 @@
         .responsive-text { font-size: clamp(12px, 2.5vw, 24px); }
         .responsive-title { font-size: clamp(20px, 5vw, 48px); }
         
-        /* Prevent zoom on double tap */
         @media (max-width: 768px) {
             .option-btn { min-height: 80px; }
         }
@@ -334,7 +329,7 @@
             </div>
         </div>
 
-        <!-- Quiz Mode Content - FIXED for iPad -->
+        <!-- Quiz Mode Content -->
         <div id="quiz-content" class="hidden my-auto max-w-2xl w-full mx-auto space-y-2 md:space-y-3 pointer-events-auto px-2">
             <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur p-3 md:p-4 rounded-2xl border-2 border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-2 md:gap-3">
                 <div id="q-avatar" class="text-3xl md:text-4xl bg-sky-100 dark:bg-slate-800 p-1.5 md:p-2 rounded-xl flex-shrink-0">🤒</div>
@@ -469,7 +464,7 @@
                 </div>
                 <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-xl md:text-2xl">🏆</div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-xl md:text-2xl"></div>
                         <div>
                             <div class="text-xs md:text-sm text-slate-600 dark:text-slate-400">คะแนนสูงสุด</div>
                             <div id="stat-best" class="text-2xl md:text-3xl font-black text-amber-600">0%</div>
@@ -571,7 +566,7 @@
                             <label class="flex items-start gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-sky-400 transition">
                                 <input type="radio" name="hud-position" value="compact" class="mt-1 accent-sky-500">
                                 <div>
-                                    <div class="font-bold text-xs md:text-sm">紧凑 (Compact) - ชิดขอบบน</div>
+                                    <div class="font-bold text-xs md:text-sm">Compact - ชิดขอบบน</div>
                                     <div class="text-xs text-slate-600 dark:text-slate-400">HUD ขนาดเล็กลง ชิดขอบบนสุด ไม่บังคำถาม</div>
                                 </div>
                             </label>
@@ -655,7 +650,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q4", avatar:"", speaker:"น้อง", story:"ยาพาราเซตามอลช่วยเรื่องอะไร?", options:[
             {id:"A",text:"ลดไข้ แก้ปวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฆ่าเชื้อแบคทีเรีย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q5", avatar:"‍⚕️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
+        { id:"EP1_Q5", avatar:"👩‍⚕️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
             {id:"A",text:"ดี สะดวก",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ดี เป็นอันตราย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP1_Q6", avatar:"🤔", speaker:"นักเรียน", story:"ยาปฏิชีวนะกับยาแก้ปวดเหมือนกันไหม?", options:[
@@ -667,7 +662,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q8", avatar:"👾", speaker:"ครู", story:"วิกฤตเชื้อดื้อยาเกิดจากอะไร?", options:[
             {id:"A",text:"กินยาฆ่าเชื้อผิดวิธี/บ่อยเกิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินอาหารเผ็ด",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q9", avatar:"🤧", speaker:"เพื่อน", story:"คอแดง เจ็บคอ ควรดูแลยังไง?", options:[
+        { id:"EP1_Q9", avatar:"", speaker:"เพื่อน", story:"คอแดง เจ็บคอ ควรดูแลยังไง?", options:[
             {id:"A",text:"กลั้วคอด้วยน้ำเกลืออุ่น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดื่มน้ำเย็นจัด",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP1_Q10", avatar:"", speaker:"หมอ", story:"ยาฆ่าเชื้อฆ่าไวรัสได้ไหม?", options:[
@@ -687,7 +682,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP2_Q4", avatar:"", speaker:"หมอ", story:"สเตียรอยด์ทำร้ายอวัยวะใด?", options:[
             {id:"A",text:"เส้นผมและเล็บ",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"กระเพาะอาหารและไต",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP2_Q5", avatar:"👴", speaker:"ตา", story:"มีคนเร่ขายยาชุดถึงบ้าน ควรทำไง?", options:[
+        { id:"EP2_Q5", avatar:"", speaker:"ตา", story:"มีคนเร่ขายยาชุดถึงบ้าน ควรทำไง?", options:[
             {id:"A",text:"ห้ามซื้อเด็ดขาด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ซื้อให้ตากิน",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP2_Q6", avatar:"🚚", speaker:"ผู้ใหญ่บ้าน", story:"รถเร่ขายยาโฆษณาเสียงดัง น่าเชื่อถือไหม?", options:[
@@ -795,7 +790,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP5_Q8", avatar:"", speaker:"นักเรียน", story:"กิน NSAIDs ตอนท้องว่าง เป็นไง?", options:[
             {id:"A",text:"กัดกระเพาะ ปวดท้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ยาออกฤทธิ์ดี",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q9", avatar:"⏱️", speaker:"ตา", story:"ไข้สูง กินพาราทุก 1 ชั่วโมง ได้ไหม?", options:[
+        { id:"EP5_Q9", avatar:"️", speaker:"ตา", story:"ไข้สูง กินพาราทุก 1 ชั่วโมง ได้ไหม?", options:[
             {id:"A",text:"ได้ ไข้ลดเร็ว",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ต้องห่าง 4-6 ชม.",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP5_Q10", avatar:"🤝", speaker:"เพื่อน", story:"เอายาที่หมอสั่งให้ ไปแบ่งเพื่อนกิน ได้ไหม?", options:[
@@ -827,7 +822,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"กินต่อ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตากแดดแล้วกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ทิ้งไป ห้ามกิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP6_Q7", avatar:"👩⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
+        { id:"EP6_Q7", avatar:"‍⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
             {id:"A",text:"ตื่นนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"หลังมื้ออาหารหรือพร้อมมื้ออาหาร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ท้องว่างก่อนนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
@@ -860,7 +855,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"คนแปลกหน้า",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"แพทย์หรือเภสัชกร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"ใครก็ได้",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q4", avatar:"🗑️", speaker:"หมวด 1", story:"ยาหมดอายุควรทำอย่างไร?", options:[
+        { id:"EP7_Q4", avatar:"", speaker:"หมวด 1", story:"ยาหมดอายุควรทำอย่างไร?", options:[
             {id:"A",text:"กินให้หมด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"แบ่งให้เพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"เก็บไว้กินภายหลัง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
@@ -880,82 +875,82 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"หยุดยาทันที",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ขอคำแนะนำจากผู้ใหญ่/เภสัชกร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"กินยาของเพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q8", avatar:"🥄", speaker:"หมวด 2", story:"ยาน้ำควรตวงด้วยอะไร?", options:[
+        { id:"EP7_Q8", avatar:"", speaker:"หมวด 2", story:"ยาน้ำควรตวงด้วยอะไร?", options:[
             {id:"A",text:"ช้อนตวงยา",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฝาขวดทุกชนิด",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ช้อนกินข้าว",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"กะด้วยสายตา",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q9", avatar:"🔍", speaker:"หมวด 2", story:"ก่อนกินยาควรตรวจอะไร?", options:[
+        { id:"EP7_Q9", avatar:"", speaker:"หมวด 2", story:"ก่อนกินยาควรตรวจอะไร?", options:[
             {id:"A",text:"สีเสื้อ",hpChange:-10,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ราคายา",hpChange:-10,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"รูปทรงกล่อง",hpChange:-10,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ชื่อยาและวันหมดอายุ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP7_Q10", avatar:"🏠", speaker:"หมวด 2", story:"ควรเก็บยาไว้ที่ใด?", options:[
+        { id:"EP7_Q10", avatar:"", speaker:"หมวด 2", story:"ควรเก็บยาไว้ที่ใด?", options:[
             {id:"A",text:"ใกล้เตาไฟ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ที่เหมาะสมตามฉลาก พ้นมือเด็ก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ในรถร้อนจัด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"กลางแดด",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q11", avatar:"⚠️", speaker:"หมวด 3: อันตราย", story:"กินยาเกินขนาดอาจเกิดอะไร?", options:[
+        { id:"EP7_Q11", avatar:"", speaker:"หมวด 3: อันตราย", story:"กินยาเกินขนาดอาจเกิดอะไร?", options:[
             {id:"A",text:"แข็งแรงทันที",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"หายป่วยทันที",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"เกิดอันตราย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"สูงขึ้นทันที",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q12", avatar:"🦠", speaker:"หมวด 3", story:"ยาปฏิชีวนะใช้รักษาอะไร?", options:[
+        { id:"EP7_Q12", avatar:"", speaker:"หมวด 3", story:"ยาปฏิชีวนะใช้รักษาอะไร?", options:[
             {id:"A",text:"การติดเชื้อแบคทีเรียบางชนิด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"โรคทุกชนิด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ความหิว",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ความง่วง",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q13", avatar:"🦠", speaker:"หมวด 3", story:"ยาปฏิชีวนะรักษาหวัดจากไวรัสได้ไหม?", options:[
+        { id:"EP7_Q13", avatar:"", speaker:"หมวด 3", story:"ยาปฏิชีวนะรักษาหวัดจากไวรัสได้ไหม?", options:[
             {id:"A",text:"ได้ทุกครั้ง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ได้ถ้ากินมาก",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ได้ถ้ากินกับน้ำหวาน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ไม่รักษาไวรัสโดยตรง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP7_Q14", avatar:"🚨", speaker:"หมวด 3", story:"กินยาแล้วมีอาการแพ้ ควรทำอย่างไร?", options:[
+        { id:"EP7_Q14", avatar:"", speaker:"หมวด 3", story:"กินยาแล้วมีอาการแพ้ ควรทำอย่างไร?", options:[
             {id:"A",text:"กินเพิ่ม",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"แจ้งผู้ใหญ่และขอความช่วยเหลือทันที",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ซ่อนอาการไว้",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ทดลองกินซ้ำ",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q15", avatar:"🏷️", speaker:"หมวด 3", story:"ยาที่ไม่มีฉลากควรทำอย่างไร?", options:[
+        { id:"EP7_Q15", avatar:"", speaker:"หมวด 3", story:"ยาที่ไม่มีฉลากควรทำอย่างไร?", options:[
             {id:"A",text:"ทดลองกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ดมแล้วกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ไม่กินและถามผู้ใหญ่",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"แบ่งให้เพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q16", avatar:"🙅", speaker:"หมวด 4: สถานการณ์", story:"เพื่อนชวนกินยาเล่น ควรทำอย่างไร?", options:[
+        { id:"EP7_Q16", avatar:"", speaker:"หมวด 4: สถานการณ์", story:"เพื่อนชวนกินยาเล่น ควรทำอย่างไร?", options:[
             {id:"A",text:"ปฏิเสธ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินตามเพื่อน",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ซ่อนยาไว้",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ชวนเพื่อนเพิ่ม",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q17", avatar:"👀", speaker:"หมวด 4", story:"พบยาเม็ดบนพื้น ควรทำอย่างไร?", options:[
+        { id:"EP7_Q17", avatar:"", speaker:"หมวด 4", story:"พบยาเม็ดบนพื้น ควรทำอย่างไร?", options:[
             {id:"A",text:"หยิบกิน",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"เก็บไว้กินทีหลัง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ให้เพื่อนกิน",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ไม่กินและแจ้งผู้ใหญ่",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP7_Q18", avatar:"👨‍👩‍", speaker:"หมวด 4", story:"ใครควรดูแลการกินยาของเด็ก?", options:[
+        { id:"EP7_Q18", avatar:"", speaker:"หมวด 4", story:"ใครควรดูแลการกินยาของเด็ก?", options:[
             {id:"A",text:"เพื่อนร่วมชั้น",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ผู้ปกครองหรือผู้ใหญ่",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"คนที่เดินผ่านมา",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"เด็กด้วยกันเอง",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q19", avatar:"🆘", speaker:"หมวด 4", story:"สงสัยว่ากินยาเกินขนาด ควรทำอย่างไร?", options:[
+        { id:"EP7_Q19", avatar:"", speaker:"หมวด 4", story:"สงสัยว่ากินยาเกินขนาด ควรทำอย่างไร?", options:[
             {id:"A",text:"รอดูอาการคนเดียว",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ทำให้อาเจียนเอง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"รีบแจ้งผู้ใหญ่และขอความช่วยเหลือฉุกเฉิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"กินยาอื่นแก้เอง",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q20", avatar:"✅", speaker:"หมวด 4", story:"ยาควรใช้เมื่อใด?", options:[
+        { id:"EP7_Q20", avatar:"", speaker:"หมวด 4", story:"ยาควรใช้เมื่อใด?", options:[
             {id:"A",text:"เมื่อมีข้อบ่งใช้และใช้ตามคำแนะนำ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"เมื่ออยากลอง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"เมื่อเพื่อนให้",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"เมื่อเห็นยาสีสวย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]}
     ]},
     ep8: { title: "ตอนที่ 8: ยาในชีวิตประจำวัน (เพิ่มเติม)", questions: [
-        { id:"EP8_Q1", avatar:"💊", speaker:"ครู", story:"ยาพาราเซตามอลผู้ใหญ่ กินครั้งละกี่เม็ด?", options:[
+        { id:"EP8_Q1", avatar:"", speaker:"ครู", story:"ยาพาราเซตามอลผู้ใหญ่ กินครั้งละกี่เม็ด?", options:[
             {id:"A",text:"1-2 เม็ด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง! (500-1000 mg)"},
             {id:"B",text:"5 เม็ด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"10 เม็ด",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q2", avatar:"⏰", speaker:"เภสัชกร", story:"ยาพาราเซตามอลควรห่างกันกี่ชั่วโมง?", options:[
+        { id:"EP8_Q2", avatar:"", speaker:"เภสัชกร", story:"ยาพาราเซตามอลควรห่างกันกี่ชั่วโมง?", options:[
             {id:"A",text:"ทุก 1 ชั่วโมง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ทุก 4-6 ชั่วโมง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ทุก 12 ชั่วโมง",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q3", avatar:"🧴", speaker:"แม่", story:"เด็กเป็นไข้ ควรเช็ดตัวด้วยน้ำอะไร?", options:[
+        { id:"EP8_Q3", avatar:"", speaker:"แม่", story:"เด็กเป็นไข้ ควรเช็ดตัวด้วยน้ำอะไร?", options:[
             {id:"A",text:"น้ำเย็นจัด",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"น้ำอุ่นหรือน้ำอุณหภูมิห้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"แอลกอฮอล์",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
@@ -963,7 +958,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"รักษาโรคที่เป็นแล้ว",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ป้องกันโรค",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ทำให้แข็งแรงทันที",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q5", avatar:"🏥", speaker:"พยาบาล", story:"ควรไปหาหมอเมื่อไหร่?", options:[
+        { id:"EP8_Q5", avatar:"", speaker:"พยาบาล", story:"ควรไปหาหมอเมื่อไหร่?", options:[
             {id:"A",text:"เมื่ออาการรุนแรงหรือไม่ดีขึ้น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"เมื่ออยากพบหมอ",hpChange:-10,isCorrect:false,feedback:"ไม่จำเป็น"},
             {id:"C",text:"ไม่เคยต้องไป",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
@@ -971,7 +966,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"สีเปลี่ยน",hpChange:-10,isCorrect:false,feedback:"ไม่แน่เสมอไป"},
             {id:"B",text:"วันที่ EXP บนฉลาก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"รสชาติเปลี่ยน",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q7", avatar:"🧴", speaker:"ครู", story:"ควรเก็บยาอย่างไร?", options:[
+        { id:"EP8_Q7", avatar:"", speaker:"ครู", story:"ควรเก็บยาอย่างไร?", options:[
             {id:"A",text:"ในที่แห้ง เย็น พ้นแสง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ในที่ชื้น แสงแดดส่อง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ในรถ",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
@@ -979,11 +974,11 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"เขย่าขวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ปล่อยนิ่ง",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"อุ่นให้ร้อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q9", avatar:"🚫", speaker:"พ่อ", story:"ควรแบ่งยาให้คนอื่นกินไหม?", options:[
+        { id:"EP8_Q9", avatar:"", speaker:"พ่อ", story:"ควรแบ่งยาให้คนอื่นกินไหม?", options:[
             {id:"A",text:"ควร แบ่งปันกัน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ควร ยาใครยามัน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ได้แล้วแต่กรณี",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q10", avatar:"📞", speaker:"ครู", story:"เบอร์โทรฉุกเฉินทางการแพทย์คือ?", options:[
+        { id:"EP8_Q10", avatar:"", speaker:"ครู", story:"เบอร์โทรฉุกเฉินทางการแพทย์คือ?", options:[
             {id:"A",text:"191",hpChange:-10,isCorrect:false,feedback:"ผิด! นั่นคือตำรวจ"},
             {id:"B",text:"1669",hpChange:0,isCorrect:true,feedback:"ถูกต้อง! สถาบันการแพทย์ฉุกเฉิน"},
             {id:"C",text:"1155",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]}
@@ -1034,7 +1029,7 @@ let detectionFrame = 0;
 // Smooth cursor state
 const smoothCursor = { x: 0, y: 0, targetX: 0, targetY: 0, visible: false };
 
-// Hover state - WITH TOLERANCE & MEMORY
+// Hover state
 const hoverState = {
     single: { 
         target: null, start: 0, selecting: false, 
@@ -1173,7 +1168,7 @@ function toggleHUD() {
         icon.className = 'fa-solid fa-eye-slash';
     }
     
-    showGestureHint(hudVisible ? '👁️ แสดง HUD' : ' ซ่อน HUD (กด H เพื่อสลับ)');
+    showGestureHint(hudVisible ? '👁️ แสดง HUD' : '🙈 ซ่อน HUD (กด H เพื่อสลับ)');
 }
 
 function applyHUDPosition() {
@@ -1438,7 +1433,7 @@ async function startGame() {
         document.getElementById('balloon-hud').classList.remove('hidden');
         document.getElementById('fillblank-hud').classList.add('hidden');
         gameCanvas.classList.remove('hidden');
-        document.getElementById('game-hint').textContent = '🎈 ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
+        document.getElementById('game-hint').textContent = ' ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
         startBalloonGame();
     } else if (currentMode === 'fillblank') {
         document.getElementById('quiz-content').classList.add('hidden');
@@ -1490,7 +1485,7 @@ function shuffleArray(arr) {
     return a;
 }
 
-// ==================== AR HAND TRACKING (STABLE + TOLERANCE) ====================
+// ==================== AR HAND TRACKING (REALISTIC CURSOR) ====================
 async function predictWebcam() {
     const video = document.getElementById('webcam');
     if (!webcamRunning || !handLandmarker || !video.videoWidth) {
@@ -1579,7 +1574,7 @@ async function predictWebcam() {
     if (smoothCursor.visible) {
         const state = hoverState['single'];
         const isPinching = state.grabbing;
-        drawCursor(smoothCursor.x, smoothCursor.y, 'single', isPinching);
+        drawRealisticCursor(smoothCursor.x, smoothCursor.y, 'single', isPinching);
     }
     
     arCtx.restore();
@@ -1593,7 +1588,8 @@ async function predictWebcam() {
     animFrameId = requestAnimationFrame(predictWebcam);
 }
 
-function drawCursor(x, y, team, isPinching) {
+// FIXED: Realistic cursor that appears ABOVE the element being pointed at
+function drawRealisticCursor(x, y, team, isPinching) {
     let color = '#38bdf8';
     if (team === 'A') color = '#60a5fa';
     if (team === 'B') color = '#f87171';
@@ -1604,46 +1600,77 @@ function drawCursor(x, y, team, isPinching) {
         color = '#fbbf24';
     }
     
-    const cursorY = y - 60;
+    // FIXED: Offset cursor to appear ABOVE the element (not below)
+    // Calculate offset based on typical element height
+    const cursorY = y - 80; // Move up 80px to appear above element
+    
+    // Outer glow with animation
+    const time = Date.now() * 0.003;
+    const pulseSize = Math.sin(time) * 3;
+    
+    arCtx.beginPath();
+    arCtx.arc(x, cursorY, 22 + pulseSize, 0, Math.PI * 2);
+    arCtx.fillStyle = color + '40'; // 25% opacity
+    arCtx.fill();
+    
+    // Main circle with gradient
+    const gradient = arCtx.createRadialGradient(x, cursorY, 0, x, cursorY, 20);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, color + '80');
     
     arCtx.beginPath();
     arCtx.arc(x, cursorY, 20, 0, Math.PI * 2);
-    arCtx.fillStyle = color;
+    arCtx.fillStyle = gradient;
     arCtx.shadowColor = color;
-    arCtx.shadowBlur = 12;
+    arCtx.shadowBlur = 20;
     arCtx.fill();
-    
-    arCtx.beginPath();
-    arCtx.arc(x, cursorY, 8, 0, Math.PI * 2);
-    arCtx.fillStyle = '#ffffff';
     arCtx.shadowBlur = 0;
+    
+    // Inner white dot (highlight)
+    arCtx.beginPath();
+    arCtx.arc(x - 5, cursorY - 5, 6, 0, Math.PI * 2);
+    arCtx.fillStyle = 'rgba(255,255,255,0.8)';
     arCtx.fill();
     
+    // Pinch indicator
     if (isPinching) {
         arCtx.beginPath();
-        arCtx.arc(x, cursorY, 28, 0, Math.PI * 2);
+        arCtx.arc(x, cursorY, 30, 0, Math.PI * 2);
         arCtx.strokeStyle = '#fbbf24';
         arCtx.lineWidth = 3;
         arCtx.stroke();
+        
+        // Add grabbing effect
+        arCtx.beginPath();
+        arCtx.arc(x, cursorY, 25, 0, Math.PI * 2);
+        arCtx.strokeStyle = '#fbbf24' + '60';
+        arCtx.lineWidth = 2;
+        arCtx.stroke();
     }
     
+    // Progress ring for hold-to-select
     if (state && state.target && state.start > 0 && !state.grabbing) {
         const elapsed = performance.now() - state.start;
         const progress = Math.min(elapsed / 1000, 1.0);
+        
         arCtx.beginPath();
-        arCtx.arc(x, cursorY, 30, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
+        arCtx.arc(x, cursorY, 28, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
         arCtx.strokeStyle = '#10b981';
         arCtx.lineWidth = 4;
         arCtx.stroke();
     }
+    
+    // Draw finger/hand indicator (small dot below cursor)
+    arCtx.beginPath();
+    arCtx.arc(x, cursorY + 35, 5, 0, Math.PI * 2);
+    arCtx.fillStyle = color + '80';
+    arCtx.fill();
 }
 
-// FIXED: Enhanced intersection with tolerance & memory
 function checkIntersection(x, y, team, isPinching) {
     const state = hoverState[team];
     let hitBtn = null;
     
-    // FIXED: Increased tolerance to 50px for better detection
     const HOVER_TOLERANCE = 50;
     
     const isInside = (x, y, rect, tolerance = 0) => {
@@ -1663,7 +1690,6 @@ function checkIntersection(x, y, team, isPinching) {
             const btnC = document.getElementById('opt-c');
             const btnD = document.getElementById('opt-d');
             
-            // Remove previous pointed-at class
             ['a','b','c','d'].forEach(k => {
                 const btn = document.getElementById(`opt-${k}`);
                 if (btn) btn.classList.remove('pointed-at');
@@ -1688,7 +1714,7 @@ function checkIntersection(x, y, team, isPinching) {
         }
     }
     
-    // Balloon mode
+    // Balloon mode - FIXED: Balloon stops when pointed at
     if (currentMode === 'balloon' && balloonState.running && balloonState.baskets && balloonState.baskets.length > 0) {
         const rect = gameCanvas.getBoundingClientRect();
         const cx = x - rect.left;
@@ -1708,6 +1734,8 @@ function checkIntersection(x, y, team, isPinching) {
                     const dist = Math.sqrt(Math.pow(cx - b.x, 2) + Math.pow(cy - b.y, 2));
                     if (dist <= (b.r + HOVER_TOLERANCE)) {
                         hitBtn = { type: 'balloon', balloon: b, index: i };
+                        // FIXED: Stop balloon movement when pointed at
+                        b.isHovered = true;
                         break;
                     }
                 }
@@ -1750,7 +1778,7 @@ function checkIntersection(x, y, team, isPinching) {
                 state.grabbing = true;
                 state.grabTarget = hitBtn;
                 playSound('tick');
-                showGestureHint(' หยิบแล้ว! ลากไปวาง');
+                showGestureHint('🤏 หยิบแล้ว! ลากไปวาง');
                 return;
             }
         }
@@ -1761,7 +1789,7 @@ function checkIntersection(x, y, team, isPinching) {
             } else if (hitBtn.type === 'blank' && state.grabTarget.type === 'word') {
                 handleWordDrop(state.grabTarget.word, hitBtn.blank);
             } else {
-                showGestureHint(' วางไม่ถูกที่');
+                showGestureHint('❌ วางไม่ถูกที่');
             }
             state.grabbing = false;
             state.grabTarget = null;
@@ -1839,6 +1867,13 @@ function resetAllHover() {
         if (badge) badge.classList.add('hidden');
         if (btn) btn.classList.remove('pointed-at');
     });
+    
+    // Reset balloon hover state
+    if (balloonState.balloons) {
+        balloonState.balloons.forEach(b => {
+            if (b) b.isHovered = false;
+        });
+    }
 }
 
 // ==================== QUIZ MODE ====================
@@ -2010,7 +2045,7 @@ function updateTeamScore() {
     if (b) b.textContent = teamScore.B;
 }
 
-// ==================== BALLOON GAME ====================
+// ==================== BALLOON GAME (REALISTIC BASKETS + HOVER STOP) ====================
 function startBalloonGame() {
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
@@ -2022,7 +2057,7 @@ function startBalloonGame() {
         balloons: [],
         baskets: [
             { x: 10, y: basketY, w: basketW, h: basketH, label: '✅ ยาถูก', color: '#10b981', category: 'correct' },
-            { x: Math.floor(displayWidth / 2) + 10, y: basketY, w: basketW, h: basketH, label: '❌ ยาผิด', color: '#ef4444', category: 'wrong' }
+            { x: Math.floor(displayWidth / 2) + 10, y: basketY, w: basketW, h: basketH, label: ' ยาผิด', color: '#ef4444', category: 'wrong' }
         ],
         correct: 0,
         wrong: 0,
@@ -2065,7 +2100,6 @@ function spawnBalloon() {
     
     const colors = ['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899'];
     const displayWidth = window.innerWidth;
-    const displayHeight = window.innerHeight;
     const balloonR = Math.max(40, displayWidth * 0.06);
     
     balloonState.balloons.push({
@@ -2079,7 +2113,8 @@ function spawnBalloon() {
         speed: 2 + Math.random() * 2,
         wobble: Math.random() * Math.PI * 2,
         question: q,
-        grabbed: false
+        grabbed: false,
+        isHovered: false // NEW: Track hover state
     });
 }
 
@@ -2096,9 +2131,22 @@ function renderBalloonGame() {
     const basketFontSize = Math.max(16, displayWidth * 0.025);
     const balloonFontSize = Math.max(12, displayWidth * 0.018);
     
+    // Draw realistic baskets
     balloonState.baskets.forEach(basket => {
         if (!basket) return;
-        ctx.fillStyle = basket.color + '40';
+        
+        // Basket shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(basket.x + basket.w/2, basket.y + basket.h - 5, basket.w/2, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Basket body with gradient
+        const basketGradient = ctx.createLinearGradient(basket.x, basket.y, basket.x, basket.y + basket.h);
+        basketGradient.addColorStop(0, basket.color + '60');
+        basketGradient.addColorStop(1, basket.color + '90');
+        
+        ctx.fillStyle = basketGradient;
         ctx.strokeStyle = basket.color;
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -2110,12 +2158,22 @@ function renderBalloonGame() {
         ctx.fill();
         ctx.stroke();
         
-        ctx.fillStyle = basket.color;
+        // Basket icon
+        ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${basketFontSize}px Kanit, sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(basket.label, basket.x + basket.w/2, basket.y + basket.h/2 + basketFontSize/3);
+        
+        // Basket rim
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(basket.x + 10, basket.y + 20);
+        ctx.lineTo(basket.x + basket.w - 10, basket.y + 20);
+        ctx.stroke();
     });
     
+    // Update and draw balloons
     for (let i = balloonState.balloons.length - 1; i >= 0; i--) {
         const b = balloonState.balloons[i];
         if (!b) continue;
@@ -2123,37 +2181,71 @@ function renderBalloonGame() {
         const state = hoverState['single'];
         const isGrabbed = state.grabbing && state.grabTarget && state.grabTarget.type === 'balloon' && state.grabTarget.balloon === b;
         
-        if (!isGrabbed) {
+        // FIXED: Stop balloon movement when hovered or grabbed
+        if (!isGrabbed && !b.isHovered) {
             b.y += b.speed;
             b.wobble += 0.05;
             b.x += Math.sin(b.wobble) * 0.5;
-        } else {
+        } else if (isGrabbed) {
+            // Follow cursor when grabbed
             b.x = smoothCursor.x;
-            b.y = smoothCursor.y + 60;
+            b.y = smoothCursor.y + 80; // Offset to appear below cursor
         }
+        // If hovered but not grabbed, balloon stays in place (doesn't move)
         
-        ctx.fillStyle = b.color;
+        // Balloon shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(b.x + 5, b.y + b.r * 1.2 + 10, b.r * 0.8, b.r * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Balloon body with gradient
+        const balloonGradient = ctx.createRadialGradient(b.x - b.r/3, b.y - b.r/3, 0, b.x, b.y, b.r);
+        balloonGradient.addColorStop(0, b.color);
+        balloonGradient.addColorStop(1, b.color + 'c0');
+        
+        ctx.fillStyle = balloonGradient;
         ctx.shadowColor = b.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = b.isHovered || isGrabbed ? 25 : 15; // More glow when hovered
         ctx.beginPath();
         ctx.ellipse(b.x, b.y, b.r, b.r * 1.2, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
         
-        ctx.strokeStyle = '#ffffff';
+        // Balloon highlight (shine)
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(b.x - b.r/3, b.y - b.r/3, b.r/4, b.r/6, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // String
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(b.x, b.y + b.r * 1.2);
         ctx.lineTo(b.x, b.y + b.r * 1.2 + 30);
         ctx.stroke();
         
+        // Text
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${balloonFontSize}px Kanit, sans-serif`;
         ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
         const words = b.text.split(' ');
         words.forEach((word, wi) => {
             ctx.fillText(word, b.x, b.y - b.r/2 + wi * (balloonFontSize + 2));
         });
+        ctx.shadowBlur = 0;
+        
+        // Hover effect - scale up and glow
+        if (b.isHovered && !isGrabbed) {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(b.x, b.y, b.r + 5, b.r * 1.2 + 5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
         
         if (b.y > displayHeight + 100 && !isGrabbed) {
             balloonState.balloons.splice(i, 1);
@@ -2374,7 +2466,7 @@ function renderFillBlankGame() {
         
         if (isGrabbed) {
             drawX = smoothCursor.x - word.w / 2;
-            drawY = smoothCursor.y + 60 - word.h / 2;
+            drawY = smoothCursor.y + 80 - word.h / 2;
         }
         
         ctx.fillStyle = '#8b5cf6';
@@ -2466,7 +2558,7 @@ function showResult() {
     if (correctEl) correctEl.textContent = correctCount + ' ข้อ';
     if (accuracyEl) accuracyEl.textContent = accuracy + '%';
     
-    let badge = '🔰 ผู้ฝึกหัด';
+    let badge = ' ผู้ฝึกหัด';
     let emoji = '📚';
     if (accuracy >= 80) { badge = '🎖️ เภสัชกรอัจฉริยะ'; emoji = '🏆'; triggerConfetti(); }
     else if (accuracy >= 60) { badge = '🛡️ ผู้พิทักษ์ตู้ยา'; emoji = '🎉'; }
@@ -2561,7 +2653,7 @@ function openDashboard() {
     if (bestEl) bestEl.textContent = Math.round(stats.bestAccuracy) + '%';
     
     const modeNames = {quiz:'ตอบคำถาม',balloon:'จับลูกโป่ง',fillblank:'เติมคำ',free:'อิสระ'};
-    const modeIcons = {quiz:'❓',balloon:'🎈',fillblank:'🧩',free:'♾️'};
+    const modeIcons = {quiz:'❓',balloon:'',fillblank:'🧩',free:'♾️'};
     const modeContainer = document.getElementById('mode-stats');
     if (modeContainer) {
         modeContainer.innerHTML = '';
