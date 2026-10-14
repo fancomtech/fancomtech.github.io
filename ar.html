@@ -2,8 +2,8 @@
 <html lang="th" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Final)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Universal)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,14 +23,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&display=swap');
-        body { font-family: 'Kanit', sans-serif; user-select: none; -webkit-user-select: none; }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            user-select: none; 
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
         .mirror-mode { transform: scaleX(-1); }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(15,23,42,0.6); }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .ar-hover-active { transform: scale(1.03) !important; box-shadow: 0 0 30px rgba(56,189,248,0.8) !important; border-color: #38bdf8 !important; }
-        @keyframes pulse-red { 0%,100%{transform:scale(1);color:#ef4444} 50%{transform:scale(1.15);color:#dc2626} }
+        
+        .ar-hover-active { 
+            transform: scale(1.03) !important; 
+            box-shadow: 0 0 30px rgba(56,189,248,0.8) !important; 
+            border-color: #38bdf8 !important; 
+        }
+        
+        @keyframes pulse-red { 
+            0%,100%{transform:scale(1);color:#ef4444} 
+            50%{transform:scale(1.15);color:#dc2626} 
+        }
         .timer-warning { animation: pulse-red 0.5s infinite; }
+        
         .game-canvas { touch-action: none; }
         .option-btn { transition: all 0.2s ease; position: relative; }
         
@@ -51,142 +76,151 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        /* Gesture indicator */
         .gesture-hint {
             position: fixed;
-            bottom: 80px;
+            bottom: 10vh;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: clamp(12px, 2vw, 18px);
             z-index: 100;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
+            white-space: nowrap;
         }
         .gesture-hint.show { opacity: 1; }
+        
+        /* Responsive utilities */
+        .responsive-text { font-size: clamp(12px, 2.5vw, 24px); }
+        .responsive-title { font-size: clamp(20px, 5vw, 48px); }
+        
+        /* Prevent zoom on double tap */
+        @media (max-width: 768px) {
+            .option-btn { min-height: 60px; }
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen overflow-x-hidden">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
 
 <div id="fps-counter">FPS: 0</div>
 <div id="gesture-hint" class="gesture-hint"></div>
 
-<div id="app" class="relative w-full h-screen overflow-hidden">
+<div id="app" class="relative w-full h-full overflow-hidden">
     <video id="webcam" class="hidden absolute inset-0 w-full h-full object-cover mirror-mode" autoplay playsinline></video>
     <canvas id="ar-canvas" class="hidden absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
     <canvas id="game-canvas" class="hidden absolute inset-0 w-full h-full z-15 game-canvas"></canvas>
 
     <!-- ========== SCREEN 1: MAIN MENU ========== -->
-    <div id="start-screen" class="absolute inset-0 z-20 flex flex-col items-center p-4 md:p-6 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md overflow-y-auto">
+    <div id="start-screen" class="absolute inset-0 z-20 flex flex-col items-center p-2 md:p-6 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md overflow-y-auto">
         
-        <div class="w-full max-w-5xl flex justify-between items-center mb-4">
-            <div class="text-xs font-bold px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-600 dark:text-sky-400">
-                <i class="fa-solid fa-shield-halved"></i> AR Learning Game
+        <div class="w-full max-w-5xl flex justify-between items-center mb-2 md:mb-4">
+            <div class="text-xs font-bold px-2 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-600 dark:text-sky-400">
+                <i class="fa-solid fa-shield-halved"></i> <span class="hidden md:inline">AR Learning Game</span>
             </div>
-            <div class="flex gap-2 items-center">
-                <div class="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 shadow flex items-center gap-2">
-                    <i class="fa-regular fa-clock text-sky-500"></i>
-                    <span id="clock-time" class="text-sm font-bold font-mono">00:00</span>
+            <div class="flex gap-1 md:gap-2 items-center">
+                <div class="bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 shadow flex items-center gap-1">
+                    <i class="fa-regular fa-clock text-sky-500 text-xs"></i>
+                    <span id="clock-time" class="text-xs font-bold font-mono">00:00</span>
                 </div>
-                <button onclick="toggleMute()" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow hover:scale-105 transition">
-                    <i id="mute-icon" class="fa-solid fa-volume-high text-sky-500"></i>
+                <button onclick="toggleMute()" class="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow">
+                    <i id="mute-icon" class="fa-solid fa-volume-high text-sky-500 text-sm"></i>
                 </button>
-                <button onclick="toggleTheme()" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow hover:scale-105 transition">
-                    <i class="fa-solid fa-moon text-indigo-600 dark:hidden"></i>
-                    <i class="fa-solid fa-sun text-amber-500 hidden dark:inline"></i>
+                <button onclick="toggleTheme()" class="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow">
+                    <i class="fa-solid fa-moon text-indigo-600 dark:hidden text-sm"></i>
+                    <i class="fa-solid fa-sun text-amber-500 hidden dark:inline text-sm"></i>
                 </button>
-                <button onclick="toggleFPS()" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow hover:scale-105 transition" title="กด F เพื่อเปิด/ปิด FPS">
-                    <i class="fa-solid fa-gauge-high text-emerald-500"></i>
+                <button onclick="toggleFPS()" class="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow">
+                    <i class="fa-solid fa-gauge-high text-emerald-500 text-sm"></i>
                 </button>
             </div>
         </div>
 
-        <div class="text-center max-w-5xl w-full">
-            <div class="inline-block p-3 bg-sky-500/10 rounded-full border border-sky-400/30 mb-2 animate-bounce">
-                <span class="text-5xl">💊</span>
+        <div class="text-center max-w-5xl w-full flex-1 flex flex-col justify-center">
+            <div class="inline-block p-2 md:p-3 bg-sky-500/10 rounded-full border border-sky-400/30 mb-2 animate-bounce mx-auto">
+                <span class="text-4xl md:text-6xl">💊</span>
             </div>
-            <h1 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 dark:from-sky-400 dark:via-teal-300 dark:to-emerald-400 mb-1">
+            <h1 class="responsive-title font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 dark:from-sky-400 dark:via-teal-300 dark:to-emerald-400 mb-1">
                 ภารกิจพิชิตตู้ยา
             </h1>
-            <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">หมอจำเป็นใน 24 ชั่วโมง • เล่นผ่านกล้อง AR</p>
+            <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm mb-3 md:mb-4">หมอจำเป็นใน 24 ชั่วโมง • เล่นผ่านกล้อง AR</p>
 
             <!-- Game Mode Selection -->
-            <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-4 shadow-xl">
-                <label class="block text-sky-700 dark:text-sky-300 text-sm font-bold mb-3">
+            <div class="bg-white/90 dark:bg-slate-800/80 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3 md:mb-4 shadow-xl">
+                <label class="block text-sky-700 dark:text-sky-300 text-xs md:text-sm font-bold mb-2 md:mb-3">
                     <i class="fa-solid fa-gamepad"></i> เลือกโหมดเกม
                 </label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <button onclick="setGameMode('quiz')" id="mode-quiz" class="game-mode-btn py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow">
-                        <i class="fa-solid fa-question-circle block text-2xl mb-1"></i>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-2">
+                    <button onclick="setGameMode('quiz')" id="mode-quiz" class="game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow">
+                        <i class="fa-solid fa-question-circle block text-xl md:text-2xl mb-1"></i>
                         <span class="text-xs">ตอบคำถาม</span>
                     </button>
-                    <button onclick="setGameMode('balloon')" id="mode-balloon" class="game-mode-btn py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow hover:scale-105">
-                        <i class="fa-solid fa-balloon block text-2xl mb-1"></i>
+                    <button onclick="setGameMode('balloon')" id="mode-balloon" class="game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow">
+                        <i class="fa-solid fa-balloon block text-xl md:text-2xl mb-1"></i>
                         <span class="text-xs">จับลูกโป่งยา</span>
                     </button>
-                    <button onclick="setGameMode('fillblank')" id="mode-fillblank" class="game-mode-btn py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow hover:scale-105">
-                        <i class="fa-solid fa-puzzle-piece block text-2xl mb-1"></i>
+                    <button onclick="setGameMode('fillblank')" id="mode-fillblank" class="game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow">
+                        <i class="fa-solid fa-puzzle-piece block text-xl md:text-2xl mb-1"></i>
                         <span class="text-xs">เติมคำ</span>
                     </button>
-                    <button onclick="setGameMode('free')" id="mode-free" class="game-mode-btn py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow hover:scale-105">
-                        <i class="fa-solid fa-infinity block text-2xl mb-1"></i>
+                    <button onclick="setGameMode('free')" id="mode-free" class="game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow">
+                        <i class="fa-solid fa-infinity block text-xl md:text-2xl mb-1"></i>
                         <span class="text-xs">แบบอิสระ</span>
                     </button>
                 </div>
             </div>
 
             <!-- Play Mode -->
-            <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-4 shadow-xl">
-                <label class="block text-sky-700 dark:text-sky-300 text-sm font-bold mb-3">
+            <div class="bg-white/90 dark:bg-slate-800/80 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3 md:mb-4 shadow-xl">
+                <label class="block text-sky-700 dark:text-sky-300 text-xs md:text-sm font-bold mb-2 md:mb-3">
                     <i class="fa-solid fa-users"></i> รูปแบบการเล่น
                 </label>
-                <div class="flex gap-2">
-                    <button id="btn-single" onclick="setPlayMode('single')" class="flex-1 py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow">
-                        <i class="fa-solid fa-user"></i> เดี่ยว
+                <div class="flex gap-1.5 md:gap-2">
+                    <button id="btn-single" onclick="setPlayMode('single')" class="flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow text-sm">
+                        <i class="fa-solid fa-user"></i> <span class="hidden md:inline">เดี่ยว</span>
                     </button>
-                    <button id="btn-team" onclick="setPlayMode('team')" class="flex-1 py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow">
-                        <i class="fa-solid fa-users"></i> ทีม (ซ้าย-ขวา)
+                    <button id="btn-team" onclick="setPlayMode('team')" class="flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow text-sm">
+                        <i class="fa-solid fa-users"></i> <span class="hidden md:inline">ทีม (ซ้าย-ขวา)</span>
                     </button>
                 </div>
             </div>
 
             <!-- Episode Selection -->
-            <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-4 shadow-xl">
-                <label class="block text-sky-700 dark:text-sky-300 text-sm font-bold mb-3">
+            <div class="bg-white/90 dark:bg-slate-800/80 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3 md:mb-4 shadow-xl">
+                <label class="block text-sky-700 dark:text-sky-300 text-xs md:text-sm font-bold mb-2 md:mb-3">
                     <i class="fa-solid fa-book-open"></i> เลือกตอนข้อสอบ
                 </label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1" id="episode-list"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 md:gap-2 max-h-32 md:max-h-48 overflow-y-auto pr-1" id="episode-list"></div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-                <button onclick="startGame()" class="py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:scale-105 transition">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-1.5 md:gap-2 mb-3 md:mb-4">
+                <button onclick="startGame()" class="py-2.5 md:py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm md:text-base">
                     <i class="fa-solid fa-play"></i> เริ่มเกม
                 </button>
-                <button onclick="openDashboard()" class="py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 hover:scale-105 transition">
+                <button onclick="openDashboard()" class="py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm md:text-base">
                     <i class="fa-solid fa-chart-line"></i> แดชบอร์ด
                 </button>
-                <button onclick="openTeacherDashboard()" class="py-3 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-xl border border-slate-300 dark:border-slate-700 flex items-center justify-center gap-2 hover:scale-105 transition">
+                <button onclick="openTeacherDashboard()" class="py-2.5 md:py-3 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold rounded-xl border border-slate-300 dark:border-slate-700 flex items-center justify-center gap-2 text-sm md:text-base">
                     <i class="fa-solid fa-sliders"></i> จัดการ
                 </button>
             </div>
         </div>
 
-        <div class="text-xs text-slate-500 text-center">
-            <i class="fa-solid fa-hand-pointer text-sky-500"></i> ใช้กล้อง AR + นิ้วชี้ควบคุม • ชี้ค้าง 1 วินาทีเพื่อเลือก • กด F เพื่อดู FPS
+        <div class="text-xs text-slate-500 text-center pb-2">
+            <i class="fa-solid fa-hand-pointer text-sky-500"></i> ใช้กล้อง AR + นิ้วชี้ควบคุม • กด F เพื่อดู FPS
         </div>
     </div>
 
     <!-- ========== SCREEN 2: GAMEPLAY ========== -->
-    <div id="game-screen" class="hidden absolute inset-0 z-20 flex flex-col p-3 pointer-events-none">
+    <div id="game-screen" class="hidden absolute inset-0 z-20 flex flex-col p-2 md:p-3 pointer-events-none">
         
         <!-- HUD Top -->
-        <div class="flex justify-between items-start gap-2 pointer-events-auto mb-2">
-            <div id="hud-hp" class="bg-white/90 dark:bg-slate-900/90 backdrop-blur p-2 rounded-xl border border-slate-200 dark:border-slate-700 w-40 shadow">
+        <div class="flex justify-between items-start gap-1 md:gap-2 pointer-events-auto mb-1 md:mb-2">
+            <div id="hud-hp" class="bg-white/90 dark:bg-slate-900/90 backdrop-blur p-1.5 md:p-2 rounded-xl border border-slate-200 dark:border-slate-700 w-28 md:w-40 shadow">
                 <div class="flex justify-between text-xs font-bold mb-1">
                     <span class="text-rose-600"><i class="fa-solid fa-heart"></i> HP</span>
                     <span id="hp-text" class="text-rose-600">100</span>
@@ -196,133 +230,133 @@
                 </div>
             </div>
 
-            <div id="hud-team" class="hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 flex gap-4 shadow">
+            <div id="hud-team" class="hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-slate-200 dark:border-slate-700 flex gap-3 md:gap-4 shadow">
                 <div class="text-center">
                     <div class="text-xs text-sky-600 font-bold">ทีม A</div>
-                    <div id="score-a" class="text-xl font-black text-sky-700 dark:text-sky-300">0</div>
+                    <div id="score-a" class="text-lg md:text-xl font-black text-sky-700 dark:text-sky-300">0</div>
                 </div>
                 <div class="w-px bg-slate-300 dark:bg-slate-700"></div>
                 <div class="text-center">
                     <div class="text-xs text-rose-600 font-bold">ทีม B</div>
-                    <div id="score-b" class="text-xl font-black text-rose-700 dark:text-rose-300">0</div>
+                    <div id="score-b" class="text-lg md:text-xl font-black text-rose-700 dark:text-rose-300">0</div>
                 </div>
             </div>
 
-            <div class="flex gap-2 items-center">
-                <div id="timer-ui" class="hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur p-2 rounded-xl border border-amber-500/50 flex items-center gap-2 shadow">
-                    <div class="relative w-10 h-10">
-                        <svg class="w-10 h-10 -rotate-90">
-                            <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" fill="none" class="text-slate-300 dark:text-slate-700"/>
-                            <circle id="timer-circle" cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="100.5" stroke-dashoffset="0" class="text-amber-500 transition-all" stroke-linecap="round"/>
+            <div class="flex gap-1 md:gap-2 items-center">
+                <div id="timer-ui" class="hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur p-1.5 md:p-2 rounded-xl border border-amber-500/50 flex items-center gap-1 md:gap-2 shadow">
+                    <div class="relative w-8 h-8 md:w-10 md:h-10">
+                        <svg class="w-full h-full -rotate-90">
+                            <circle cx="50%" cy="50%" r="40%" stroke="currentColor" stroke-width="3" fill="none" class="text-slate-300 dark:text-slate-700"/>
+                            <circle id="timer-circle" cx="50%" cy="50%" r="40%" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="100.5" stroke-dashoffset="0" class="text-amber-500 transition-all" stroke-linecap="round"/>
                         </svg>
                         <span id="timer-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-400">15</span>
                     </div>
                 </div>
-                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow">
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-2 md:px-3 py-1.5 md:py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow">
                     <div class="text-xs text-sky-700 dark:text-sky-300">ข้อที่</div>
-                    <div id="progress-text" class="font-bold text-lg">1/10</div>
+                    <div id="progress-text" class="font-bold text-sm md:text-lg">1/10</div>
                 </div>
-                <button onclick="quitGame()" class="bg-red-500 hover:bg-red-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow pointer-events-auto">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="quitGame()" class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow pointer-events-auto">
+                    <i class="fa-solid fa-xmark text-sm md:text-base"></i>
                 </button>
             </div>
         </div>
 
         <!-- Quiz Mode Content -->
-        <div id="quiz-content" class="hidden my-auto max-w-2xl w-full mx-auto space-y-3 pointer-events-auto">
-            <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl border-2 border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-3">
-                <div id="q-avatar" class="text-4xl bg-sky-100 dark:bg-slate-800 p-2 rounded-xl">🤒</div>
-                <div class="flex-1">
-                    <div id="q-speaker" class="text-xs font-bold text-sky-700 dark:text-sky-400">ผู้ป่วย</div>
-                    <p id="q-story" class="text-slate-800 dark:text-slate-100 font-medium text-sm md:text-base">กำลังโหลด...</p>
+        <div id="quiz-content" class="hidden my-auto max-w-2xl w-full mx-auto space-y-2 md:space-y-3 pointer-events-auto px-2">
+            <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur p-3 md:p-4 rounded-2xl border-2 border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-2 md:gap-3">
+                <div id="q-avatar" class="text-3xl md:text-4xl bg-sky-100 dark:bg-slate-800 p-1.5 md:p-2 rounded-xl flex-shrink-0">🤒</div>
+                <div class="flex-1 min-w-0">
+                    <div id="q-speaker" class="text-xs font-bold text-sky-700 dark:text-sky-400 truncate">ผู้ป่วย</div>
+                    <p id="q-story" class="text-slate-800 dark:text-slate-100 font-medium text-sm md:text-base leading-relaxed break-words">กำลังโหลด...</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-2">
-                <button id="opt-a" onclick="handleAnswer('A')" class="option-btn w-full p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-sky-300 dark:border-sky-500/50 text-left flex items-center gap-3 shadow pointer-events-auto">
+            <div class="grid grid-cols-1 gap-1.5 md:gap-2">
+                <button id="opt-a" onclick="handleAnswer('A')" class="option-btn w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-sky-300 dark:border-sky-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-a" class="absolute inset-y-0 left-0 bg-sky-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-9 h-9 rounded-lg bg-sky-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10">ก</span>
-                    <span id="txt-a" class="text-sm flex-1 z-10">ตัวเลือก A</span>
+                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-sky-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ก</span>
+                    <span id="txt-a" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก A</span>
                     <span id="badge-a" class="hidden text-xs px-2 py-1 rounded-full bg-sky-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-b" onclick="handleAnswer('B')" class="option-btn w-full p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-emerald-300 dark:border-emerald-500/50 text-left flex items-center gap-3 shadow pointer-events-auto">
+                <button id="opt-b" onclick="handleAnswer('B')" class="option-btn w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-emerald-300 dark:border-emerald-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-b" class="absolute inset-y-0 left-0 bg-emerald-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-9 h-9 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10">ข</span>
-                    <span id="txt-b" class="text-sm flex-1 z-10">ตัวเลือก B</span>
+                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ข</span>
+                    <span id="txt-b" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก B</span>
                     <span id="badge-b" class="hidden text-xs px-2 py-1 rounded-full bg-emerald-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-c" onclick="handleAnswer('C')" class="option-btn hidden w-full p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-purple-300 dark:border-purple-500/50 text-left flex items-center gap-3 shadow pointer-events-auto">
+                <button id="opt-c" onclick="handleAnswer('C')" class="option-btn hidden w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-purple-300 dark:border-purple-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-c" class="absolute inset-y-0 left-0 bg-purple-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-9 h-9 rounded-lg bg-purple-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10">ค</span>
-                    <span id="txt-c" class="text-sm flex-1 z-10">ตัวเลือก C</span>
+                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-purple-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ค</span>
+                    <span id="txt-c" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก C</span>
                     <span id="badge-c" class="hidden text-xs px-2 py-1 rounded-full bg-purple-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-d" onclick="handleAnswer('D')" class="option-btn hidden w-full p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-amber-300 dark:border-amber-500/50 text-left flex items-center gap-3 shadow pointer-events-auto">
+                <button id="opt-d" onclick="handleAnswer('D')" class="option-btn hidden w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-amber-300 dark:border-amber-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-d" class="absolute inset-y-0 left-0 bg-amber-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-9 h-9 rounded-lg bg-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10">ง</span>
-                    <span id="txt-d" class="text-sm flex-1 z-10">ตัวเลือก D</span>
+                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ง</span>
+                    <span id="txt-d" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก D</span>
                     <span id="badge-d" class="hidden text-xs px-2 py-1 rounded-full bg-amber-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
             </div>
         </div>
 
         <!-- Balloon Mode HUD -->
-        <div id="balloon-hud" class="hidden absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-xl border border-sky-300 dark:border-sky-500/30 shadow-lg pointer-events-auto">
-            <div class="flex gap-4 items-center">
+        <div id="balloon-hud" class="hidden absolute top-16 md:top-20 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 md:px-4 py-1.5 md:py-2 rounded-xl border border-sky-300 dark:border-sky-500/30 shadow-lg pointer-events-auto">
+            <div class="flex gap-2 md:gap-4 items-center">
                 <div class="text-center">
                     <div class="text-xs text-slate-600 dark:text-slate-400">จับถูก</div>
-                    <div id="balloon-correct" class="text-2xl font-black text-emerald-600">0</div>
+                    <div id="balloon-correct" class="text-xl md:text-2xl font-black text-emerald-600">0</div>
                 </div>
-                <div class="w-px bg-slate-300 dark:bg-slate-700 h-8"></div>
+                <div class="w-px bg-slate-300 dark:bg-slate-700 h-6 md:h-8"></div>
                 <div class="text-center">
                     <div class="text-xs text-slate-600 dark:text-slate-400">จับผิด</div>
-                    <div id="balloon-wrong" class="text-2xl font-black text-rose-600">0</div>
+                    <div id="balloon-wrong" class="text-xl md:text-2xl font-black text-rose-600">0</div>
                 </div>
-                <div class="w-px bg-slate-300 dark:bg-slate-700 h-8"></div>
+                <div class="w-px bg-slate-300 dark:bg-slate-700 h-6 md:h-8"></div>
                 <div class="text-center">
                     <div class="text-xs text-slate-600 dark:text-slate-400">เวลา</div>
-                    <div id="balloon-time" class="text-2xl font-black text-amber-600">90</div>
+                    <div id="balloon-time" class="text-xl md:text-2xl font-black text-amber-600">90</div>
                 </div>
             </div>
         </div>
 
         <!-- Fill Blank Mode HUD -->
-        <div id="fillblank-hud" class="hidden absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-xl border border-purple-300 dark:border-purple-500/30 shadow-lg pointer-events-auto">
-            <div class="flex gap-4 items-center">
+        <div id="fillblank-hud" class="hidden absolute top-16 md:top-20 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 md:px-4 py-1.5 md:py-2 rounded-xl border border-purple-300 dark:border-purple-500/30 shadow-lg pointer-events-auto">
+            <div class="flex gap-2 md:gap-4 items-center">
                 <div class="text-center">
                     <div class="text-xs text-slate-600 dark:text-slate-400">ข้อที่</div>
-                    <div id="fb-progress" class="text-xl font-black text-purple-600">1/10</div>
+                    <div id="fb-progress" class="text-lg md:text-xl font-black text-purple-600">1/10</div>
                 </div>
-                <div class="w-px bg-slate-300 dark:bg-slate-700 h-8"></div>
+                <div class="w-px bg-slate-300 dark:bg-slate-700 h-6 md:h-8"></div>
                 <div class="text-center">
                     <div class="text-xs text-slate-600 dark:text-slate-400">คะแนน</div>
-                    <div id="fb-score" class="text-2xl font-black text-emerald-600">0</div>
+                    <div id="fb-score" class="text-xl md:text-2xl font-black text-emerald-600">0</div>
                 </div>
             </div>
         </div>
 
         <!-- Bottom Hint -->
-        <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/90 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 shadow pointer-events-auto mt-auto">
+        <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/90 py-1.5 md:py-2 px-3 md:px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 shadow pointer-events-auto mt-auto">
             <i class="fa-solid fa-hand-pointer text-sky-500 animate-bounce"></i> <span id="game-hint">ยกนิ้วชี้ขึ้นเพื่อควบคุม</span>
         </div>
     </div>
 
     <!-- ========== SCREEN 3: RESULT ========== -->
-    <div id="result-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-6 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-lg">
-        <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center shadow-2xl space-y-4">
-            <div class="text-6xl" id="res-emoji">🏆</div>
-            <h2 class="text-2xl font-black" id="res-title">จบเกม!</h2>
-            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl space-y-2">
+    <div id="result-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4 md:p-6 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-lg">
+        <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center shadow-2xl space-y-3 md:space-y-4">
+            <div class="text-5xl md:text-6xl" id="res-emoji">🏆</div>
+            <h2 class="text-xl md:text-2xl font-black" id="res-title">จบเกม!</h2>
+            <div class="bg-slate-50 dark:bg-slate-800 p-3 md:p-4 rounded-xl space-y-2">
                 <div class="flex justify-between text-sm"><span>จำนวนข้อ:</span><span id="res-total" class="font-bold text-sky-600">10</span></div>
                 <div class="flex justify-between text-sm"><span>ตอบถูก:</span><span id="res-correct" class="font-bold text-emerald-600">8</span></div>
                 <div class="flex justify-between text-sm"><span>ความถูกต้อง:</span><span id="res-accuracy" class="font-bold text-purple-600">80%</span></div>
             </div>
-            <div class="p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">🎖️ เภสัชกรอัจฉริยะ</div>
+            <div class="p-2 md:p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">🎖️ เภสัชกรอัจฉริยะ</div>
             <div class="flex gap-2">
-                <button onclick="restartGame()" class="flex-1 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow">
+                <button onclick="restartGame()" class="flex-1 py-2.5 md:py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow text-sm md:text-base">
                     <i class="fa-solid fa-rotate-right"></i> เล่นใหม่
                 </button>
-                <button onclick="quitGame()" class="py-3 px-5 bg-slate-200 dark:bg-slate-800 font-bold rounded-xl border border-slate-300 dark:border-slate-700">
+                <button onclick="quitGame()" class="py-2.5 md:py-3 px-3 md:px-5 bg-slate-200 dark:bg-slate-800 font-bold rounded-xl border border-slate-300 dark:border-slate-700 text-sm md:text-base">
                     หน้าหลัก
                 </button>
             </div>
@@ -330,172 +364,172 @@
     </div>
 
     <!-- ========== SCREEN 4: DASHBOARD ========== -->
-    <div id="dashboard-screen" class="hidden absolute inset-0 z-30 p-4 md:p-6 bg-slate-100 dark:bg-slate-950 overflow-y-auto">
+    <div id="dashboard-screen" class="hidden absolute inset-0 z-30 p-3 md:p-6 bg-slate-100 dark:bg-slate-950 overflow-y-auto">
         <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold">📊 แดชบอร์ดสถิติ</h1>
-                    <p class="text-slate-600 dark:text-slate-400 text-sm">สรุปผลการเรียนรู้</p>
+                    <h1 class="text-2xl md:text-3xl font-bold">📊 แดชบอร์ดสถิติ</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm">สรุปผลการเรียนรู้</p>
                 </div>
-                <button onclick="closeDashboard()" class="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 shadow">
+                <button onclick="closeDashboard()" class="bg-white dark:bg-slate-800 px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 shadow text-sm">
                     <i class="fa-solid fa-xmark"></i> ปิด
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+                <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-xl flex items-center justify-center text-2xl">🎮</div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-sky-100 dark:bg-sky-900/30 rounded-xl flex items-center justify-center text-xl md:text-2xl">🎮</div>
                         <div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400">เล่นทั้งหมด</div>
-                            <div id="stat-games" class="text-3xl font-black text-sky-600">0</div>
+                            <div class="text-xs md:text-sm text-slate-600 dark:text-slate-400">เล่นทั้งหมด</div>
+                            <div id="stat-games" class="text-2xl md:text-3xl font-black text-sky-600">0</div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-2xl">✅</div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-xl md:text-2xl">✅</div>
                         <div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400">ความถูกต้องเฉลี่ย</div>
-                            <div id="stat-accuracy" class="text-3xl font-black text-emerald-600">0%</div>
+                            <div class="text-xs md:text-sm text-slate-600 dark:text-slate-400">ความถูกต้องเฉลี่ย</div>
+                            <div id="stat-accuracy" class="text-2xl md:text-3xl font-black text-emerald-600">0%</div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-2xl">🏆</div>
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center text-xl md:text-2xl"></div>
                         <div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400">คะแนนสูงสุด</div>
-                            <div id="stat-best" class="text-3xl font-black text-amber-600">0%</div>
+                            <div class="text-xs md:text-sm text-slate-600 dark:text-slate-400">คะแนนสูงสุด</div>
+                            <div id="stat-best" class="text-2xl md:text-3xl font-black text-amber-600">0%</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow mb-6">
-                <h2 class="text-xl font-bold mb-4">📈 สถิติตามโหมดเกม</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="mode-stats"></div>
+            <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow mb-4 md:mb-6">
+                <h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4">📈 สถิติตามโหมดเกม</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3" id="mode-stats"></div>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
-                <h2 class="text-xl font-bold mb-4">📚 สถิติตามตอน</h2>
+            <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4"> สถิติตามตอน</h2>
                 <div class="space-y-2" id="episode-stats"></div>
             </div>
 
-            <button onclick="clearStats()" class="mt-4 w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold rounded-xl border border-red-500/30 transition">
+            <button onclick="clearStats()" class="mt-4 w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold rounded-xl border border-red-500/30 transition text-sm">
                 <i class="fa-solid fa-trash"></i> ล้างสถิติทั้งหมด
             </button>
         </div>
     </div>
 
     <!-- ========== SCREEN 5: TEACHER DASHBOARD ========== -->
-    <div id="teacher-screen" class="hidden absolute inset-0 z-50 p-4 md:p-6 bg-slate-100 dark:bg-slate-950 overflow-y-auto">
+    <div id="teacher-screen" class="hidden absolute inset-0 z-50 p-3 md:p-6 bg-slate-100 dark:bg-slate-950 overflow-y-auto">
         <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold">👨‍ Teacher Dashboard</h1>
-                    <p class="text-slate-600 dark:text-slate-400 text-sm">จัดการข้อสอบและตั้งค่า</p>
+                    <h1 class="text-2xl md:text-3xl font-bold">👨‍ Teacher Dashboard</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm">จัดการข้อสอบและตั้งค่า</p>
                 </div>
-                <button onclick="closeTeacherDashboard()" class="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 shadow">
+                <button onclick="closeTeacherDashboard()" class="bg-white dark:bg-slate-800 px-3 md:px-4 py-1.5 md:py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 shadow text-sm">
                     <i class="fa-solid fa-xmark"></i> ปิด
                 </button>
             </div>
 
-            <div class="flex border-b border-slate-200 dark:border-slate-800 mb-4 gap-2">
-                <button onclick="switchTab('questions')" id="tab-q" class="py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all">
+            <div class="flex border-b border-slate-200 dark:border-slate-800 mb-3 md:mb-4 gap-1 md:gap-2 overflow-x-auto">
+                <button onclick="switchTab('questions')" id="tab-q" class="py-2 px-3 md:px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all whitespace-nowrap text-sm">
                     <i class="fa-solid fa-list"></i> คลังข้อสอบ
                 </button>
-                <button onclick="switchTab('settings')" id="tab-s" class="py-2 px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                <button onclick="switchTab('settings')" id="tab-s" class="py-2 px-3 md:px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all whitespace-nowrap text-sm">
                     <i class="fa-solid fa-sliders"></i> ตั้งค่า
                 </button>
-                <button onclick="switchTab('import')" id="tab-i" class="py-2 px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                <button onclick="switchTab('import')" id="tab-i" class="py-2 px-3 md:px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all whitespace-nowrap text-sm">
                     <i class="fa-solid fa-file-csv"></i> นำเข้า CSV
                 </button>
             </div>
 
-            <div id="content-questions" class="tab-content active bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold">คลังข้อสอบทั้งหมด</h2>
-                    <button onclick="resetQuestions()" class="text-red-600 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs border border-red-500/30">
-                        <i class="fa-solid fa-rotate-left"></i> คืนค่าเริ่มต้น
+            <div id="content-questions" class="tab-content active bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <div class="flex justify-between items-center mb-3 md:mb-4">
+                    <h2 class="text-base md:text-lg font-bold">คลังข้อสอบทั้งหมด</h2>
+                    <button onclick="resetQuestions()" class="text-red-600 hover:bg-red-500/10 px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-xs border border-red-500/30">
+                        <i class="fa-solid fa-rotate-left"></i> <span class="hidden md:inline">คืนค่าเริ่มต้น</span>
                     </button>
                 </div>
-                <div class="max-h-96 overflow-y-auto space-y-3" id="question-list"></div>
+                <div class="max-h-96 overflow-y-auto space-y-2 md:space-y-3" id="question-list"></div>
             </div>
 
-            <div id="content-settings" class="tab-content bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
-                <form onsubmit="saveSettings(event)" class="max-w-xl space-y-4">
-                    <div class="space-y-3">
-                        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-list-ol text-purple-500"></i> จำนวนข้อต่อรอบ</h3>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="qcount" value="5" class="accent-sky-500"> 5 ข้อ</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="qcount" value="10" class="accent-sky-500"> 10 ข้อ</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="qcount" value="20" class="accent-sky-500"> 20 ข้อ</label>
+            <div id="content-settings" class="tab-content bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <form onsubmit="saveSettings(event)" class="max-w-xl space-y-3 md:space-y-4">
+                    <div class="space-y-2 md:space-y-3">
+                        <h3 class="font-bold flex items-center gap-2 text-sm md:text-base"><i class="fa-solid fa-list-ol text-purple-500"></i> จำนวนข้อต่อรอบ</h3>
+                        <div class="flex gap-3 md:gap-4 flex-wrap">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="qcount" value="5" class="accent-sky-500"> 5 ข้อ</label>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="qcount" value="10" class="accent-sky-500"> 10 ข้อ</label>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="qcount" value="20" class="accent-sky-500"> 20 ข้อ</label>
                         </div>
                     </div>
-                    <div class="space-y-3">
-                        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-stopwatch text-sky-500"></i> จับเวลา</h3>
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="set-timer" class="accent-sky-500"> เปิดใช้งาน</label>
+                    <div class="space-y-2 md:space-y-3">
+                        <h3 class="font-bold flex items-center gap-2 text-sm md:text-base"><i class="fa-solid fa-stopwatch text-sky-500"></i> จับเวลา</h3>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="checkbox" id="set-timer" class="accent-sky-500"> เปิดใช้งาน</label>
                         <div class="flex items-center gap-2">
                             <span class="text-sm">เวลาต่อข้อ:</span>
-                            <input type="number" id="set-timer-dur" min="5" max="120" value="15" class="w-20 p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-center">
+                            <input type="number" id="set-timer-dur" min="5" max="120" value="15" class="w-16 md:w-20 p-1.5 md:p-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-center text-sm">
                             <span class="text-sm">วินาที</span>
                         </div>
                     </div>
-                    <div class="space-y-3">
-                        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-list text-emerald-500"></i> จำนวนตัวเลือก</h3>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="optcount" value="2" class="accent-sky-500"> 2 ตัวเลือก</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="optcount" value="3" class="accent-sky-500"> 3 ตัวเลือก</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="optcount" value="4" class="accent-sky-500"> 4 ตัวเลือก</label>
+                    <div class="space-y-2 md:space-y-3">
+                        <h3 class="font-bold flex items-center gap-2 text-sm md:text-base"><i class="fa-solid fa-list text-emerald-500"></i> จำนวนตัวเลือก</h3>
+                        <div class="flex gap-3 md:gap-4 flex-wrap">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="optcount" value="2" class="accent-sky-500"> 2 ตัวเลือก</label>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="optcount" value="3" class="accent-sky-500"> 3 ตัวเลือก</label>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm"><input type="radio" name="optcount" value="4" class="accent-sky-500"> 4 ตัวเลือก</label>
                         </div>
                     </div>
-                    <button type="submit" class="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow">
+                    <button type="submit" class="w-full py-2.5 md:py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow text-sm md:text-base">
                         <i class="fa-solid fa-floppy-disk"></i> บันทึก
                     </button>
                 </form>
             </div>
 
-            <div id="content-import" class="tab-content bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
-                <div class="max-w-2xl space-y-4">
-                    <div class="bg-gradient-to-br from-sky-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800 p-5 rounded-xl border border-sky-200 dark:border-slate-700">
-                        <h3 class="text-xl font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-file-csv text-emerald-600"></i> นำเข้าข้อสอบ CSV</h3>
+            <div id="content-import" class="tab-content bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
+                <div class="max-w-2xl space-y-3 md:space-y-4">
+                    <div class="bg-gradient-to-br from-sky-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800 p-3 md:p-5 rounded-xl border border-sky-200 dark:border-slate-700">
+                        <h3 class="text-lg md:text-xl font-bold mb-2 md:mb-3 flex items-center gap-2"><i class="fa-solid fa-file-csv text-emerald-600"></i> นำเข้าข้อสอบ CSV</h3>
                         
-                        <div class="space-y-3">
-                            <button onclick="downloadTemplate()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2">
+                        <div class="space-y-2 md:space-y-3">
+                            <button onclick="downloadTemplate()" class="w-full py-2.5 md:py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 text-sm md:text-base">
                                 <i class="fa-solid fa-download"></i> ดาวน์โหลดเทมเพลต CSV
                             </button>
                             
-                            <input type="file" id="csv-input" accept=".csv" class="w-full p-3 bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-sm">
+                            <input type="file" id="csv-input" accept=".csv" class="w-full p-2 md:p-3 bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs md:text-sm">
                             
-                            <div class="space-y-2">
-                                <label class="flex items-start gap-2 p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-700 cursor-pointer">
+                            <div class="space-y-1.5 md:space-y-2">
+                                <label class="flex items-start gap-2 p-2 md:p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-700 cursor-pointer">
                                     <input type="radio" name="import-mode" value="merge" checked class="mt-1 accent-sky-500">
                                     <div>
-                                        <div class="font-bold text-sm">เพิ่มจากของเดิม (แนะนำ)</div>
+                                        <div class="font-bold text-xs md:text-sm">เพิ่มจากของเดิม (แนะนำ)</div>
                                         <div class="text-xs text-slate-600 dark:text-slate-400">เก็บข้อสอบเดิม + เพิ่มข้อใหม่</div>
                                     </div>
                                 </label>
-                                <label class="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-900/30 rounded-xl border border-rose-200 dark:border-rose-700 cursor-pointer">
+                                <label class="flex items-start gap-2 p-2 md:p-3 bg-rose-50 dark:bg-rose-900/30 rounded-xl border border-rose-200 dark:border-rose-700 cursor-pointer">
                                     <input type="radio" name="import-mode" value="replace" class="mt-1 accent-rose-500">
                                     <div>
-                                        <div class="font-bold text-sm">แทนที่ทั้งหมด</div>
+                                        <div class="font-bold text-xs md:text-sm">แทนที่ทั้งหมด</div>
                                         <div class="text-xs text-slate-600 dark:text-slate-400">ลบของเก่า ใช้เฉพาะไฟล์ใหม่</div>
                                     </div>
                                 </label>
                             </div>
 
-                            <button onclick="importCSV()" class="w-full py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2">
+                            <button onclick="importCSV()" class="w-full py-2.5 md:py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 text-sm md:text-base">
                                 <i class="fa-solid fa-upload"></i> นำเข้าข้อสอบ
                             </button>
                         </div>
                     </div>
 
-                    <div class="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-200 dark:border-amber-700">
-                        <h4 class="font-bold text-amber-800 dark:text-amber-300 text-sm mb-2">รูปแบบ CSV:</h4>
-                        <div class="bg-white dark:bg-slate-950 p-2 rounded font-mono text-xs overflow-x-auto">
-                            <div class="text-slate-500">episode_id,question_id,avatar,speaker,story,option_a,option_b,option_c,option_d,correct_option,hp_change,feedback</div>
-                            <div class="text-emerald-600">ep7,EP7_Q21,💊,ครู,ยาเก็บอย่างไร?,ตู้เย็น,อุณหภูมิห้อง,ในรถ,กลางแดด,B,0,ถูกต้อง!</div>
+                    <div class="bg-amber-50 dark:bg-amber-900/20 p-2 md:p-3 rounded-xl border border-amber-200 dark:border-amber-700">
+                        <h4 class="font-bold text-amber-800 dark:text-amber-300 text-xs md:text-sm mb-1.5 md:mb-2">รูปแบบ CSV:</h4>
+                        <div class="bg-white dark:bg-slate-950 p-1.5 md:p-2 rounded font-mono text-xs overflow-x-auto">
+                            <div class="text-slate-500 whitespace-nowrap">episode_id,question_id,avatar,speaker,story,option_a,option_b,option_c,option_d,correct_option,hp_change,feedback</div>
+                            <div class="text-emerald-600 whitespace-nowrap">ep7,EP7_Q21,💊,ครู,ยาเก็บอย่างไร?,ตู้เย็น,อุณหภูมิห้อง,ในรถ,กลางแดด,B,0,ถูกต้อง!</div>
                         </div>
                     </div>
                 </div>
@@ -505,7 +539,7 @@
 </div>
 
 <script>
-// ==================== QUESTION BANK (8 Episodes - Same as before) ====================
+// ==================== QUESTION BANK (8 Episodes) ====================
 const DEFAULT_QUESTIONS = {
     ep1: { title: "ตอนที่ 1: เจ็บคอต้องกินยาอะไร?", questions: [
         { id:"EP1_Q1", avatar:"🤒", speaker:"เพื่อน", story:"เจ็บคอ มีน้ำมูก เป็นไข้หวัด ควรทำยังไง?", options:[
@@ -517,10 +551,10 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q3", avatar:"🦠", speaker:"หมอ", story:"กินยาฆ่าเชื้อไม่ครบ แบคทีเรียจะเป็นไง?", options:[
             {id:"A",text:"จะดื้อยา รักษายากขึ้น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"จะอ่อนแอลง",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q4", avatar:"👦", speaker:"น้อง", story:"ยาพาราเซตามอลช่วยเรื่องอะไร?", options:[
+        { id:"EP1_Q4", avatar:"", speaker:"น้อง", story:"ยาพาราเซตามอลช่วยเรื่องอะไร?", options:[
             {id:"A",text:"ลดไข้ แก้ปวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฆ่าเชื้อแบคทีเรีย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q5", avatar:"‍⚕️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
+        { id:"EP1_Q5", avatar:"👩‍️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
             {id:"A",text:"ดี สะดวก",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ดี เป็นอันตราย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP1_Q6", avatar:"🤔", speaker:"นักเรียน", story:"ยาปฏิชีวนะกับยาแก้ปวดเหมือนกันไหม?", options:[
@@ -532,7 +566,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q8", avatar:"👾", speaker:"ครู", story:"วิกฤตเชื้อดื้อยาเกิดจากอะไร?", options:[
             {id:"A",text:"กินยาฆ่าเชื้อผิดวิธี/บ่อยเกิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินอาหารเผ็ด",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q9", avatar:"🤧", speaker:"เพื่อน", story:"คอแดง เจ็บคอ ควรดูแลยังไง?", options:[
+        { id:"EP1_Q9", avatar:"", speaker:"เพื่อน", story:"คอแดง เจ็บคอ ควรดูแลยังไง?", options:[
             {id:"A",text:"กลั้วคอด้วยน้ำเกลืออุ่น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดื่มน้ำเย็นจัด",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP1_Q10", avatar:"🦠", speaker:"หมอ", story:"ยาฆ่าเชื้อฆ่าไวรัสได้ไหม?", options:[
@@ -540,7 +574,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ฆ่าไวรัสได้",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]}
     ]},
     ep2: { title: "ตอนที่ 2: ยาชุดอันตราย", questions: [
-        { id:"EP2_Q1", avatar:"👵", speaker:"ยาย", story:"ยาชุดซื้อตามตลาดนัด ดีไหม?", options:[
+        { id:"EP2_Q1", avatar:"", speaker:"ยาย", story:"ยาชุดซื้อตามตลาดนัด ดีไหม?", options:[
             {id:"A",text:"ไม่ดี อันตรายมาก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดี คุ้มราคา",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP2_Q2", avatar:"⚠️", speaker:"เภสัชกร", story:"กินยาชุดแล้วหายปวดเร็ว เพราะอะไร?", options:[
@@ -555,7 +589,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP2_Q5", avatar:"👴", speaker:"ตา", story:"มีคนเร่ขายยาชุดถึงบ้าน ควรทำไง?", options:[
             {id:"A",text:"ห้ามซื้อเด็ดขาด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ซื้อให้ตากิน",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP2_Q6", avatar:"🚚", speaker:"ผู้ใหญ่บ้าน", story:"รถเร่ขายยาโฆษณาเสียงดัง น่าเชื่อถือไหม?", options:[
+        { id:"EP2_Q6", avatar:"", speaker:"ผู้ใหญ่บ้าน", story:"รถเร่ขายยาโฆษณาเสียงดัง น่าเชื่อถือไหม?", options:[
             {id:"A",text:"น่าเชื่อถือ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่น่าเชื่อถือ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP2_Q7", avatar:"🩻", speaker:"พยาบาล", story:"กินยาชุดบ่อยๆ เสี่ยงเป็นโรคอะไร?", options:[
@@ -590,7 +624,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP3_Q6", avatar:"👦", speaker:"น้อง", story:"ควรกินยาพาราตอนไหน?", options:[
             {id:"A",text:"กินทุกวันป้องกันไข้",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตอนมีไข้หรือปวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP3_Q7", avatar:"🧊", speaker:"แม่", story:"เก็บยาทุกชนิดในตู้เย็น ดีไหม?", options:[
+        { id:"EP3_Q7", avatar:"", speaker:"แม่", story:"เก็บยาทุกชนิดในตู้เย็น ดีไหม?", options:[
             {id:"A",text:"ไม่ดี ยาอาจชื้น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดี ยาสดใหม่",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP3_Q8", avatar:"📅", speaker:"เภสัชกร", story:"รู้ได้ยังไงว่ายาหมดอายุ?", options:[
@@ -610,13 +644,13 @@ const DEFAULT_QUESTIONS = {
         { id:"EP4_Q2", avatar:"🥛", speaker:"น้อง", story:"กินยากับนมสด ดีไหม?", options:[
             {id:"A",text:"ไม่ดี ยาไม่ออกฤทธิ์",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดี นมมีประโยชน์",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP4_Q3", avatar:"☔", speaker:"แม่", story:"ตากฝนมา กินพาราดักไข้ได้ไหม?", options:[
+        { id:"EP4_Q3", avatar:"", speaker:"แม่", story:"ตากฝนมา กินพาราดักไข้ได้ไหม?", options:[
             {id:"A",text:"ไม่ได้ ยาดักไข้ไม่มีจริง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ได้ จะได้ไม่ป่วย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP4_Q4", avatar:"🩹", speaker:"นักเรียน", story:"แผลถลอก ล้างด้วยน้ำเปล่าได้ไหม?", options:[
             {id:"A",text:"ไม่ได้ ต้องแอลกอฮอล์",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ได้ ล้างสิ่งสกปรก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP4_Q5", avatar:"🍼", speaker:"พ่อ", story:"ยาน้ำเด็ก ต้องเขย่าก่อนกินไหม?", options:[
+        { id:"EP4_Q5", avatar:"", speaker:"พ่อ", story:"ยาน้ำเด็ก ต้องเขย่าก่อนกินไหม?", options:[
             {id:"A",text:"ต้องเขย่าทุกครั้ง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ห้ามเขย่า",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP4_Q6", avatar:"🧪", speaker:"พยาบาล", story:"แอลกอฮอล์ราดแผลสด ดีไหม?", options:[
@@ -636,7 +670,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ไม่ได้ ต้องถามหมอก่อน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]}
     ]},
     ep5: { title: "ตอนที่ 5: อันตรายจากการใช้ยา", questions: [
-        { id:"EP5_Q1", avatar:"🧒", speaker:"แม่", story:"เด็ก 5 ขวบเป็นไข้ เอาของผู้ใหญ่หักครึ่งให้กินได้ไหม?", options:[
+        { id:"EP5_Q1", avatar:"", speaker:"แม่", story:"เด็ก 5 ขวบเป็นไข้ เอาของผู้ใหญ่หักครึ่งให้กินได้ไหม?", options:[
             {id:"A",text:"ได้ หักครึ่งก็พอ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ต้องใช้ยาน้ำเด็ก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP5_Q2", avatar:"😖", speaker:"นักเรียน", story:"ยาแก้ปวดกล้ามเนื้อ (NSAIDs) กินตอนไหน?", options:[
@@ -645,19 +679,19 @@ const DEFAULT_QUESTIONS = {
         { id:"EP5_Q3", avatar:"👨", speaker:"พ่อ", story:"ปวดหัวมาก กินพาราวันละ 10 เม็ด ได้ไหม?", options:[
             {id:"A",text:"ได้ ถ้าปวดมาก",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ห้ามเกิน 8 เม็ด/วัน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP5_Q4", avatar:"🚨", speaker:"พยาบาล", story:"อาการแพ้ยารุนแรง เป็นยังไง?", options:[
+        { id:"EP5_Q4", avatar:"", speaker:"พยาบาล", story:"อาการแพ้ยารุนแรง เป็นยังไง?", options:[
             {id:"A",text:"ผื่นขึ้นเต็มตัว หายใจไม่ออก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ง่วงนอนนิดหน่อย",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q5", avatar:"", speaker:"ผู้ใหญ่บ้าน", story:"กินยาแก้แพ้แล้วง่วง ควรทำไง?", options:[
+        { id:"EP5_Q5", avatar:"🚗", speaker:"ผู้ใหญ่บ้าน", story:"กินยาแก้แพ้แล้วง่วง ควรทำไง?", options:[
             {id:"A",text:"ไปวิ่งให้ตื่น",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"นอนพัก ห้ามขับรถ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP5_Q6", avatar:"😱", speaker:"เพื่อน", story:"กินยาแล้วผื่นขึ้น ปากบวม ทำไง?", options:[
             {id:"A",text:"หยุดยา รีบไปหาหมอ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินต่อไป เดี๋ยวหาย",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q7", avatar:"️", speaker:"เภสัชกร", story:"ปริมาณยาพาราเด็ก คิดจากอะไร?", options:[
+        { id:"EP5_Q7", avatar:"⚖️", speaker:"เภสัชกร", story:"ปริมาณยาพาราเด็ก คิดจากอะไร?", options:[
             {id:"A",text:"น้ำหนักตัว",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"อายุ",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q8", avatar:"", speaker:"นักเรียน", story:"กิน NSAIDs ตอนท้องว่าง เป็นไง?", options:[
+        { id:"EP5_Q8", avatar:"🍔", speaker:"นักเรียน", story:"กิน NSAIDs ตอนท้องว่าง เป็นไง?", options:[
             {id:"A",text:"กัดกระเพาะ ปวดท้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ยาออกฤทธิ์ดี",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP5_Q9", avatar:"⏱️", speaker:"ตา", story:"ไข้สูง กินพาราทุก 1 ชั่วโมง ได้ไหม?", options:[
@@ -684,7 +718,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"ห้องน้ำชื้นๆ",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตู้ยา แห้ง เย็น พ้นแดด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"หน้าต่างแดดส่อง",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP6_Q5", avatar:"", speaker:"เพื่อน", story:"แพ้ยา (ผื่นขึ้น หายใจไม่ออก) ทำไง?", options:[
+        { id:"EP6_Q5", avatar:"🤒", speaker:"เพื่อน", story:"แพ้ยา (ผื่นขึ้น หายใจไม่ออก) ทำไง?", options:[
             {id:"A",text:"หยุดยา ไปพบแพทย์",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินยาต่อ",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"กินยาแก้แพ้เพิ่ม",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
@@ -692,7 +726,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"กินต่อ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตากแดดแล้วกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ทิ้งไป ห้ามกิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP6_Q7", avatar:"‍⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
+        { id:"EP6_Q7", avatar:"👩‍⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
             {id:"A",text:"ตื่นนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"หลังมื้ออาหารหรือพร้อมมื้ออาหาร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ท้องว่างก่อนนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
@@ -720,7 +754,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"อ่านฉลากยา",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"กินตามเพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"กินหลายเม็ด",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q3", avatar:"👨‍⚕️", speaker:"หมวด 1", story:"ใครควรแนะนำการใช้ยา?", options:[
+        { id:"EP7_Q3", avatar:"‍⚕️", speaker:"หมวด 1", story:"ใครควรแนะนำการใช้ยา?", options:[
             {id:"A",text:"เพื่อน",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"คนแปลกหน้า",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"แพทย์หรือเภสัชกร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
@@ -820,7 +854,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"ทุก 1 ชั่วโมง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ทุก 4-6 ชั่วโมง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ทุก 12 ชั่วโมง",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q3", avatar:"🧴", speaker:"แม่", story:"เด็กเป็นไข้ ควรเช็ดตัวด้วยน้ำอะไร?", options:[
+        { id:"EP8_Q3", avatar:"", speaker:"แม่", story:"เด็กเป็นไข้ ควรเช็ดตัวด้วยน้ำอะไร?", options:[
             {id:"A",text:"น้ำเย็นจัด",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"น้ำอุ่นหรือน้ำอุณหภูมิห้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"แอลกอฮอล์",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
@@ -840,11 +874,11 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"ในที่แห้ง เย็น พ้นแสง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ในที่ชื้น แสงแดดส่อง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ในรถ",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q8", avatar:"🍼", speaker:"แม่", story:"ยาน้ำเด็กก่อนใช้ต้องทำอย่างไร?", options:[
+        { id:"EP8_Q8", avatar:"", speaker:"แม่", story:"ยาน้ำเด็กก่อนใช้ต้องทำอย่างไร?", options:[
             {id:"A",text:"เขย่าขวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ปล่อยนิ่ง",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"อุ่นให้ร้อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP8_Q9", avatar:"", speaker:"พ่อ", story:"ควรแบ่งยาให้คนอื่นกินไหม?", options:[
+        { id:"EP8_Q9", avatar:"🚫", speaker:"พ่อ", story:"ควรแบ่งยาให้คนอื่นกินไหม?", options:[
             {id:"A",text:"ควร แบ่งปันกัน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ควร ยาใครยามัน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ได้แล้วแต่กรณี",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
@@ -895,6 +929,9 @@ let currentFPS = 0;
 let showFPS = false;
 let detectionFrame = 0;
 
+// Smooth cursor state
+const smoothCursor = { x: 0, y: 0, targetX: 0, targetY: 0, visible: false };
+
 // Hover state
 const hoverState = {
     single: { target: null, start: 0, selecting: false, grabbing: false, grabTarget: null },
@@ -911,8 +948,7 @@ let balloonState = {
     timeLeft: 90,
     running: false,
     spawnInterval: null,
-    gameTimer: null,
-    draggedBalloon: null
+    gameTimer: null
 };
 
 // Fill blank game state
@@ -921,8 +957,7 @@ let fillblankState = {
     currentIndex: 0,
     score: 0,
     words: [],
-    blanks: [],
-    draggedWord: null
+    blanks: []
 };
 
 // Timer
@@ -1077,10 +1112,10 @@ function toggleMute() {
 function setGameMode(mode) {
     currentMode = mode;
     document.querySelectorAll('.game-mode-btn').forEach(b => {
-        b.className = 'game-mode-btn py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow hover:scale-105';
+        b.className = 'game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow';
     });
     const active = document.getElementById(`mode-${mode}`);
-    if (active) active.className = 'game-mode-btn py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow scale-105';
+    if (active) active.className = 'game-mode-btn py-2 md:py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow scale-105';
 }
 
 function setPlayMode(mode) {
@@ -1088,11 +1123,11 @@ function setPlayMode(mode) {
     const btnS = document.getElementById('btn-single');
     const btnT = document.getElementById('btn-team');
     if (mode === 'single') {
-        btnS.className = 'flex-1 py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow';
-        btnT.className = 'flex-1 py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow';
+        btnS.className = 'flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow text-sm';
+        btnT.className = 'flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow text-sm';
     } else {
-        btnT.className = 'flex-1 py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow';
-        btnS.className = 'flex-1 py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow';
+        btnT.className = 'flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow text-sm';
+        btnS.className = 'flex-1 py-2 md:py-2.5 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow text-sm';
     }
 }
 
@@ -1120,13 +1155,13 @@ function renderEpisodeList() {
         const btn = document.createElement('button');
         btn.id = `ep-${ep}`;
         btn.onclick = () => selectEpisode(ep);
-        btn.className = `ep-btn p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left`;
+        btn.className = `ep-btn p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left`;
         btn.innerHTML = `
-            <div>
-                <div class="font-bold text-${color}-800 dark:text-${color}-300 text-sm">${data.title}</div>
+            <div class="min-w-0 flex-1">
+                <div class="font-bold text-${color}-800 dark:text-${color}-300 text-xs md:text-sm truncate">${data.title}</div>
                 <div class="text-xs text-slate-600 dark:text-slate-400">${data.questions.length} ข้อ</div>
             </div>
-            <i class="fa-solid fa-chevron-right text-${color}-500"></i>
+            <i class="fa-solid fa-chevron-right text-${color}-500 flex-shrink-0 ml-2"></i>
         `;
         container.appendChild(btn);
     });
@@ -1160,7 +1195,13 @@ async function startGame() {
     
     const video = document.getElementById('webcam');
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'}});
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: 640 },  // ลด resolution สำหรับ detection
+                height: { ideal: 480 },
+                facingMode: 'user'
+            }
+        });
         video.srcObject = stream;
         webcamRunning = true;
     } catch(e) {
@@ -1185,10 +1226,13 @@ async function startGame() {
         else video.addEventListener('loadeddata', resolve, {once: true});
     });
     
-    arCanvas.width = video.clientWidth;
-    arCanvas.height = video.clientHeight;
-    gameCanvas.width = video.clientWidth;
-    gameCanvas.height = video.clientHeight;
+    // ใช้ขนาดจอจริงสำหรับ render
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight;
+    arCanvas.width = displayWidth;
+    arCanvas.height = displayHeight;
+    gameCanvas.width = displayWidth;
+    gameCanvas.height = displayHeight;
     
     if (currentPlayMode === 'team') {
         document.getElementById('hud-hp').classList.add('hidden');
@@ -1227,7 +1271,7 @@ async function startGame() {
         document.getElementById('balloon-hud').classList.remove('hidden');
         document.getElementById('fillblank-hud').classList.add('hidden');
         gameCanvas.classList.remove('hidden');
-        document.getElementById('game-hint').textContent = ' ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
+        document.getElementById('game-hint').textContent = '👆 ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
         startBalloonGame();
     } else if (currentMode === 'fillblank') {
         document.getElementById('quiz-content').classList.add('hidden');
@@ -1279,7 +1323,7 @@ function shuffleArray(arr) {
     return a;
 }
 
-// ==================== AR HAND TRACKING (OPTIMIZED + GESTURE) ====================
+// ==================== AR HAND TRACKING (SMOOTH CURSOR) ====================
 async function predictWebcam() {
     const video = document.getElementById('webcam');
     if (!webcamRunning || !handLandmarker || !video.videoWidth) {
@@ -1289,13 +1333,16 @@ async function predictWebcam() {
     
     updateFPS();
     
-    if (arCanvas.width !== video.clientWidth || arCanvas.height !== video.clientHeight) {
-        arCanvas.width = video.clientWidth;
-        arCanvas.height = video.clientHeight;
+    // ใช้ขนาดจอจริง
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight;
+    if (arCanvas.width !== displayWidth || arCanvas.height !== displayHeight) {
+        arCanvas.width = displayWidth;
+        arCanvas.height = displayHeight;
     }
-    if (gameCanvas.width !== video.clientWidth || gameCanvas.height !== video.clientHeight) {
-        gameCanvas.width = video.clientWidth;
-        gameCanvas.height = video.clientHeight;
+    if (gameCanvas.width !== displayWidth || gameCanvas.height !== displayHeight) {
+        gameCanvas.width = displayWidth;
+        gameCanvas.height = displayHeight;
     }
     
     arCtx.save();
@@ -1312,9 +1359,8 @@ async function predictWebcam() {
         arCtx.setLineDash([]);
     }
     
-    // PERFORMANCE: ทำ hand detection ทุก 3 เฟรม (~20 FPS)
-    detectionFrame++;
-    if (detectionFrame % 3 === 0 && lastVideoTime !== video.currentTime) {
+    // Detection ทุกเฟรม แต่ใช้ video resolution ต่ำ
+    if (lastVideoTime !== video.currentTime) {
         lastVideoTime = video.currentTime;
         
         try {
@@ -1322,34 +1368,54 @@ async function predictWebcam() {
             const results = handLandmarker.detectForVideo(video, startTime);
             
             if (results.landmarks && results.landmarks.length > 0) {
-                for (let i = 0; i < results.landmarks.length; i++) {
-                    const lm = results.landmarks[i];
-                    const indexTip = lm[8];
-                    const thumbTip = lm[4];
-                    const x = (1 - indexTip.x) * arCanvas.width;
-                    const y = indexTip.y * arCanvas.height;
-                    
-                    // คำนวณระยะห่างระหว่างนิ้วโป้งกับนิ้วชี้ (สำหรับ pinch detection)
-                    const thumbX = (1 - thumbTip.x) * arCanvas.width;
-                    const thumbY = thumbTip.y * arCanvas.height;
-                    const pinchDistance = Math.sqrt(Math.pow(x - thumbX, 2) + Math.pow(y - thumbY, 2));
-                    const isPinching = pinchDistance < 50; // ระยะ pinch (พิกเซล)
-                    
-                    let team = 'single';
-                    if (currentPlayMode === 'team') {
-                        team = x < arCanvas.width / 2 ? 'A' : 'B';
-                    }
-                    
-                    drawCursor(x, y, team, isPinching);
-                    checkIntersection(x, y, team, isPinching);
+                const lm = results.landmarks[0];
+                const indexTip = lm[8];
+                const thumbTip = lm[4];
+                
+                // แปลงพิกัด (mirror corrected)
+                const rawX = (1 - indexTip.x) * arCanvas.width;
+                const rawY = indexTip.y * arCanvas.height;
+                const thumbX = (1 - thumbTip.x) * arCanvas.width;
+                const thumbY = thumbTip.y * arCanvas.height;
+                
+                // ตั้ง target position
+                smoothCursor.targetX = rawX;
+                smoothCursor.targetY = rawY;
+                smoothCursor.visible = true;
+                
+                // คำนวณ pinch
+                const pinchDistance = Math.sqrt(Math.pow(rawX - thumbX, 2) + Math.pow(rawY - thumbY, 2));
+                const isPinching = pinchDistance < 60;
+                
+                let team = 'single';
+                if (currentPlayMode === 'team') {
+                    team = rawX < arCanvas.width / 2 ? 'A' : 'B';
                 }
+                
+                checkIntersection(rawX, rawY, team, isPinching);
             } else {
+                smoothCursor.visible = false;
                 resetAllHover();
             }
         } catch(e) {
             console.error('Detection error:', e);
         }
     }
+    
+    // Smooth cursor position (lerp)
+    if (smoothCursor.visible) {
+        const lerpFactor = 0.3;
+        smoothCursor.x += (smoothCursor.targetX - smoothCursor.x) * lerpFactor;
+        smoothCursor.y += (smoothCursor.targetY - smoothCursor.y) * lerpFactor;
+    }
+    
+    // วาด cursor ทุกเฟรม (ไม่กระพริบ)
+    if (smoothCursor.visible) {
+        const state = hoverState['single'];
+        const isPinching = state.grabbing;
+        drawCursor(smoothCursor.x, smoothCursor.y, 'single', isPinching);
+    }
+    
     arCtx.restore();
     
     // Game-specific rendering
@@ -1371,28 +1437,31 @@ function drawCursor(x, y, team, isPinching) {
     
     // ถ้ากำลังหยิบ (pinch) ให้เปลี่ยนสี
     if (isPinching && state.grabbing) {
-        color = '#fbbf24'; // สีเหลืองเมื่อหยิบ
+        color = '#fbbf24';
     }
+    
+    // OFFSET: ย้าย cursor ขึ้นไปด้านบน 60px เพื่อให้มองเห็นสิ่งที่ชี้
+    const cursorY = y - 60;
     
     // Outer glow
     arCtx.beginPath();
-    arCtx.arc(x, y, 22, 0, Math.PI * 2);
+    arCtx.arc(x, cursorY, 20, 0, Math.PI * 2);
     arCtx.fillStyle = color;
     arCtx.shadowColor = color;
-    arCtx.shadowBlur = 15; // ลด blur เพื่อประสิทธิภาพ
+    arCtx.shadowBlur = 12;
     arCtx.fill();
     
     // Inner white dot
     arCtx.beginPath();
-    arCtx.arc(x, y, 9, 0, Math.PI * 2);
+    arCtx.arc(x, cursorY, 8, 0, Math.PI * 2);
     arCtx.fillStyle = '#ffffff';
     arCtx.shadowBlur = 0;
     arCtx.fill();
     
-    // Pinch indicator (วงกลมเล็กแสดงการบีบ)
+    // Pinch indicator
     if (isPinching) {
         arCtx.beginPath();
-        arCtx.arc(x, y, 30, 0, Math.PI * 2);
+        arCtx.arc(x, cursorY, 28, 0, Math.PI * 2);
         arCtx.strokeStyle = '#fbbf24';
         arCtx.lineWidth = 3;
         arCtx.stroke();
@@ -1403,9 +1472,9 @@ function drawCursor(x, y, team, isPinching) {
         const elapsed = performance.now() - state.start;
         const progress = Math.min(elapsed / 1000, 1.0);
         arCtx.beginPath();
-        arCtx.arc(x, y, 32, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
+        arCtx.arc(x, cursorY, 30, -Math.PI/2, -Math.PI/2 + Math.PI*2*progress);
         arCtx.strokeStyle = '#10b981';
-        arCtx.lineWidth = 5;
+        arCtx.lineWidth = 4;
         arCtx.stroke();
     }
 }
@@ -1416,7 +1485,7 @@ function checkIntersection(x, y, team, isPinching) {
     
     const isInside = (x, y, rect) => rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
     
-    // Quiz mode - ชี้ค้าง 1 วินาที
+    // Quiz mode
     if ((currentMode === 'quiz' || currentMode === 'free')) {
         const quizContent = document.getElementById('quiz-content');
         if (quizContent && !quizContent.classList.contains('hidden')) {
@@ -1432,22 +1501,19 @@ function checkIntersection(x, y, team, isPinching) {
         }
     }
     
-    // Balloon mode - ชี้ค้าง 0.5 วินาทีเพื่อหยิบ หรือ pinch เพื่อหยิบ
+    // Balloon mode
     if (currentMode === 'balloon' && balloonState.running && balloonState.baskets && balloonState.baskets.length > 0) {
         const rect = gameCanvas.getBoundingClientRect();
         const cx = x - rect.left;
         const cy = y - rect.top;
         
-        // ถ้ากำลังลากลูกโป่งอยู่
         if (state.grabbing && state.grabTarget && state.grabTarget.type === 'balloon') {
-            // ตรวจสอบว่าอยู่เหนือตะกร้าไหม
             balloonState.baskets.forEach(basket => {
                 if (basket && cx >= basket.x && cx <= basket.x + basket.w && cy >= basket.y && cy <= basket.y + basket.h) {
                     hitBtn = { type: 'basket', basket: basket };
                 }
             });
         } else {
-            // ตรวจสอบว่าชี้ที่ลูกโป่งไหม
             for (let i = 0; i < balloonState.balloons.length; i++) {
                 const b = balloonState.balloons[i];
                 if (b) {
@@ -1461,13 +1527,12 @@ function checkIntersection(x, y, team, isPinching) {
         }
     }
     
-    // Fill blank mode - ชี้ค้าง 0.5 วินาทีเพื่อหยิบคำ
+    // Fill blank mode
     if (currentMode === 'fillblank' && fillblankState.words && fillblankState.blanks) {
         const rect = gameCanvas.getBoundingClientRect();
         const cx = x - rect.left;
         const cy = y - rect.top;
         
-        // ถ้ากำลังลากคำอยู่
         if (state.grabbing && state.grabTarget && state.grabTarget.type === 'word') {
             fillblankState.blanks.forEach(blank => {
                 if (blank && !blank.filled && cx >= blank.x && cx <= blank.x + blank.w && cy >= blank.y && cy <= blank.y + blank.h) {
@@ -1475,7 +1540,6 @@ function checkIntersection(x, y, team, isPinching) {
                 }
             });
         } else {
-            // ตรวจสอบว่าชี้ที่คำไหม
             fillblankState.words.forEach(word => {
                 if (word && !word.placed && cx >= word.x && cx <= word.x + word.w && cy >= word.y && cy <= word.y + word.h) {
                     hitBtn = { type: 'word', word: word };
@@ -1485,25 +1549,22 @@ function checkIntersection(x, y, team, isPinching) {
     }
     
     if (hitBtn) {
-        // ถ้า pinch (หยิบ) - grab ทันที
         if (isPinching && !state.grabbing) {
             if (hitBtn.type === 'balloon' || hitBtn.type === 'word') {
                 state.grabbing = true;
                 state.grabTarget = hitBtn;
                 playSound('tick');
-                showGestureHint(' หยิบแล้ว! ลากไปวาง');
+                showGestureHint('🤏 หยิบแล้ว! ลากไปวาง');
                 return;
             }
         }
         
-        // ถ้าปล่อย pinch - drop
         if (!isPinching && state.grabbing) {
             if (hitBtn.type === 'basket' && state.grabTarget.type === 'balloon') {
                 handleBalloonDrop(state.grabTarget.balloon, hitBtn.basket);
             } else if (hitBtn.type === 'blank' && state.grabTarget.type === 'word') {
                 handleWordDrop(state.grabTarget.word, hitBtn.blank);
             } else {
-                // ปล่อยนอกเป้าหมาย - เด้งกลับ
                 showGestureHint('❌ วางไม่ถูกที่');
             }
             state.grabbing = false;
@@ -1511,7 +1572,6 @@ function checkIntersection(x, y, team, isPinching) {
             return;
         }
         
-        // ถ้าไม่ pinch - ใช้ระบบชี้ค้าง
         if (!isPinching && !state.grabbing) {
             if (state.target === hitBtn) {
                 const elapsed = performance.now() - state.start;
@@ -1523,17 +1583,15 @@ function checkIntersection(x, y, team, isPinching) {
                     if (hitBtn.type === 'quiz') {
                         handleAnswer(hitBtn.choice);
                     } else if (hitBtn.type === 'balloon') {
-                        // Grab balloon
                         state.grabbing = true;
                         state.grabTarget = hitBtn;
                         playSound('tick');
                         showGestureHint(' หยิบแล้ว! ลากไปใส่ตะกร้า');
                     } else if (hitBtn.type === 'word') {
-                        // Grab word
                         state.grabbing = true;
                         state.grabTarget = hitBtn;
                         playSound('tick');
-                        showGestureHint(' หยิบแล้ว! ลากไปวางในช่องว่าง');
+                        showGestureHint('👆 หยิบแล้ว! ลากไปวางในช่องว่าง');
                     }
                 }
             } else {
@@ -1543,7 +1601,6 @@ function checkIntersection(x, y, team, isPinching) {
             }
         }
     } else {
-        // ถ้าปล่อยนอกเป้าหมายขณะ grabbing
         if (state.grabbing) {
             if (!isPinching) {
                 showGestureHint('❌ วางไม่ถูกที่');
@@ -1742,28 +1799,28 @@ function updateTeamScore() {
     if (b) b.textContent = teamScore.B;
 }
 
-// ==================== BALLOON GAME (OPTIMIZED + DRAG) ====================
+// ==================== BALLOON GAME (OPTIMIZED) ====================
 function startBalloonGame() {
-    const basketW = Math.floor(gameCanvas.width / 2 - 20);
-    const basketH = 140;
-    const basketY = gameCanvas.height - basketH - 20;
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight;
+    const basketW = Math.floor(displayWidth / 2 - 20);
+    const basketH = Math.max(100, displayHeight * 0.15);
+    const basketY = displayHeight - basketH - 20;
     
     balloonState = {
         balloons: [],
         baskets: [
             { x: 10, y: basketY, w: basketW, h: basketH, label: '✅ ยาถูก', color: '#10b981', category: 'correct' },
-            { x: Math.floor(gameCanvas.width / 2) + 10, y: basketY, w: basketW, h: basketH, label: '❌ ยาผิด', color: '#ef4444', category: 'wrong' }
+            { x: Math.floor(displayWidth / 2) + 10, y: basketY, w: basketW, h: basketH, label: ' ยาผิด', color: '#ef4444', category: 'wrong' }
         ],
         correct: 0,
         wrong: 0,
         timeLeft: 90,
         running: true,
         spawnInterval: null,
-        gameTimer: null,
-        draggedBalloon: null
+        gameTimer: null
     };
     
-    // Spawn ทุก 1 วินาที (เร็วขึ้น)
     balloonState.spawnInterval = setInterval(() => {
         if (balloonState.running && balloonState.balloons.length < 8) {
             spawnBalloon();
@@ -1782,7 +1839,6 @@ function startBalloonGame() {
         }
     }, 1000);
     
-    // Spawn เริ่มต้น 5 ลูก
     for (let i = 0; i < 5; i++) {
         setTimeout(() => spawnBalloon(), i * 200);
     }
@@ -1797,15 +1853,19 @@ function spawnBalloon() {
     const opt = useCorrect ? correctOpt : wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
     
     const colors = ['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899'];
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight;
+    const balloonR = Math.max(40, displayWidth * 0.06);
+    
     balloonState.balloons.push({
-        x: 80 + Math.random() * (gameCanvas.width - 200),
-        y: -80,
-        r: 50,
+        x: 80 + Math.random() * (displayWidth - 200),
+        y: -balloonR * 2,
+        r: balloonR,
         text: opt.text.substring(0, 25),
         fullText: opt.text,
         isCorrect: opt.isCorrect,
         color: colors[Math.floor(Math.random() * colors.length)],
-        speed: 2 + Math.random() * 2, // เร็วขึ้น 2-4x
+        speed: 2 + Math.random() * 2,
         wobble: Math.random() * Math.PI * 2,
         question: q,
         grabbed: false
@@ -1815,9 +1875,16 @@ function spawnBalloon() {
 function renderBalloonGame() {
     if (!gameCtx) return;
     const ctx = gameCtx;
-    ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+    const displayWidth = gameCanvas.width;
+    const displayHeight = gameCanvas.height;
+    
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
     
     if (!balloonState.baskets || balloonState.baskets.length === 0) return;
+    
+    // Responsive font size
+    const basketFontSize = Math.max(16, displayWidth * 0.025);
+    const balloonFontSize = Math.max(12, displayWidth * 0.018);
     
     // Draw baskets
     balloonState.baskets.forEach(basket => {
@@ -1835,9 +1902,9 @@ function renderBalloonGame() {
         ctx.stroke();
         
         ctx.fillStyle = basket.color;
-        ctx.font = 'bold 24px Kanit, sans-serif';
+        ctx.font = `bold ${basketFontSize}px Kanit, sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(basket.label, basket.x + basket.w/2, basket.y + basket.h/2 + 8);
+        ctx.fillText(basket.label, basket.x + basket.w/2, basket.y + basket.h/2 + basketFontSize/3);
     });
     
     // Update and draw balloons
@@ -1845,21 +1912,23 @@ function renderBalloonGame() {
         const b = balloonState.balloons[i];
         if (!b) continue;
         
-        // ถ้าถูก grabbing อย่าให้ตก
         const state = hoverState['single'];
-        if (state.grabbing && state.grabTarget && state.grabTarget.type === 'balloon' && state.grabTarget.balloon === b) {
-            // ตามตำแหน่งนิ้ว
-            // (ตำแหน่งจะถูกอัพเดทใน checkIntersection)
-        } else {
+        const isGrabbed = state.grabbing && state.grabTarget && state.grabTarget.type === 'balloon' && state.grabTarget.balloon === b;
+        
+        if (!isGrabbed) {
             b.y += b.speed;
             b.wobble += 0.05;
             b.x += Math.sin(b.wobble) * 0.5;
+        } else {
+            // ตามตำแหน่ง cursor (offset ขึ้น 60px)
+            b.x = smoothCursor.x;
+            b.y = smoothCursor.y + 60;
         }
         
         // Draw balloon
         ctx.fillStyle = b.color;
         ctx.shadowColor = b.color;
-        ctx.shadowBlur = 10; // ลด blur
+        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.ellipse(b.x, b.y, b.r, b.r * 1.2, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -1875,20 +1944,14 @@ function renderBalloonGame() {
         
         // Text
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px Kanit, sans-serif';
+        ctx.font = `bold ${balloonFontSize}px Kanit, sans-serif`;
         ctx.textAlign = 'center';
         const words = b.text.split(' ');
         words.forEach((word, wi) => {
-            ctx.fillText(word, b.x, b.y - 5 + wi * 18);
+            ctx.fillText(word, b.x, b.y - b.r/2 + wi * (balloonFontSize + 2));
         });
         
-        // ถ้าถูก grabbing ให้ตามนิ้ว
-        if (state && state.grabbing && state.grabTarget && state.grabTarget.type === 'balloon' && state.grabTarget.balloon === b) {
-            // ตำแหน่งจะถูกอัพเดทผ่าน checkIntersection
-        }
-        
-        // Remove if off screen
-        if (b.y > gameCanvas.height + 100 && !b.grabbed) {
+        if (b.y > displayHeight + 100 && !isGrabbed) {
             balloonState.balloons.splice(i, 1);
         }
     }
@@ -1910,7 +1973,6 @@ function handleBalloonDrop(balloon, basket) {
         showGestureHint('❌ ผิด!');
     }
     
-    // ลบออกจาก array
     const idx = balloonState.balloons.indexOf(balloon);
     if (idx > -1) balloonState.balloons.splice(idx, 1);
     
@@ -1932,15 +1994,14 @@ function endBalloonGame() {
     showResult();
 }
 
-// ==================== FILL BLANK GAME (DRAG & DROP) ====================
+// ==================== FILL BLANK GAME (FIXED READABILITY) ====================
 function startFillBlankGame() {
     fillblankState = {
         questions: activeQuestions.slice(0, 10),
         currentIndex: 0,
         score: 0,
         words: [],
-        blanks: [],
-        draggedWord: null
+        blanks: []
     };
     showFillBlankQuestion();
 }
@@ -1959,25 +2020,30 @@ function showFillBlankQuestion() {
     const allTexts = [answer, ...wrongOpts.map(o => o.text)];
     const shuffled = shuffleArray(allTexts);
     
-    const wordW = Math.floor((gameCanvas.width - 100) / 3);
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight;
+    
+    const wordW = Math.floor((displayWidth - 100) / 3);
+    const wordH = Math.max(60, displayHeight * 0.08);
     fillblankState.words = shuffled.map((text, i) => ({
         text: text,
         isCorrect: text === answer,
         x: 50 + i * (wordW + 10),
-        y: gameCanvas.height - 150,
+        y: displayHeight - wordH - 80,
         w: wordW,
-        h: 70,
+        h: wordH,
         placed: false,
         originalX: 50 + i * (wordW + 10),
-        originalY: gameCanvas.height - 150
+        originalY: displayHeight - wordH - 80
     }));
     
-    const blankW = Math.min(450, gameCanvas.width - 100);
+    const blankW = Math.min(500, displayWidth - 100);
+    const blankH = Math.max(80, displayHeight * 0.12);
     fillblankState.blanks = [{
-        x: Math.floor((gameCanvas.width - blankW) / 2),
-        y: Math.floor(gameCanvas.height / 2) - 50,
+        x: Math.floor((displayWidth - blankW) / 2),
+        y: Math.floor(displayHeight * 0.55),
         w: blankW,
-        h: 100,
+        h: blankH,
         filled: false,
         correctText: answer
     }];
@@ -1991,51 +2057,73 @@ function showFillBlankQuestion() {
 function renderFillBlankGame() {
     if (!gameCtx) return;
     const ctx = gameCtx;
-    ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+    const displayWidth = gameCanvas.width;
+    const displayHeight = gameCanvas.height;
+    
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
     
     if (fillblankState.currentIndex >= fillblankState.questions.length) return;
     
     const q = fillblankState.questions[fillblankState.currentIndex];
     if (!q) return;
     
-    // Draw question box
+    // Responsive font sizes
+    const titleFontSize = Math.max(16, displayWidth * 0.025);
+    const storyFontSize = Math.max(14, displayWidth * 0.022);
+    const hintFontSize = Math.max(14, displayWidth * 0.02);
+    const blankFontSize = Math.max(14, displayWidth * 0.022);
+    const wordFontSize = Math.max(12, displayWidth * 0.018);
+    
+    // Question box - ย้ายไปด้านบน ไม่ทับ HUD
+    const boxX = displayWidth * 0.05;
+    const boxY = displayHeight * 0.12;
+    const boxW = displayWidth * 0.9;
+    const boxH = displayHeight * 0.22;
+    
     ctx.fillStyle = 'rgba(255,255,255,0.95)';
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 3;
     ctx.beginPath();
     if (ctx.roundRect) {
-        ctx.roundRect(50, 50, gameCanvas.width - 100, 180, 20);
+        ctx.roundRect(boxX, boxY, boxW, boxH, 20);
     } else {
-        ctx.rect(50, 50, gameCanvas.width - 100, 180);
+        ctx.rect(boxX, boxY, boxW, boxH);
     }
     ctx.fill();
     ctx.stroke();
     
+    // Title (avatar + speaker)
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 20px Kanit, sans-serif';
+    ctx.font = `bold ${titleFontSize}px Kanit, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText((q.avatar || '👤') + ' ' + (q.speaker || ''), gameCanvas.width / 2, 90);
-    ctx.font = '18px Kanit, sans-serif';
+    ctx.fillText((q.avatar || '👤') + ' ' + (q.speaker || ''), displayWidth / 2, boxY + titleFontSize + 10);
+    
+    // Story text - ใช้ word wrap
+    ctx.font = `${storyFontSize}px Kanit, sans-serif`;
+    ctx.fillStyle = '#1e293b';
     
     const storyText = `"${q.story}"`;
-    const maxWidth = gameCanvas.width - 140;
+    const maxWidth = boxW - 40;
+    const lineHeight = storyFontSize * 1.4;
     let line = '';
-    let ly = 130;
+    let ly = boxY + titleFontSize + 30;
+    
     for (let char of storyText) {
         const testLine = line + char;
         if (ctx.measureText(testLine).width > maxWidth && line.length > 0) {
-            ctx.fillText(line, gameCanvas.width / 2, ly);
+            ctx.fillText(line, displayWidth / 2, ly);
             line = char;
-            ly += 24;
+            ly += lineHeight;
         } else {
             line = testLine;
         }
     }
-    if (line) ctx.fillText(line, gameCanvas.width / 2, ly);
+    if (line) ctx.fillText(line, displayWidth / 2, ly);
     
-    ctx.font = 'bold 16px Kanit, sans-serif';
+    // Hint text
+    ctx.font = `bold ${hintFontSize}px Kanit, sans-serif`;
     ctx.fillStyle = '#38bdf8';
-    ctx.fillText('เลือกคำตอบที่ถูกต้อง:', gameCanvas.width / 2, 200);
+    ctx.fillText('เลือกคำตอบที่ถูกต้อง:', displayWidth / 2, boxY + boxH - 15);
     
     // Draw drop zone
     fillblankState.blanks.forEach(blank => {
@@ -2056,8 +2144,8 @@ function renderFillBlankGame() {
             ctx.setLineDash([]);
             
             ctx.fillStyle = '#38bdf8';
-            ctx.font = 'bold 16px Kanit, sans-serif';
-            ctx.fillText('▼ วางคำตอบที่นี่ ▼', blank.x + blank.w/2, blank.y + blank.h/2 + 6);
+            ctx.font = `bold ${blankFontSize}px Kanit, sans-serif`;
+            ctx.fillText('▼ วางคำตอบที่นี่ ▼', blank.x + blank.w/2, blank.y + blank.h/2 + blankFontSize/3);
         } else {
             ctx.fillStyle = 'rgba(16,185,129,0.3)';
             ctx.strokeStyle = '#10b981';
@@ -2072,8 +2160,8 @@ function renderFillBlankGame() {
             ctx.stroke();
             
             ctx.fillStyle = '#10b981';
-            ctx.font = 'bold 18px Kanit, sans-serif';
-            ctx.fillText('✅ ' + blank.correctText, blank.x + blank.w/2, blank.y + blank.h/2 + 6);
+            ctx.font = `bold ${blankFontSize}px Kanit, sans-serif`;
+            ctx.fillText('✅ ' + blank.correctText, blank.x + blank.w/2, blank.y + blank.h/2 + blankFontSize/3);
         }
     });
     
@@ -2081,12 +2169,16 @@ function renderFillBlankGame() {
     fillblankState.words.forEach(word => {
         if (!word || word.placed) return;
         
-        // ถ้ากำลังถูก drag ให้วาดที่ตำแหน่งนิ้ว
         const state = hoverState['single'];
+        const isGrabbed = state.grabbing && state.grabTarget && state.grabTarget.type === 'word' && state.grabTarget.word === word;
+        
         let drawX = word.x;
         let drawY = word.y;
-        if (state.grabbing && state.grabTarget && state.grabTarget.type === 'word' && state.grabTarget.word === word) {
-            // ตามตำแหน่งนิ้ว (จะใช้ตำแหน่งล่าสุดจาก checkIntersection)
+        
+        // ถ้ากำลังถูก drag ให้ตาม cursor
+        if (isGrabbed) {
+            drawX = smoothCursor.x - word.w / 2;
+            drawY = smoothCursor.y + 60 - word.h / 2;
         }
         
         ctx.fillStyle = '#8b5cf6';
@@ -2102,17 +2194,17 @@ function renderFillBlankGame() {
         ctx.shadowBlur = 0;
         
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 16px Kanit, sans-serif';
+        ctx.font = `bold ${wordFontSize}px Kanit, sans-serif`;
         ctx.textAlign = 'center';
         
         const words = word.text.split(' ');
         let line = '';
-        let ly = drawY + 28;
+        let ly = drawY + word.h * 0.4;
         words.forEach(w => {
             if ((line + w).length > 18 && line.length > 0) {
                 ctx.fillText(line, drawX + word.w/2, ly);
                 line = w + ' ';
-                ly += 22;
+                ly += wordFontSize + 4;
             } else {
                 line += w + ' ';
             }
@@ -2137,8 +2229,7 @@ function handleWordDrop(word, blank) {
         }, 1000);
     } else {
         playSound('wrong');
-        showGestureHint(' ผิด! ลองใหม่');
-        // เด้งกลับ
+        showGestureHint('❌ ผิด! ลองใหม่');
         word.x = word.originalX;
         word.y = word.originalY;
     }
@@ -2180,7 +2271,7 @@ function showResult() {
     
     let badge = '🔰 ผู้ฝึกหัด';
     let emoji = '📚';
-    if (accuracy >= 80) { badge = '🎖️ เภสัชกรอัจฉริยะ'; emoji = ''; triggerConfetti(); }
+    if (accuracy >= 80) { badge = '🎖️ เภสัชกรอัจฉริยะ'; emoji = '🏆'; triggerConfetti(); }
     else if (accuracy >= 60) { badge = '🛡️ ผู้พิทักษ์ตู้ยา'; emoji = '🎉'; }
     else if (accuracy >= 40) { badge = '👍 ผู้เรียนรู้'; emoji = ''; }
     
@@ -2280,14 +2371,14 @@ function openDashboard() {
             const s = stats.modeStats[mode];
             const macc = s.total > 0 ? Math.round((s.correct/s.total)*100) : 0;
             const div = document.createElement('div');
-            div.className = 'bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700';
+            div.className = 'bg-slate-50 dark:bg-slate-800 p-3 md:p-4 rounded-xl border border-slate-200 dark:border-slate-700';
             div.innerHTML = `
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-2xl">${modeIcons[mode]||''}</span>
-                    <span class="font-bold">${modeNames[mode]||mode}</span>
+                    <span class="text-xl md:text-2xl">${modeIcons[mode]||''}</span>
+                    <span class="font-bold text-sm md:text-base">${modeNames[mode]||mode}</span>
                 </div>
-                <div class="text-sm text-slate-600 dark:text-slate-400">เล่น: ${s.played} ครั้ง</div>
-                <div class="text-sm text-emerald-600 font-bold">ถูก: ${macc}%</div>
+                <div class="text-xs md:text-sm text-slate-600 dark:text-slate-400">เล่น: ${s.played} ครั้ง</div>
+                <div class="text-xs md:text-sm text-emerald-600 font-bold">ถูก: ${macc}%</div>
             `;
             modeContainer.appendChild(div);
         });
@@ -2301,10 +2392,10 @@ function openDashboard() {
             const eacc = s.total > 0 ? Math.round((s.correct/s.total)*100) : 0;
             const title = allEpisodes[ep]?.title || ep;
             const div = document.createElement('div');
-            div.className = 'flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700';
+            div.className = 'flex items-center justify-between p-2 md:p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700';
             div.innerHTML = `
-                <span class="font-medium text-sm">${title}</span>
-                <div class="flex gap-3 text-sm">
+                <span class="font-medium text-xs md:text-sm truncate flex-1">${title}</span>
+                <div class="flex gap-2 md:gap-3 text-xs md:text-sm flex-shrink-0">
                     <span class="text-slate-600 dark:text-slate-400">${s.played} ครั้ง</span>
                     <span class="text-emerald-600 font-bold">${eacc}%</span>
                 </div>
@@ -2358,8 +2449,8 @@ function switchTab(tab) {
         'i': document.getElementById('tab-i')
     };
     
-    const activeClass = 'py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all';
-    const inactiveClass = 'py-2 px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all';
+    const activeClass = 'py-2 px-3 md:px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all whitespace-nowrap text-sm';
+    const inactiveClass = 'py-2 px-3 md:px-4 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all whitespace-nowrap text-sm';
     
     Object.values(tabBtns).forEach(btn => {
         if (btn) btn.className = inactiveClass;
@@ -2401,8 +2492,8 @@ function renderQuestionList() {
             card.className = 'bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs mb-1';
             card.innerHTML = `
                 <div class="flex justify-between font-bold">
-                    <span>${q.avatar||''} ${q.speaker||''} (${q.id})</span>
-                    <span class="text-slate-500">${q.options.length} ตัวเลือก</span>
+                    <span class="truncate">${q.avatar||''} ${q.speaker||''} (${q.id})</span>
+                    <span class="text-slate-500 flex-shrink-0 ml-2">${q.options.length} ตัวเลือก</span>
                 </div>
                 <p class="text-slate-600 dark:text-slate-400 mt-1">${q.story}</p>
             `;
@@ -2460,7 +2551,7 @@ function downloadTemplate() {
     const rows = [
         ['episode_id','question_id','avatar','speaker','story','option_a','option_b','option_c','option_d','correct_option','hp_change','feedback'],
         ['ep8','EP8_Q11','💊','ครู','ยาพารากินครั้งละกี่เม็ด?','1-2 เม็ด','5 เม็ด','10 เม็ด','','A','0','ถูกต้อง! 500-1000 mg'],
-        ['ep8','EP8_Q12','⏰','เภสัชกร','ยาพาราควรห่างกันกี่ชม.?','ทุก 1 ชม.','ทุก 4-6 ชม.','ทุก 12 ชม.','','B','0','ถูกต้อง!']
+        ['ep8','EP8_Q12','','เภสัชกร','ยาพาราควรห่างกันกี่ชม.?','ทุก 1 ชม.','ทุก 4-6 ชม.','ทุก 12 ชม.','','B','0','ถูกต้อง!']
     ];
     const csv = '\ufeff' + rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
