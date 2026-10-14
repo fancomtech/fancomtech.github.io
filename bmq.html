@@ -1,0 +1,1367 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Body Move Quiz - Full System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Kanit:wght@400;600;700&display=swap');
+  :root {
+    --yellow:#ffca28; --green:#66bb6a; --red:#ef5350;
+    --blue:#4fc3f7; --purple:#ab47bc; --dark:#1a237e;
+    --label-size:3.6rem; --question-size:5rem;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Kanit',sans-serif; background:linear-gradient(135deg,#e0f7fa,#b3e5fc); min-height:100vh; }
+
+  .nav-tabs {
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    background:linear-gradient(135deg,#1a237e,#283593);
+    padding:10px 15px; display:flex; gap:8px; flex-wrap:wrap;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+  }
+  .nav-tabs.hidden { display:none; }
+  .nav-tab {
+    padding:8px 18px; border-radius:25px; border:2px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.1); color:#fff; font-family:'Kanit'; font-size:.9rem;
+    cursor:pointer; transition:all .2s;
+  }
+  .nav-tab:hover { background:rgba(255,255,255,.2); }
+  .nav-tab.active { background:var(--yellow); color:#1a237e; border-color:var(--yellow); font-weight:700; }
+
+  .page { display:none; padding:80px 20px 20px; min-height:100vh; }
+  .page.active { display:block; }
+
+  .game-container { max-width:900px; margin:0 auto; }
+  .game-header {
+    background:linear-gradient(135deg,#1a237e,#3949ab); border-radius:20px;
+    padding:30px; color:#fff; margin-bottom:20px; box-shadow:0 8px 30px rgba(0,0,0,.2); text-align:center;
+  }
+  .game-title { font-family:'Fredoka One'; font-size:clamp(2rem,5vw,3rem); color:var(--yellow); margin-bottom:10px; animation:titlePulse 2s ease-in-out infinite; }
+  @keyframes titlePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+  .game-subtitle { color:#90caf9; font-size:1.1rem; }
+
+  .control-panel { background:#fff; border-radius:20px; padding:25px; margin-bottom:20px; box-shadow:0 4px 20px rgba(0,0,0,.1); }
+  .control-row { display:flex; gap:15px; flex-wrap:wrap; align-items:end; margin-bottom:15px; }
+  .control-group { flex:1; min-width:200px; }
+  .control-group label { display:block; color:#555; font-size:.9rem; margin-bottom:6px; font-weight:600; }
+  .control-group select, .control-group input {
+    width:100%; padding:12px 16px; border:2px solid #e0e0e0; border-radius:12px;
+    font-family:'Kanit'; font-size:1rem;
+  }
+  .control-group select:focus, .control-group input:focus { border-color:var(--blue); outline:none; }
+
+  .btn {
+    padding:12px 28px; border-radius:50px; border:none; font-family:'Kanit';
+    font-size:1rem; font-weight:700; cursor:pointer; transition:all .2s;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary { background:linear-gradient(135deg,#ffca28,#ff8f00); color:#1a237e; }
+  .btn-primary:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,143,0,.4); }
+  .btn-success { background:linear-gradient(135deg,#66bb6a,#43a047); color:#fff; }
+  .btn-danger { background:linear-gradient(135deg,#ef5350,#d32f2f); color:#fff; }
+  .btn-secondary { background:#f5f5f5; color:#333; border:2px solid #ddd; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  .cam-center-box {
+    width:min(500px,90vw); height:280px; margin:20px auto;
+    border-radius:24px; overflow:hidden; border:5px solid var(--yellow);
+    box-shadow:0 0 50px rgba(255,202,40,.3); position:relative; background:#000;
+  }
+  .cam-center-box video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  .cam-label {
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,.7); color:#fff; padding:6px 18px; border-radius:20px; font-size:.85rem;
+  }
+  .status-text { color:#666; font-size:.95rem; text-align:center; min-height:24px; margin-top:10px; }
+  .status-text.error { color:var(--red); }
+  .status-text.success { color:var(--green); font-weight:600; }
+
+  .admin-container { max-width:1400px; margin:0 auto; }
+  .admin-header { background:linear-gradient(135deg,#1a237e,#3949ab); border-radius:20px; padding:25px; color:#fff; margin-bottom:20px; }
+  .admin-title { font-family:'Fredoka One'; font-size:2rem; color:var(--yellow); }
+
+  .card { background:#fff; border-radius:20px; padding:25px; margin-bottom:20px; box-shadow:0 4px 20px rgba(0,0,0,.08); }
+  .card-title { font-size:1.3rem; font-weight:700; color:#1a237e; margin-bottom:15px; display:flex; align-items:center; gap:10px; }
+
+  /* ===== ตารางสวยขึ้น ===== */
+  .data-table { width:100%; border-collapse:separate; border-spacing:0; font-size:.9rem; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .data-table thead th {
+    background:linear-gradient(135deg,#1a237e,#283593);
+    color:#fff; padding:14px 12px; text-align:left; font-weight:700;
+    position:sticky; top:0; z-index:10;
+    border-bottom:3px solid var(--yellow);
+    letter-spacing:.5px;
+  }
+  .data-table tbody td {
+    padding:12px; border-bottom:1px solid #f0f0f0;
+    transition:background .15s;
+  }
+  .data-table tbody tr { transition:background .15s; }
+  .data-table tbody tr:hover { background:#f5f9ff; }
+  .data-table tbody tr:nth-child(even) { background:#fafbfc; }
+  .data-table tbody tr:nth-child(even):hover { background:#f0f4ff; }
+
+  /* ช่องวันที่สวย */
+  .data-table td.date-cell {
+    font-family:'Kanit',monospace;
+    font-weight:600;
+    color:#1a237e;
+    white-space:nowrap;
+    background:linear-gradient(to right,#fff,#f5f9ff);
+    border-left:3px solid var(--blue);
+  }
+  .data-table tbody tr:hover td.date-cell { color:var(--blue); border-left-color:var(--yellow); }
+
+  .data-table .actions { display:flex; gap:6px; }
+  .btn-sm { padding:6px 14px; font-size:.85rem; border-radius:20px; }
+
+  .table-wrap { max-height:500px; overflow-y:auto; border-radius:12px; border:1px solid #eee; }
+
+  .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:15px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:.9rem; color:#555; font-weight:600; }
+  .form-group input, .form-group select {
+    padding:10px 14px; border:2px solid #e0e0e0; border-radius:10px;
+    font-family:'Kanit'; font-size:.95rem;
+  }
+  .form-group input:focus, .form-group select:focus { border-color:var(--blue); outline:none; }
+
+  .modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:#fff; border-radius:20px; padding:30px; max-width:700px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .modal-title { font-size:1.5rem; font-weight:700; color:#1a237e; }
+  .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin-bottom:20px; }
+  .stat-card { background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; padding:20px; border-radius:16px; text-align:center; }
+  .stat-value { font-family:'Fredoka One'; font-size:2.5rem; color:var(--yellow); }
+  .stat-label { font-size:.9rem; opacity:.9; margin-top:5px; }
+
+  .chart-bar { display:flex; align-items:flex-end; gap:8px; height:200px; padding:10px 0; border-bottom:2px solid #ddd; position:relative; }
+  .chart-col { flex:1; background:linear-gradient(to top,var(--blue),var(--purple)); border-radius:8px 8px 0 0; position:relative; min-height:5px; transition:height .5s; }
+  .chart-col .label { position:absolute; bottom:-25px; left:50%; transform:translateX(-50%); font-size:.75rem; white-space:nowrap; color:#555; }
+  .chart-col .value { position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:.8rem; font-weight:700; color:#1a237e; }
+
+  .toast { position:fixed; bottom:30px; right:30px; background:#333; color:#fff; padding:14px 24px; border-radius:12px; z-index:3000; opacity:0; transform:translateY(20px); transition:all .3s; font-weight:600; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.success { background:var(--green); }
+  .toast.error { background:var(--red); }
+
+  .loading { display:inline-block; width:20px; height:20px; border:3px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .empty-state { text-align:center; padding:40px; color:#999; }
+  .empty-state .icon { font-size:3rem; margin-bottom:10px; }
+
+  .error-box { background:#ffebee; border:2px solid var(--red); color:#c62828; padding:15px; border-radius:12px; margin:10px 0; font-size:.9rem; }
+  .retry-link { color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:600; }
+
+  /* Game Screen */
+  .game-screen { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:5000; background:#000; }
+  .game-screen.active { display:block; }
+  #camVideo { width:100vw; height:100vh; object-fit:cover; transform:scaleX(-1); position:absolute; top:0; left:0; }
+  #motionCanvas { display:none; }
+
+  .motion-zone { position:absolute; top:0; bottom:0; width:15vw; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; }
+  .motion-zone.left { left:0; }
+  .motion-zone.right { right:0; }
+
+  .choice-card {
+    width:100%; background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
+    padding:18px 12px; border:5px solid transparent; box-shadow:0 12px 40px rgba(0,0,0,.35);
+    display:flex; flex-direction:column; align-items:center; gap:10px; min-height:200px; justify-content:center;
+    transition:transform .1s, border-color .2s;
+  }
+  .left-card { border-color:#4fc3f7; border-radius:0 24px 24px 0; border-left:none; }
+  .right-card { border-color:#ab47bc; border-radius:24px 0 0 24px; border-right:none; }
+  .choice-label { font-family:'Fredoka One',cursive; font-size:clamp(1.8rem,5.5vw,var(--label-size)); color:#1a237e; text-align:center; line-height:1.15; word-break:break-word; }
+
+  .progress-container { width:100%; height:18px; background:rgba(255,255,255,.25); overflow:hidden; border:2px solid rgba(255,255,255,.4); margin-top:10px; }
+  .motion-zone.left .progress-container { border-radius:0 10px 10px 0; border-left:none; }
+  .motion-zone.right .progress-container { border-radius:10px 0 0 10px; border-right:none; }
+  .progress-bar { height:100%; width:0%; transition:width .08s ease-out; }
+  .left-bar { background:linear-gradient(to right,#29b6f6,#4fc3f7); }
+  .right-bar { background:linear-gradient(to left,#ce93d8,#ab47bc); }
+
+  .motion-zone.left.zone-active { box-shadow:inset 6px 0 20px rgba(79,195,247,.4); }
+  .motion-zone.right.zone-active { box-shadow:inset -6px 0 20px rgba(171,71,188,.4); }
+
+  .choice-card.fly-correct { animation:flyOut .5s ease-in forwards; }
+  .choice-card.fly-wrong { animation:flyDown .5s ease-in forwards; }
+  @keyframes flyOut { 0%{transform:scale(1.08);opacity:1} 100%{transform:scale(1.4) translateY(-80px);opacity:0} }
+  @keyframes flyDown { 0%{transform:scale(1);opacity:1} 100%{transform:scale(0.8) translateY(60px);opacity:0} }
+
+  .game-overlay-top { position:absolute; top:0; left:0; width:100%; display:flex; flex-direction:column; z-index:20; pointer-events:none; }
+  .top-bar { display:flex; justify-content:space-between; align-items:flex-start; padding:14px 20px; background:linear-gradient(to bottom,rgba(0,0,0,.65),transparent); }
+  .top-bar-left { display:flex; flex-direction:column; gap:8px; pointer-events:auto; }
+  .score-box { background:rgba(255,255,255,.15); backdrop-filter:blur(10px); border:2px solid rgba(255,255,255,.25); border-radius:50px; padding:7px 20px; color:#fff; font-size:1.1rem; font-weight:700; }
+  .score-box span { color:var(--yellow); font-size:1.3rem; }
+  .progress-info { color:rgba(255,255,255,.9); font-size:.9rem; background:rgba(0,0,0,.45); padding:4px 12px; border-radius:20px; }
+
+  .top-controls { display:flex; align-items:center; gap:8px; pointer-events:auto; }
+  .timer-wrap { position:relative; width:64px; height:64px; background:rgba(0,0,0,.4); border-radius:50%; }
+  .timer-wrap svg { transform:rotate(-90deg); }
+  .timer-wrap circle { fill:none; stroke-width:6; }
+  .timer-bg { stroke:rgba(255,255,255,.2); }
+  .timer-fg { stroke:var(--yellow); stroke-linecap:round; transition:stroke-dashoffset .5s linear; }
+  .timer-num { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:1.3rem; color:#fff; }
+  .btn-exit { background:rgba(239,83,80,.85); border:none; border-radius:50px; padding:7px 18px; color:#fff; font-family:'Kanit'; font-size:.95rem; cursor:pointer; }
+  .btn-mute { background:rgba(255,255,255,.15); backdrop-filter:blur(10px); border:2px solid rgba(255,255,255,.25); border-radius:50%; width:42px; height:42px; color:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  .question-area { align-self:center; display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:-8px; pointer-events:none; }
+  .q-label { color:rgba(255,255,255,.85); font-size:clamp(.8rem,1.8vw,1rem); background:rgba(0,0,0,.45); padding:3px 14px; border-radius:20px; }
+  .question-image-box { width:clamp(90px,20vw,150px); height:clamp(90px,20vw,150px); border-radius:20px; overflow:hidden; background:rgba(255,255,255,.9); border:4px solid var(--yellow); box-shadow:0 8px 30px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; animation:wordBounce .5s cubic-bezier(.34,1.56,.64,1); }
+  .question-image-box img { width:100%; height:100%; object-fit:contain; }
+  .question-image-box.emoji-mode { font-size:clamp(3rem,8vw,6rem); }
+  .question-image-box.hide { display:none; }
+  .question-word { font-family:'Fredoka One',cursive; font-size:clamp(2.5rem,7vw,var(--question-size)); color:#fff; background:linear-gradient(135deg,rgba(102,187,106,.92),rgba(41,182,246,.92)); backdrop-filter:blur(10px); border:4px solid rgba(255,255,255,.4); padding:10px 50px; border-radius:60px; box-shadow:0 8px 40px rgba(0,0,0,.4); animation:wordBounce .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes wordBounce { from{transform:scale(.4);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .tap-hint { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.25); color:#fff; font-size:1rem; padding:8px 24px; border-radius:30px; white-space:nowrap; opacity:0; transition:opacity .4s; pointer-events:none; z-index:30; }
+  .tap-hint.show { opacity:1; animation:pulseHint 1.5s ease-in-out infinite; }
+  @keyframes pulseHint { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.05)} }
+
+  .result-flash { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; font-family:'Fredoka One',cursive; font-size:clamp(2.5rem,8vw,6rem); opacity:0; pointer-events:none; transition:opacity .2s; z-index:100; }
+  .result-flash.correct { background:rgba(102,187,106,.45); color:#fff; }
+  .result-flash.wrong { background:rgba(239,83,80,.45); color:#fff; }
+  .result-flash.timeout { background:rgba(0,0,0,.6); color:#fff; }
+  .result-flash.show { opacity:1; }
+  .result-sub { font-size:clamp(1rem,2.5vw,1.6rem); opacity:.9; }
+
+  .countdown-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:200; flex-direction:column; gap:16px; }
+  .countdown-overlay.show { display:flex; }
+  .countdown-num { font-family:'Fredoka One',cursive; font-size:clamp(5rem,18vw,12rem); color:var(--yellow); animation:countPop .8s cubic-bezier(.34,1.56,.64,1); text-shadow:0 0 60px rgba(255,202,40,.5); }
+  .countdown-hint { color:rgba(255,255,255,.75); font-size:clamp(1rem,2.5vw,1.5rem); text-align:center; padding:0 20px; }
+  @keyframes countPop { from{transform:scale(2.5);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .particle { position:fixed; pointer-events:none; border-radius:50%; z-index:9999; animation:particleFall 1.6s ease-out forwards; }
+  @keyframes particleFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(360deg);opacity:0} }
+
+  .end-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(160deg,#1a237e,#283593,#3949ab); display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:300; padding:20px; overflow-y:auto; }
+  .end-overlay.show { display:flex; }
+  .end-trophy { font-size:clamp(3.5rem,9vw,6rem); animation:trophySpin .8s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes trophySpin { from{transform:scale(0) rotate(-180deg)} to{transform:scale(1) rotate(0deg)} }
+  .end-title { font-family:'Fredoka One',cursive; font-size:clamp(1.6rem,4.5vw,2.8rem); color:var(--yellow); }
+  .end-stars { font-size:clamp(1.8rem,4.5vw,3rem); }
+  .end-score { color:#90caf9; font-size:clamp(1rem,2.5vw,1.4rem); }
+  .end-score span { color:#fff; font-weight:700; font-size:1.2em; }
+
+  .result-summary { width:min(500px,90vw); max-height:28vh; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px; }
+  .result-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.08); border-radius:12px; padding:8px 14px; font-size:clamp(.8rem,1.8vw,1rem); color:#fff; border-left:4px solid transparent; }
+  .result-row.ok { border-color:#66bb6a; }
+  .result-row.ng { border-color:#ef5350; }
+  .result-row .ri { font-size:1.2rem; }
+  .result-row .rq { flex:1; font-weight:700; color:#ffca28; }
+  .result-row .ra { flex:2; font-size:.88em; opacity:.85; }
+
+  .btn-group { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .btn-outline { font-family:'Fredoka One',cursive; font-size:clamp(.9rem,2vw,1.1rem); padding:10px 28px; background:rgba(255,255,255,.12); color:#fff; border:2px solid rgba(255,255,255,.35); border-radius:50px; cursor:pointer; }
+  .btn-outline:hover { background:rgba(255,255,255,.22); transform:translateY(-3px); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-tabs" id="navTabs">
+  <button class="nav-tab active" data-page="game" onclick="showPage('game',this)">🎮 เล่นเกม</button>
+  <button class="nav-tab" data-page="questions" onclick="showPage('questions',this)"> จัดการคำถาม</button>
+  <button class="nav-tab" data-page="sheets" onclick="showPage('sheets',this)">📂 ชุดคำถาม</button>
+  <button class="nav-tab" data-page="settings" onclick="showPage('settings',this)">⚙️ ตั้งค่า</button>
+  <button class="nav-tab" data-page="stats" onclick="showPage('stats',this)"> สถิติ</button>
+</div>
+
+<!-- PAGE: GAME -->
+<div id="page-game" class="page active">
+  <div class="game-container">
+    <div class="game-header">
+      <div class="game-title">🏃 Body Move Quiz!</div>
+      <div class="game-subtitle">ขยับตัว โบกมือ ไปฝั่งที่ถูกต้อง!</div>
+    </div>
+
+    <div class="control-panel">
+      <div class="control-row">
+        <div class="control-group">
+          <label>🎮 เลือกชุดคำถาม</label>
+          <select id="gameSheetSelect" onchange="onGameSheetChange()">
+            <option value="">-- กำลังโหลด --</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btnStartGame" onclick="startGame()" disabled>▶ เริ่มเกม!</button>
+      </div>
+      <div id="gameStatus" class="status-text">กำลังโหลดข้อมูล...</div>
+      <div id="gameErrorBox"></div>
+    </div>
+
+    <div class="cam-center-box">
+      <video id="previewVideo" autoplay muted playsinline></video>
+      <div class="cam-label">📷 ตรวจสอบกล้อง - ยืนตรงกลาง</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: QUESTIONS -->
+<div id="page-questions" class="page">
+  <div class="admin-container">
+    <div class="admin-header"><div class="admin-title">📝 จัดการคำถาม</div></div>
+    <div class="card">
+      <div class="control-row">
+        <div class="control-group">
+          <label>เลือกชุดคำถาม</label>
+          <select id="qSheetSelect" onchange="loadQuestionsTable()"></select>
+        </div>
+        <button class="btn btn-success" onclick="openQuestionModal()">➕ เพิ่มคำถาม</button>
+        <button class="btn btn-secondary" onclick="exportCurrentSheet()">📤 Export JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()"> Import</button>
+        <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none;">
+      </div>
+      <div id="qErrorBox"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">รายการคำถาม (<span id="qCount">0</span> ข้อ)</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>คำถาม</th><th>ภาพ</th><th>ตัวเลือกซ้าย</th><th>ตัวเลือกขวา</th><th>คำตอบ</th><th>จัดการ</th></tr></thead>
+          <tbody id="questionsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SHEETS -->
+<div id="page-sheets" class="page">
+  <div class="admin-container">
+    <div class="admin-header"><div class="admin-title">📂 จัดการชุดคำถาม</div></div>
+    <div class="card">
+      <div class="card-title">สร้างชุดคำถามใหม่</div>
+      <div class="control-row">
+        <div class="control-group">
+          <input type="text" id="newSheetNameAdmin" placeholder="ชื่อชุด (ภาษาอังกฤษ เช่น animals)">
+        </div>
+        <button class="btn btn-success" onclick="createSheet()">➕ สร้างชุด</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">ชุดคำถามทั้งหมด</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>ชื่อชุด</th><th>จำนวนข้อ</th><th>จัดการ</th></tr></thead>
+          <tbody id="sheetsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div id="page-settings" class="page">
+  <div class="admin-container">
+    <div class="admin-header"><div class="admin-title">⚙️ ตั้งค่าระบบ</div></div>
+    <div class="card">
+      <div class="card-title">⏱️ การเล่นเกม</div>
+      <div class="form-grid">
+        <div class="form-group"><label>เวลาต่อข้อ (วินาที)</label><input type="number" id="setTime" min="5" max="60" step="1"></div>
+        <div class="form-group"><label>ความกว้างโซนตรวจจับ (0.1-0.5)</label><input type="number" id="setZone" min="0.1" max="0.5" step="0.05"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔤 ขนาดตัวอักษร (rem)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>ขนาดคำตอบ</label><input type="number" id="setLabelSize" min="1" max="8" step="0.1"></div>
+        <div class="form-group"><label>ขนาดคำถาม</label><input type="number" id="setQuestionSize" min="1" max="10" step="0.1"></div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: STATS -->
+<div id="page-stats" class="page">
+  <div class="admin-container">
+    <div class="admin-header"><div class="admin-title">📊 สถิติการเล่น</div></div>
+    <div class="card">
+      <div class="card-title">🔍 กรองข้อมูล</div>
+      <div class="control-row">
+        <div class="control-group"><label>ชุดคำถาม</label><select id="statSheetFilter" onchange="loadStats()"><option value="">ทั้งหมด</option></select></div>
+        <div class="control-group"><label>ตั้งแต่</label><input type="date" id="statFromDate" onchange="loadStats()"></div>
+        <div class="control-group"><label>ถึง</label><input type="date" id="statToDate" onchange="loadStats()"></div>
+        <button class="btn btn-secondary" onclick="resetStatFilter()">🔄 รีเซ็ต</button>
+      </div>
+      <div id="statsErrorBox"></div>
+    </div>
+    <div class="stats-grid" id="statsSummary"></div>
+    <div class="card">
+      <div class="card-title"> คะแนนเฉลี่ยต่อชุดคำถาม</div>
+      <div class="chart-bar" id="statsChart"></div>
+      <div style="height:30px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 ประวัติการเล่น (<span id="statsCount">0</span> ครั้ง)</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>วันที่</th><th>ชุดคำถาม</th><th>คะแนน</th><th>จำนวนข้อ</th><th>เปอร์เซ็นต์</th><th>เวลาเล่น (วิ)</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION MODAL -->
+<div class="modal-overlay" id="questionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="qModalTitle">เพิ่มคำถาม</div>
+      <button class="modal-close" onclick="closeQuestionModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1;"><label>คำถาม *</label><input type="text" id="qQuestion" placeholder="เช่น สัตว์อะไรเอ่ย?"></div>
+      <div class="form-group" style="grid-column:1/-1;"><label>ลิงก์ภาพ (หรือ Emoji)</label><input type="text" id="qImage" placeholder="https://... หรือ "></div>
+      <div class="form-group"><label>ตัวเลือกซ้าย *</label><input type="text" id="qLeft" placeholder="เช่น แมว"></div>
+      <div class="form-group"><label>ตัวเลือกขวา *</label><input type="text" id="qRight" placeholder="เช่น หมา"></div>
+      <div class="form-group"><label>คำตอบที่ถูกต้อง *</label>
+        <select id="qCorrect"><option value="left">👈 ซ้าย</option><option value="right">👉 ขวา</option></select>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+      <button class="btn btn-secondary" onclick="closeQuestionModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="game-screen">
+  <video id="camVideo" autoplay muted playsinline></video>
+  <canvas id="motionCanvas"></canvas>
+
+  <div class="motion-zone left" id="zoneLeft">
+    <div class="choice-card left-card" id="leftCard"><div class="choice-label" id="leftLabel">cat</div></div>
+    <div class="progress-container"><div class="progress-bar left-bar" id="barLeft"></div></div>
+  </div>
+  <div class="motion-zone right" id="zoneRight">
+    <div class="choice-card right-card" id="rightCard"><div class="choice-label" id="rightLabel">dog</div></div>
+    <div class="progress-container"><div class="progress-bar right-bar" id="barRight"></div></div>
+  </div>
+
+  <div class="game-overlay-top">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="score-box">คะแนน: <span id="scoreDisplay">0</span></div>
+        <div class="progress-info" id="progressInfo">ข้อ 1/5</div>
+      </div>
+      <div class="top-controls">
+        <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+        <div class="timer-wrap">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle class="timer-bg" cx="32" cy="32" r="26"/>
+            <circle class="timer-fg" id="timerCircle" cx="32" cy="32" r="26" stroke-dasharray="163" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num" id="timerNum">15</div>
+        </div>
+        <button class="btn-exit" onclick="exitGame()">✕ ออก</button>
+      </div>
+    </div>
+    <div class="question-area">
+      <div class="question-image-box hide" id="questionImageBox"></div>
+      <div class="q-label">เลือกฝั่งที่ถูกต้อง!</div>
+      <div class="question-word" id="questionWord">cat</div>
+    </div>
+  </div>
+
+  <div class="tap-hint" id="tapHint"> โบกมือที่ขอบจอฝั่งที่ถูกต้อง!</div>
+  <div class="result-flash" id="resultFlash"><span id="resultIcon">✓</span><span class="result-sub" id="resultSub"></span></div>
+
+  <div class="countdown-overlay" id="countdownOverlay">
+    <div class="countdown-num" id="countdownNum">3</div>
+    <div class="countdown-hint">ยืนตรงกลาง เตรียมตัว!</div>
+  </div>
+
+  <div class="end-overlay" id="endOverlay">
+    <div class="end-trophy" id="endTrophy"></div>
+    <div class="end-title">จบเกมแล้ว!</div>
+    <div class="end-stars" id="endStars">⭐⭐⭐</div>
+    <div class="end-score">ได้ <span id="finalScore">0</span> จาก <span id="totalQ">0</span> ข้อ</div>
+    <div class="result-summary" id="resultSummary"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="restartGame()">🔄 เล่นอีกครั้ง</button>
+      <button class="btn btn-outline" onclick="exitToEnd()">🏠 กลับหน้าหลัก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG - ⚠️ เปลี่ยน URL เป็นของคุณ
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYkYWir6TS4qLndpf__SuDSXkwbT6ZGOFGjEhGq5kWSi-YXKkjPvFbdbv7Dgkue6Gj/exec';
+let TIMER_SEC = 15;
+
+// ============================================================
+// DATE FORMATTER
+// ============================================================
+const THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const THAI_MONTHS_FULL  = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+function formatDate(dateStr, mode = 'short') {
+  if (!dateStr) return '-';
+  let d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  
+  const day = d.getDate();
+  const month = d.getMonth();
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  const secs = String(d.getSeconds()).padStart(2, '0');
+  
+  if (mode === 'short') {
+    return `${String(day).padStart(2,'0')}/${String(month+1).padStart(2,'0')}/${year} ${hours}:${mins}`;
+  } else if (mode === 'medium') {
+    return `${day} ${THAI_MONTHS_SHORT[month]} ${year} ${hours}:${mins}`;
+  } else if (mode === 'long') {
+    return `วัน${THAI_DAYS[d.getDay()]}ที่ ${day} ${THAI_MONTHS_FULL[month]} ${year} เวลา ${hours}:${mins}:${secs} น.`;
+  } else if (mode === 'dateOnly') {
+    return `${String(day).padStart(2,'0')}/${String(month+1).padStart(2,'0')}/${year}`;
+  }
+  return String(dateStr);
+}
+
+// ============================================================
+// AUDIO
+// ============================================================
+let audioCtx=null, bgmNode=null, bgmGain=null, isMuted=false;
+function getAC() { if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function startBGM() {
+  if(isMuted) return; stopBGM();
+  try {
+    const ctx=getAC(); bgmGain=ctx.createGain(); bgmGain.gain.value=0.07; bgmGain.connect(ctx.destination);
+    const notes=[523,659,784,1047,784,659,523,392,523,659,880,784,659,523,392,330];
+    const step=60/160; let t=ctx.currentTime+0.1;
+    function loop() {
+      notes.forEach((f,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(bgmGain);
+        o.type='square'; o.frequency.value=f;
+        g.gain.setValueAtTime(0,t+i*step); g.gain.linearRampToValueAtTime(0.5,t+i*step+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001,t+i*step+step*0.7); o.start(t+i*step); o.stop(t+i*step+step);
+      }); t+=notes.length*step;
+    }
+    loop(); bgmNode=setInterval(()=>{ if(!isMuted&&bgmGain) loop(); },(notes.length*step*1000)-100);
+  } catch(e){}
+}
+function stopBGM() { if(bgmNode){clearInterval(bgmNode);bgmNode=null;} if(bgmGain){try{bgmGain.disconnect();}catch(e){}bgmGain=null;} }
+function toggleMute() { isMuted=!isMuted; document.getElementById('btnMute').textContent=isMuted?'🔇':'🔊'; isMuted?stopBGM():startBGM(); }
+
+function sfxCorrect() {
+  if(isMuted)return; try{ const ctx=getAC(); [523,659,784,1047].forEach((f,i)=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=f; const t=ctx.currentTime+i*0.1; g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3); o.start(t); o.stop(t+0.3); }); }catch(e){}
+}
+function sfxWrong() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sawtooth'; o.frequency.setValueAtTime(300,ctx.currentTime); o.frequency.linearRampToValueAtTime(100,ctx.currentTime+0.4); g.gain.setValueAtTime(0.25,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5); o.start(); o.stop(ctx.currentTime+0.5); }catch(e){}
+}
+function sfxCountdown() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.2,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.15); o.start(); o.stop(ctx.currentTime+0.15); }catch(e){}
+}
+function sfxGo() {
+  if(isMuted)return; try{ const ctx=getAC(); [523,659,1047].forEach((f,i)=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=f; const t=ctx.currentTime+i*0.07; g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.25); o.start(t); o.stop(t+0.25); }); }catch(e){}
+}
+function sfxTick() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=440; g.gain.setValueAtTime(0.1,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08); o.start(); o.stop(ctx.currentTime+0.08); }catch(e){}
+}
+function sfxProgress(pct) {
+  if(isMuted||pct<20||pct%20>5)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value=300+pct*5; o.type='sine'; g.gain.setValueAtTime(0.07,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.06); o.start(); o.stop(ctx.currentTime+0.06); }catch(e){}
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let sheetFontSizes={label:3.6,question:5};
+let stream=null, questions=[], currentQ=0, score=0;
+let timeLeft=TIMER_SEC, timerInterval=null, answered=false;
+let motionInterval=null, prevFrameData=null;
+let leftProgress=0, rightProgress=0;
+const PROGRESS_MAX=100;
+let hintShown=false;
+let resultLog=[];
+let gameStartTime=0;
+let currentGameSheet='';
+
+const motionCanvas=document.getElementById('motionCanvas');
+const motionCtx=motionCanvas.getContext('2d');
+
+let allSheets = [];
+let currentQuestions = [];
+let currentSheet = '';
+let editingQuestionId = null;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else document.querySelector(`.nav-tab[data-page="${page}"]`)?.classList.add('active');
+
+  if (page === 'questions') loadQuestionsPage();
+  if (page === 'sheets') loadSheetsPage();
+  if (page === 'settings') loadSettingsPage();
+  if (page === 'stats') loadStatsPage();
+}
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function apiGet(action, params = {}) {
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', action);
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== '') url.searchParams.set(k, v); });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+async function apiPost(action, data) {
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', action);
+  const res = await fetch(url, { method: 'POST', body: JSON.stringify(data) });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const result = await res.json();
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showError(boxId, msg, onRetry) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  box.innerHTML = `<div class="error-box">⚠️ ${msg}${onRetry ? ' <span class="retry-link" onclick="' + onRetry + '">ลองใหม่</span>' : ''}</div>`;
+}
+
+function clearError(boxId) {
+  const box = document.getElementById(boxId);
+  if (box) box.innerHTML = '';
+}
+
+// ============================================================
+// CAMERA
+// ============================================================
+async function initCamera(videoEl) {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width:1280, height:720, facingMode:'user' }, audio:false });
+    videoEl.srcObject = stream;
+    return true;
+  } catch(e) {
+    console.error('Camera error:', e);
+    return false;
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async () => {
+  const ok = await initCamera(document.getElementById('previewVideo'));
+  if (ok) {
+    await loadSheetList();
+  } else {
+    document.getElementById('gameStatus').textContent = '❌ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง';
+    document.getElementById('gameStatus').className = 'status-text error';
+  }
+})();
+
+async function loadSheetList() {
+  const statusEl = document.getElementById('gameStatus');
+  try {
+    const data = await apiGet('listSheets');
+    allSheets = data.sheets || [];
+    populateSheetDropdowns();
+
+    if (allSheets.length === 0) {
+      statusEl.textContent = '️ ไม่พบชุดคำถาม - ไปที่แท็บ "📂 ชุดคำถาม" เพื่อสร้างชุดใหม่';
+      statusEl.className = 'status-text error';
+      document.getElementById('btnStartGame').disabled = true;
+    } else {
+      statusEl.textContent = `✅ โหลดสำเร็จ ${allSheets.length} ชุดคำถาม - พร้อมเล่น!`;
+      statusEl.className = 'status-text success';
+      document.getElementById('btnStartGame').disabled = false;
+    }
+    clearError('gameErrorBox');
+  } catch (e) {
+    console.error('[LOAD] Error:', e);
+    statusEl.textContent = '❌ โหลดข้อมูลไม่ได้: ' + e.message;
+    statusEl.className = 'status-text error';
+    showError('gameErrorBox', 'ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้ - ตรวจสอบ URL และ Deployment', 'loadSheetList()');
+    document.getElementById('btnStartGame').disabled = true;
+  }
+}
+
+function populateSheetDropdowns() {
+  const selects = ['gameSheetSelect', 'qSheetSelect', 'statSheetFilter'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    const val = sel.value;
+    const firstOpt = sel.options[0] ? sel.options[0].outerHTML : '<option value="">-- เลือก --</option>';
+    sel.innerHTML = firstOpt + allSheets.map(s => `<option value="${s}">${s}</option>`).join('');
+    if (allSheets.includes(val)) sel.value = val;
+  });
+  if (allSheets.length > 0 && !document.getElementById('qSheetSelect').value) {
+    document.getElementById('qSheetSelect').value = allSheets[0];
+  }
+}
+
+function onGameSheetChange() {}
+
+// ============================================================
+// START GAME
+// ============================================================
+async function startGame() {
+  const sheet = document.getElementById('gameSheetSelect').value;
+  if (!sheet) { toast('กรุณาเลือกชุดคำถาม', 'error'); return; }
+
+  currentGameSheet = sheet;
+  const status = document.getElementById('gameStatus');
+  const btn = document.getElementById('btnStartGame');
+  btn.disabled = true;
+  status.textContent = ' กำลังโหลดคำถาม...';
+  status.className = 'status-text';
+
+  try {
+    const setData = await apiGet('getSettings');
+    const s = setData.settings || {};
+    TIMER_SEC = parseInt(s.timePerQuestion) || 15;
+    sheetFontSizes.label = parseFloat(s.fontSizeLabel) || 3.6;
+    sheetFontSizes.question = parseFloat(s.fontSizeQuestion) || 5;
+    applyFontVars(sheetFontSizes.label, sheetFontSizes.question);
+
+    const data = await apiGet('getQuestions', { sheet });
+    if (!data.questions || data.questions.length === 0) {
+      status.textContent = '❌ ไม่พบคำถามในชุด: ' + sheet;
+      status.className = 'status-text error';
+      btn.disabled = false;
+      return;
+    }
+
+    questions = data.questions.sort(() => Math.random() - .5);
+    currentQ = 0; score = 0; hintShown = false; resultLog = [];
+    gameStartTime = Date.now();
+
+    status.textContent = `✅ โหลด ${questions.length} ข้อ — เริ่มเกม!`;
+    status.className = 'status-text success';
+    btn.disabled = false;
+
+    document.getElementById('navTabs').classList.add('hidden');
+    document.getElementById('gameScreen').classList.add('active');
+    document.getElementById('camVideo').srcObject = stream;
+    document.getElementById('endOverlay').classList.remove('show');
+    getAC(); startBGM();
+    startCountdown();
+  } catch (e) {
+    console.error('[GAME] Error:', e);
+    status.textContent = '❌ โหลดไม่ได้: ' + e.message;
+    status.className = 'status-text error';
+    btn.disabled = false;
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+function restartGame() {
+  questions = questions.sort(() => Math.random() - .5);
+  currentQ = 0; score = 0; hintShown = false; resultLog = [];
+  gameStartTime = Date.now();
+  document.getElementById('scoreDisplay').textContent = '0';
+  document.getElementById('endOverlay').classList.remove('show');
+  startBGM(); startCountdown();
+}
+
+function exitGame() {
+  clearInterval(timerInterval); stopMotion();
+  endGame(true);
+}
+
+function exitToEnd() {
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('navTabs').classList.remove('hidden');
+  stopBGM();
+  showPage('game', document.querySelector('.nav-tab[data-page="game"]'));
+}
+
+// ============================================================
+// COUNTDOWN
+// ============================================================
+function startCountdown() {
+  const overlay = document.getElementById('countdownOverlay'), numEl = document.getElementById('countdownNum');
+  overlay.classList.add('show');
+  ['leftCard','rightCard'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('fly-correct','fly-wrong');
+    el.style.opacity = '1'; el.style.transform = 'scale(1)';
+  });
+  let c = 3; numEl.textContent = c; animEl(numEl); sfxCountdown();
+  const cd = setInterval(() => {
+    c--;
+    if (c <= 0) { clearInterval(cd); overlay.classList.remove('show'); sfxGo(); loadQuestion(); }
+    else { numEl.textContent = c; animEl(numEl); sfxCountdown(); }
+  }, 900);
+}
+function animEl(el) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'countPop .8s cubic-bezier(.34,1.56,.64,1)'; }
+
+// ============================================================
+// LOAD QUESTION
+// ============================================================
+function loadQuestion() {
+  if (currentQ >= questions.length) { endGame(false); return; }
+  answered = false;
+  const q = questions[currentQ];
+  document.getElementById('progressInfo').textContent = `ข้อ ${currentQ+1}/${questions.length}`;
+  const qw = document.getElementById('questionWord'); qw.textContent = q.question; animEl(qw);
+  renderQuestionImage(q.question_image);
+
+  document.getElementById('leftLabel').textContent = q.left_label;
+  document.getElementById('rightLabel').textContent = q.right_label;
+
+  const lc = document.getElementById('leftCard'), rc = document.getElementById('rightCard');
+  lc.style.borderColor = '#4fc3f7'; lc.style.transform = 'scale(1)'; lc.style.opacity = '1'; lc.style.boxShadow = '';
+  rc.style.borderColor = '#ab47bc'; rc.style.transform = 'scale(1)'; rc.style.opacity = '1'; rc.style.boxShadow = '';
+  document.getElementById('zoneLeft').classList.remove('zone-active');
+  document.getElementById('zoneRight').classList.remove('zone-active');
+
+  if (!hintShown) {
+    hintShown = true;
+    const h = document.getElementById('tapHint');
+    h.classList.add('show');
+    setTimeout(() => h.classList.remove('show'), 3000);
+  }
+
+  startTimer(); startMotion();
+}
+
+function renderQuestionImage(image) {
+  const box = document.getElementById('questionImageBox');
+  if (image && (image.startsWith('http') || image.startsWith('/'))) {
+    box.classList.remove('hide','emoji-mode');
+    box.innerHTML = `<img src="${image}" alt="" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('hide')">`;
+  } else if (image) {
+    box.classList.remove('hide'); box.classList.add('emoji-mode');
+    box.textContent = image;
+  } else {
+    box.classList.add('hide'); box.innerHTML = '';
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  timeLeft = TIMER_SEC; updateTimer();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--; updateTimer();
+    if (timeLeft <= 3 && timeLeft > 0) sfxTick();
+    if (timeLeft <= 0) { clearInterval(timerInterval); if (!answered) handleAnswer(null); }
+  }, 1000);
+}
+function updateTimer() {
+  document.getElementById('timerNum').textContent = timeLeft;
+  const r = 26, circ = 2 * Math.PI * r, fg = document.getElementById('timerCircle');
+  fg.style.strokeDashoffset = circ * (1 - Math.max(0, timeLeft) / Math.max(1, TIMER_SEC));
+  fg.style.stroke = timeLeft <= 3 ? '#ef5350' : '#ffca28';
+}
+
+// ============================================================
+// MOTION DETECTION
+// ============================================================
+function startMotion() {
+  if (motionInterval) clearInterval(motionInterval);
+  const W = 160, H = 90; motionCanvas.width = W; motionCanvas.height = H;
+  prevFrameData = null; leftProgress = 0; rightProgress = 0;
+  updateBar('left', 0); updateBar('right', 0);
+  const vid = document.getElementById('camVideo');
+
+  motionInterval = setInterval(() => {
+    if (vid.readyState < 2 || answered) return;
+    motionCtx.drawImage(vid, 0, 0, W, H);
+    const frame = motionCtx.getImageData(0, 0, W, H);
+    if (!prevFrameData) { prevFrameData = frame.data.slice(); return; }
+
+    let motL = 0, motR = 0;
+    const thresh = 38;
+    const lEnd = W * 0.25, rStart = W * 0.75;
+
+    for (let i = 0; i < frame.data.length; i += 4) {
+      const diff = Math.abs(frame.data[i] - prevFrameData[i]) + Math.abs(frame.data[i+1] - prevFrameData[i+1]) + Math.abs(frame.data[i+2] - prevFrameData[i+2]);
+      if (diff > thresh) {
+        const x = W - 1 - (i/4) % W;
+        if (x < lEnd) motL++;
+        else if (x > rStart) motR++;
+      }
+    }
+    prevFrameData = frame.data.slice();
+
+    const minPx = 15;
+    if (motL > minPx && motL > motR * 1.5) { leftProgress = Math.min(PROGRESS_MAX, leftProgress + 15); rightProgress = 0; }
+    else if (motR > minPx && motR > motL * 1.5) { rightProgress = Math.min(PROGRESS_MAX, rightProgress + 15); leftProgress = 0; }
+    else { leftProgress = 0; rightProgress = 0; }
+
+    updateBar('left', leftProgress);
+    updateBar('right', rightProgress);
+
+    if (motL > minPx) sfxProgress(leftProgress);
+    else if (motR > minPx) sfxProgress(rightProgress);
+
+    if (leftProgress >= PROGRESS_MAX) handleAnswer('left');
+    else if (rightProgress >= PROGRESS_MAX) handleAnswer('right');
+  }, 100);
+}
+
+function updateBar(side, val) {
+  document.getElementById(side === 'left' ? 'barLeft' : 'barRight').style.width = val + '%';
+  const card = document.getElementById(side + 'Card');
+  const zone = document.getElementById(side === 'left' ? 'zoneLeft' : 'zoneRight');
+  if (val > 10) { card.style.transform = `scale(${1 + (val/100) * 0.08})`; zone.classList.add('zone-active'); }
+  else { card.style.transform = 'scale(1)'; zone.classList.remove('zone-active'); }
+}
+
+function stopMotion() {
+  if (motionInterval) { clearInterval(motionInterval); motionInterval = null; }
+  prevFrameData = null;
+}
+
+// ============================================================
+// HANDLE ANSWER
+// ============================================================
+function handleAnswer(zone) {
+  if (answered) return;
+  answered = true; clearInterval(timerInterval); stopMotion();
+
+  const q = questions[currentQ];
+  const correctSide = (q.correct_side || '').toLowerCase().trim();
+  const correct = zone === correctSide;
+
+  const correctLabel = correctSide === 'left' ? q.left_label : q.right_label;
+  const chosenLabel = zone ? (zone === 'left' ? q.left_label : q.right_label) : 'หมดเวลา';
+  resultLog.push({ q: q.question, correct, correctLabel, chosenLabel, timeout: !zone });
+
+  if (!zone) { showFlash('timeout', '⏰', 'หมดเวลา!'); sfxWrong(); }
+  else {
+    const chosenCard = zone === 'left' ? 'leftCard' : 'rightCard';
+    document.getElementById(chosenCard).classList.add(correct ? 'fly-correct' : 'fly-wrong');
+    if (correct) { score++; showFlash('correct', '✓', 'ถูกต้อง! 🎉'); sfxCorrect(); spawnParticles(); }
+    else {
+      showFlash('wrong', '✗', 'ผิด!'); sfxWrong();
+      const correctCard = correctSide === 'left' ? 'leftCard' : 'rightCard';
+      document.getElementById(correctCard).style.borderColor = '#66bb6a';
+      document.getElementById(correctCard).style.boxShadow = '0 0 20px rgba(102,187,106,.6)';
+    }
+  }
+  document.getElementById('scoreDisplay').textContent = score;
+  setTimeout(() => { hideFlash(); currentQ++; currentQ < questions.length ? startCountdown() : endGame(false); }, 2200);
+}
+
+function showFlash(type, icon, sub) {
+  const el = document.getElementById('resultFlash');
+  el.className = `result-flash ${type} show`;
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultSub').textContent = sub;
+}
+function hideFlash() { document.getElementById('resultFlash').classList.remove('show'); }
+
+// ============================================================
+// END GAME
+// ============================================================
+async function endGame(isExit) {
+  clearInterval(timerInterval); stopMotion(); stopBGM();
+
+  if (!isExit) {
+    const playTime = Math.floor((Date.now() - gameStartTime) / 1000);
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    try {
+      await apiPost('saveStats', {
+        sheetName: currentGameSheet,
+        score: String(score),
+        total: String(questions.length),
+        percentage: String(percentage),
+        playTime: String(playTime)
+      });
+    } catch (e) {
+      console.error('[STATS] Save error:', e);
+      toast('บันทึกสถิติไม่สำเร็จ: ' + e.message, 'error');
+    }
+  }
+
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('totalQ').textContent = questions.length;
+  const pct = questions.length > 0 ? score / questions.length : 0;
+  document.getElementById('endTrophy').textContent = pct >= .8 ? '🏆' : pct >= .5 ? '🥈' : '🎖️';
+  document.getElementById('endStars').textContent = pct >= .8 ? '⭐⭐⭐' : pct >= .5 ? '⭐⭐' : '⭐';
+  const t = document.getElementById('endTrophy');
+  t.style.animation = 'none'; void t.offsetWidth; t.style.animation = 'trophySpin .8s cubic-bezier(.34,1.56,.64,1)';
+
+  const summary = document.getElementById('resultSummary');
+  summary.innerHTML = resultLog.map((r, i) => `
+    <div class="result-row ${r.correct ? 'ok' : 'ng'}">
+      <span class="ri">${r.correct ? '✅' : '❌'}</span>
+      <span class="rq">ข้อ ${i+1}: ${r.q}</span>
+      <span class="ra">${r.correct ? 'ถูก! → ' + r.correctLabel : r.timeout ? 'หมดเวลา (เฉลย: ' + r.correctLabel + ')' : 'เลือก: ' + r.chosenLabel + ' → เฉลย: ' + r.correctLabel}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('endOverlay').classList.add('show');
+  spawnParticles(35);
+  if (pct >= .8) sfxCorrect();
+}
+
+function applyFontVars(labelRem, questionRem) {
+  document.documentElement.style.setProperty('--label-size', labelRem + 'rem');
+  document.documentElement.style.setProperty('--question-size', questionRem + 'rem');
+}
+
+function spawnParticles(n = 18) {
+  const colors = ['#ffca28', '#66bb6a', '#4fc3f7', '#ef5350', '#ab47bc', '#fff'];
+  for (let i = 0; i < n; i++) setTimeout(() => {
+    const p = document.createElement('div'); p.className = 'particle';
+    const s = 8 + Math.random() * 14;
+    p.style.cssText = `width:${s}px;height:${s}px;background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}vw;top:${15 + Math.random() * 50}vh;animation-duration:${1 + Math.random()}s;animation-delay:${Math.random() * .3}s`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }, i * 40);
+}
+
+// ============================================================
+// QUESTIONS MANAGEMENT
+// ============================================================
+function loadQuestionsPage() {
+  if (allSheets.length === 0) {
+    loadSheetList().then(() => {
+      if (allSheets.length > 0 && !document.getElementById('qSheetSelect').value) {
+        document.getElementById('qSheetSelect').value = allSheets[0];
+        loadQuestionsTable();
+      }
+    });
+  } else {
+    if (!document.getElementById('qSheetSelect').value && allSheets.length > 0) {
+      document.getElementById('qSheetSelect').value = allSheets[0];
+    }
+    loadQuestionsTable();
+  }
+}
+
+async function loadQuestionsTable() {
+  const sheet = document.getElementById('qSheetSelect').value;
+  if (!sheet) {
+    document.getElementById('questionsBody').innerHTML = '<tr><td colspan="7" class="empty-state">กรุณาเลือกชุดคำถาม</td></tr>';
+    return;
+  }
+  currentSheet = sheet;
+
+  const tbody = document.getElementById('questionsBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="loading"></div> กำลังโหลด...</td></tr>';
+  clearError('qErrorBox');
+
+  try {
+    const data = await apiGet('getQuestions', { sheet });
+    currentQuestions = data.questions || [];
+    document.getElementById('qCount').textContent = currentQuestions.length;
+
+    if (currentQuestions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="icon">📭</div>ยังไม่มีคำถาม - กด "➕ เพิ่มคำถาม" เพื่อเริ่ม</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = currentQuestions.map((q, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${q.question || '-'}</td>
+        <td>${q.question_image ? (q.question_image.startsWith('http') ? '️' : q.question_image) : '-'}</td>
+        <td>${q.left_label || '-'}</td>
+        <td>${q.right_label || '-'}</td>
+        <td><span style="padding:4px 12px; border-radius:12px; background:${q.correct_side === 'left' ? '#4fc3f7' : '#ab47bc'}; color:#fff; font-size:.85rem;">${q.correct_side === 'left' ? '👈 ซ้าย' : ' ขวา'}</span></td>
+        <td class="actions">
+          <button class="btn btn-sm btn-secondary" onclick="editQuestion(${q.id})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error('[Q] Load error:', e);
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">❌ โหลดไม่ได้</td></tr>';
+    showError('qErrorBox', e.message, 'loadQuestionsTable()');
+  }
+}
+
+function openQuestionModal(id = null) {
+  editingQuestionId = id;
+  document.getElementById('qModalTitle').textContent = id ? 'แก้ไขคำถาม' : 'เพิ่มคำถาม';
+  if (id) {
+    const q = currentQuestions.find(x => x.id === id);
+    document.getElementById('qQuestion').value = q.question || '';
+    document.getElementById('qImage').value = q.question_image || '';
+    document.getElementById('qLeft').value = q.left_label || '';
+    document.getElementById('qRight').value = q.right_label || '';
+    document.getElementById('qCorrect').value = q.correct_side || 'left';
+  } else {
+    ['qQuestion', 'qImage', 'qLeft', 'qRight'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('qCorrect').value = 'left';
+  }
+  document.getElementById('questionModal').classList.add('show');
+}
+
+function closeQuestionModal() {
+  document.getElementById('questionModal').classList.remove('show');
+}
+
+async function saveQuestion() {
+  const data = {
+    sheetName: currentSheet,
+    question: document.getElementById('qQuestion').value.trim(),
+    question_image: document.getElementById('qImage').value.trim(),
+    left_label: document.getElementById('qLeft').value.trim(),
+    right_label: document.getElementById('qRight').value.trim(),
+    correct_side: document.getElementById('qCorrect').value
+  };
+
+  if (!data.question || !data.left_label || !data.right_label) {
+    toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return;
+  }
+
+  try {
+    const action = editingQuestionId ? 'updateQuestion' : 'addQuestion';
+    if (editingQuestionId) data.id = editingQuestionId;
+    const res = await apiPost(action, data);
+    toast(res.message || 'บันทึกแล้ว', 'success');
+    closeQuestionModal();
+    loadQuestionsTable();
+  } catch (e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+function editQuestion(id) { openQuestionModal(id); }
+
+async function deleteQuestion(id) {
+  if (!confirm('ยืนยันการลบคำถามนี้?')) return;
+  try {
+    const res = await apiPost('deleteQuestion', { sheetName: currentSheet, id });
+    toast('ลบแล้ว', 'success');
+    loadQuestionsTable();
+  } catch (e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+function exportCurrentSheet() {
+  if (currentQuestions.length === 0) { toast('ไม่มีข้อมูล', 'error'); return; }
+  const data = { sheetName: currentSheet, questions: currentQuestions };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${currentSheet}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export แล้ว', 'success');
+}
+
+async function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.sheetName || !data.questions) throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+    if (!confirm(`นำเข้า ${data.questions.length} ข้อไปยังชุด "${data.sheetName}"? (ข้อมูลเดิมจะถูกลบ)`)) return;
+    const res = await apiPost('importData', data);
+    toast(`นำเข้า ${res.count} ข้อสำเร็จ`, 'success');
+    document.getElementById('qSheetSelect').value = data.sheetName;
+    loadQuestionsTable();
+  } catch (e) {
+    toast('Import ผิดพลาด: ' + e.message, 'error');
+  }
+  event.target.value = '';
+}
+
+// ============================================================
+// SHEETS MANAGEMENT
+// ============================================================
+async function loadSheetsPage() {
+  if (allSheets.length === 0) await loadSheetList();
+  const tbody = document.getElementById('sheetsBody');
+  tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><div class="loading"></div></td></tr>';
+
+  try {
+    const rows = await Promise.all(allSheets.map(async (name) => {
+      try {
+        const data = await apiGet('getQuestions', { sheet: name });
+        return { name, count: (data.questions || []).length };
+      } catch (e) { return { name, count: 0 }; }
+    }));
+
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">ยังไม่มีชุดคำถาม - สร้างชุดใหม่ด้านล่าง</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${r.name}</strong></td>
+        <td>${r.count} ข้อ</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('qSheetSelect').value='${r.name}'; showPage('questions', document.querySelector('.nav-tab[data-page=questions]'));">✏️ จัดการ</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSheet('${r.name}')">🗑️ ลบ</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">❌ โหลดไม่ได้</td></tr>';
+  }
+}
+
+async function createSheet() {
+  const name = document.getElementById('newSheetNameAdmin').value.trim();
+  if (!name) { toast('กรุณาใส่ชื่อชุด', 'error'); return; }
+  if (!/^[a-zA-Z0-9_\-]+$/.test(name)) { toast('ชื่อต้องเป็นภาษาอังกฤษ/ตัวเลขเท่านั้น', 'error'); return; }
+  try {
+    const res = await apiPost('createSheet', { name });
+    toast('สร้างชุดแล้ว', 'success');
+    document.getElementById('newSheetNameAdmin').value = '';
+    await loadSheetList();
+    loadSheetsPage();
+  } catch (e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+async function deleteSheet(name) {
+  if (!confirm(`ยืนยันลบชุด "${name}" และคำถามทั้งหมด?`)) return;
+  try {
+    const res = await apiPost('deleteSheet', { name });
+    toast('ลบชุดแล้ว', 'success');
+    await loadSheetList();
+    loadSheetsPage();
+  } catch (e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+async function loadSettingsPage() {
+  try {
+    const data = await apiGet('getSettings');
+    const s = data.settings || {};
+    document.getElementById('setTime').value = s.timePerQuestion || '15';
+    document.getElementById('setZone').value = s.zoneWidth || '0.25';
+    document.getElementById('setLabelSize').value = s.fontSizeLabel || '3.6';
+    document.getElementById('setQuestionSize').value = s.fontSizeQuestion || '5';
+  } catch (e) {
+    toast('โหลดตั้งค่าไม่ได้: ' + e.message, 'error');
+  }
+}
+
+async function saveSettings() {
+  const settings = {
+    timePerQuestion: document.getElementById('setTime').value,
+    zoneWidth: document.getElementById('setZone').value,
+    fontSizeLabel: document.getElementById('setLabelSize').value,
+    fontSizeQuestion: document.getElementById('setQuestionSize').value
+  };
+  try {
+    const res = await apiPost('updateSettings', { settings });
+    toast('บันทึกตั้งค่าแล้ว', 'success');
+  } catch (e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// STATS
+// ============================================================
+async function loadStatsPage() {
+  if (allSheets.length === 0) await loadSheetList();
+  loadStats();
+}
+
+async function loadStats() {
+  const sheetFilter = document.getElementById('statSheetFilter').value;
+  const fromDate = document.getElementById('statFromDate').value;
+  const toDate = document.getElementById('statToDate').value;
+
+  const params = {};
+  if (sheetFilter) params.sheet = sheetFilter;
+  if (fromDate) params.from = fromDate;
+  if (toDate) params.to = toDate + 'T23:59:59';
+
+  clearError('statsErrorBox');
+
+  try {
+    const data = await apiGet('getStats', params);
+    const stats = data.stats || [];
+    document.getElementById('statsCount').textContent = stats.length;
+
+    const totalPlays = stats.length;
+    const avgScore = stats.length > 0 ? (stats.reduce((s, x) => s + parseFloat(x.score || 0), 0) / stats.length).toFixed(1) : 0;
+    const avgPct = stats.length > 0 ? (stats.reduce((s, x) => s + parseFloat(x.percentage || 0), 0) / stats.length).toFixed(0) : 0;
+    const bestScore = stats.length > 0 ? Math.max(...stats.map(x => parseFloat(x.percentage || 0))) : 0;
+
+    document.getElementById('statsSummary').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${totalPlays}</div><div class="stat-label">จำนวนครั้งที่เล่น</div></div>
+      <div class="stat-card"><div class="stat-value">${avgScore}</div><div class="stat-label">คะแนนเฉลี่ย</div></div>
+      <div class="stat-card"><div class="stat-value">${avgPct}%</div><div class="stat-label">เปอร์เซ็นต์เฉลี่ย</div></div>
+      <div class="stat-card"><div class="stat-value">${bestScore}%</div><div class="stat-label">คะแนนสูงสุด</div></div>
+    `;
+
+    const sheetStats = {};
+    stats.forEach(s => {
+      if (!sheetStats[s.sheetName]) sheetStats[s.sheetName] = { sum: 0, count: 0 };
+      sheetStats[s.sheetName].sum += parseFloat(s.percentage || 0);
+      sheetStats[s.sheetName].count++;
+    });
+    const maxPct = Math.max(...Object.values(sheetStats).map(x => x.sum / x.count), 100);
+    document.getElementById('statsChart').innerHTML = Object.entries(sheetStats).map(([name, v]) => {
+      const avg = (v.sum / v.count).toFixed(0);
+      const h = (avg / maxPct) * 100;
+      return `<div class="chart-col" style="height:${h}%"><div class="value">${avg}%</div><div class="label">${name}</div></div>`;
+    }).join('') || '<div class="empty-state" style="width:100%;">ไม่มีข้อมูล</div>';
+
+    document.getElementById('statsBody').innerHTML = stats.length === 0
+      ? '<tr><td colspan="6" class="empty-state">ไม่มีข้อมูล - ลองเล่นเกมแล้วกลับมาดูใหม่</td></tr>'
+      : stats.map(s => `
+        <tr>
+          <td class="date-cell" title="${s.date || ''}">${formatDate(s.date, 'short')}</td>
+          <td><strong>${s.sheetName || '-'}</strong></td>
+          <td>${s.score || 0}/${s.total || 0}</td>
+          <td>${s.total || 0} ข้อ</td>
+          <td><span style="padding:4px 12px; border-radius:12px; background:${parseFloat(s.percentage||0)>=80?'#66bb6a':parseFloat(s.percentage||0)>=50?'#ffca28':'#ef5350'}; color:#fff;">${s.percentage || 0}%</span></td>
+          <td>${s.playTime || 0} วิ</td>
+        </tr>
+      `).join('');
+  } catch (e) {
+    console.error('[STATS] Error:', e);
+    showError('statsErrorBox', 'โหลดสถิติไม่ได้: ' + e.message, 'loadStats()');
+  }
+}
+
+function resetStatFilter() {
+  document.getElementById('statSheetFilter').value = '';
+  document.getElementById('statFromDate').value = '';
+  document.getElementById('statToDate').value = '';
+  loadStats();
+}
+</script>
+</body>
+</html>
