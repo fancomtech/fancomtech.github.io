@@ -1,0 +1,664 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Body Move Quiz 🎮</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Kanit:wght@400;600;700&display=swap');
+  :root {
+    --yellow:#ffca28; --green:#66bb6a; --red:#ef5350;
+    --blue:#4fc3f7; --purple:#ab47bc; --dark:#1a237e;
+    --label-size:3.6rem; --question-size:5rem;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Kanit',sans-serif; background:linear-gradient(135deg,#e0f7fa,#b3e5fc); min-height:100vh; overflow:hidden; }
+  .screen { display:none; width:100vw; height:100vh; position:absolute; top:0; left:0; flex-direction:column; align-items:center; justify-content:center; }
+  .screen.active { display:flex; }
+
+  /* ===== START SCREEN ===== */
+  #startScreen { background:linear-gradient(160deg,#1a237e,#283593,#3949ab); gap:16px; padding:20px; }
+  .game-title { font-family:'Fredoka One',cursive; font-size:clamp(2.2rem,6vw,4.5rem); color:var(--yellow); text-shadow:0 4px 20px rgba(255,202,40,.4); animation:titlePulse 2s ease-in-out infinite; text-align:center; }
+  @keyframes titlePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+  .game-subtitle { color:#90caf9; font-size:clamp(.9rem,2vw,1.2rem); text-align:center; margin-top:-8px; }
+
+  .sheet-selector { display:flex; flex-direction:column; align-items:center; gap:8px; width:min(400px,90vw); }
+  .sheet-selector label { color:#90caf9; font-size:.9rem; align-self:flex-start; }
+  .sheet-input { width:100%; padding:10px 20px; border-radius:50px; border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.1); color:#fff; font-family:'Kanit',sans-serif; font-size:1rem; outline:none; text-align:center; backdrop-filter:blur(10px); }
+  .sheet-input::placeholder { color:rgba(255,255,255,.4); }
+  .sheet-input:focus { border-color:var(--yellow); }
+
+  .font-settings { display:flex; flex-direction:column; gap:10px; width:min(400px,90vw); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:12px 16px; }
+  .font-settings summary { color:var(--yellow); font-size:.9rem; cursor:pointer; user-select:none; }
+  .font-row { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
+  .font-row label { color:#90caf9; font-size:.82rem; display:flex; justify-content:space-between; }
+  .font-row input[type=range] { width:100%; accent-color:var(--yellow); }
+  .font-reset { align-self:flex-end; background:none; border:1px solid rgba(255,255,255,.3); color:#fff; font-size:.75rem; padding:4px 12px; border-radius:20px; cursor:pointer; margin-top:2px; }
+  .cam-box { width:min(340px,88vw); height:190px; border-radius:20px; overflow:hidden; border:4px solid var(--yellow); box-shadow:0 0 40px rgba(255,202,40,.25); position:relative; background:#000; }
+  #previewVideo { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  .cam-label { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.6); color:#fff; padding:4px 14px; border-radius:20px; font-size:.78rem; white-space:nowrap; }
+
+  .btn-start { font-family:'Fredoka One',cursive; font-size:clamp(1.1rem,2.5vw,1.6rem); padding:13px 50px; background:linear-gradient(135deg,#ffca28,#ff8f00); color:#1a237e; border:none; border-radius:50px; cursor:pointer; box-shadow:0 8px 30px rgba(255,143,0,.4); transition:all .2s; }
+  .btn-start:hover { transform:translateY(-4px) scale(1.05); }
+  .btn-start:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .status-text { color:rgba(255,255,255,.6); font-size:.85rem; min-height:20px; text-align:center; }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen { padding:0; position:relative; background:#000; }
+  #camVideo { width:100vw; height:100vh; object-fit:cover; transform:scaleX(-1); position:absolute; top:0; left:0; }
+  #motionCanvas { display:none; }
+
+  /* โซนชิดขอบสุด */
+  .motion-zone {
+    position:absolute; top:0; bottom:0; width:15vw;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:10; padding:0;
+  }
+  .motion-zone.left  { left:0; }
+  .motion-zone.right { right:0; }
+
+  /* การ์ดตัวเลือก — มุมด้านนอกตัด ด้านในโค้ง */
+  .choice-card {
+    width:100%;
+    background:rgba(255,255,255,.95); backdrop-filter:blur(10px);
+    padding:18px 12px; border:5px solid transparent;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+    display:flex; flex-direction:column;
+    align-items:center; gap:10px; min-height:200px; justify-content:center;
+    transition:transform .1s, border-color .2s, box-shadow .2s;
+  }
+  .left-card  { border-color:#4fc3f7; border-radius:0 24px 24px 0; border-left:none; }
+  .right-card { border-color:#ab47bc; border-radius:24px 0 0 24px; border-right:none; }
+
+  .choice-img   { width:100%; max-height:110px; object-fit:contain; border-radius:10px; }
+  .choice-emoji { font-size:clamp(3rem,7vw,5.5rem); line-height:1; }
+  .choice-label { font-family:'Fredoka One',cursive; font-size:clamp(1.8rem,5.5vw,var(--label-size)); color:#1a237e; text-align:center; line-height:1.15; word-break:break-word; }
+
+  /* หลอดพลัง */
+  .progress-container {
+    width:100%; height:18px;
+    background:rgba(255,255,255,.25); overflow:hidden;
+    border:2px solid rgba(255,255,255,.4);
+    box-shadow:0 4px 15px rgba(0,0,0,.2);
+    margin-top:10px;
+  }
+  .motion-zone.left  .progress-container { border-radius:0 10px 10px 0; border-left:none; }
+  .motion-zone.right .progress-container { border-radius:10px 0 0 10px; border-right:none; }
+
+  .progress-bar { height:100%; width:0%; transition:width .08s ease-out; }
+  .left-bar  { background:linear-gradient(to right,#29b6f6,#4fc3f7); }
+  .right-bar { background:linear-gradient(to left,#ce93d8,#ab47bc); }
+
+  /* แถบไฮไลท์เมื่อ active */
+  .motion-zone.left.zone-active  { box-shadow:inset 6px 0 20px rgba(79,195,247,.4); }
+  .motion-zone.right.zone-active { box-shadow:inset -6px 0 20px rgba(171,71,188,.4); }
+
+  /* Fly Animations */
+  .choice-card.fly-correct { animation:flyOut .5s ease-in forwards; }
+  .choice-card.fly-wrong   { animation:flyDown .5s ease-in forwards; }
+  @keyframes flyOut  { 0%{transform:scale(1.08);opacity:1} 100%{transform:scale(1.4) translateY(-80px);opacity:0} }
+  @keyframes flyDown { 0%{transform:scale(1);opacity:1}    100%{transform:scale(0.8) translateY(60px);opacity:0} }
+
+  /* Top overlay */
+  .game-overlay-top { position:absolute; top:0; left:0; width:100%; display:flex; flex-direction:column; z-index:20; pointer-events:none; }
+  .top-bar { display:flex; justify-content:space-between; align-items:flex-start; padding:14px 20px; background:linear-gradient(to bottom,rgba(0,0,0,.65),transparent); }
+  .top-bar-left, .top-bar-right { display:flex; flex-direction:column; gap:8px; pointer-events:auto; }
+  .score-box { background:rgba(255,255,255,.15); backdrop-filter:blur(10px); border:2px solid rgba(255,255,255,.25); border-radius:50px; padding:7px 20px; color:#fff; font-size:1.1rem; font-weight:700; display:inline-block; }
+  .score-box span { color:var(--yellow); font-size:1.3rem; }
+  .progress-info { color:rgba(255,255,255,.9); font-size:.9rem; background:rgba(0,0,0,.45); padding:4px 12px; border-radius:20px; align-self:flex-start; }
+
+  .top-controls { display:flex; align-items:center; gap:8px; pointer-events:auto; }
+  .timer-wrap { position:relative; width:64px; height:64px; background:rgba(0,0,0,.4); border-radius:50%; }
+  .timer-wrap svg { transform:rotate(-90deg); }
+  .timer-wrap circle { fill:none; stroke-width:6; }
+  .timer-bg { stroke:rgba(255,255,255,.2); }
+  .timer-fg { stroke:var(--yellow); stroke-linecap:round; transition:stroke-dashoffset .5s linear; }
+  .timer-num { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:1.3rem; color:#fff; }
+  .btn-exit { background:rgba(239,83,80,.85); border:none; border-radius:50px; padding:7px 18px; color:#fff; font-family:'Kanit',sans-serif; font-size:.95rem; cursor:pointer; transition:all .2s; }
+  .btn-exit:hover { background:#d32f2f; }
+  .btn-mute { background:rgba(255,255,255,.15); backdrop-filter:blur(10px); border:2px solid rgba(255,255,255,.25); border-radius:50%; width:42px; height:42px; color:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  .question-area { align-self:center; display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:-8px; pointer-events:none; }
+  .q-label { color:rgba(255,255,255,.85); font-size:clamp(.8rem,1.8vw,1rem); background:rgba(0,0,0,.45); padding:3px 14px; border-radius:20px; }
+  .question-image-box { width:clamp(90px,20vw,150px); height:clamp(90px,20vw,150px); border-radius:20px; overflow:hidden; background:rgba(255,255,255,.9); border:4px solid var(--yellow); box-shadow:0 8px 30px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; animation:wordBounce .5s cubic-bezier(.34,1.56,.64,1); }
+  .question-image-box img { width:100%; height:100%; object-fit:contain; }
+  .question-image-box.emoji-mode { font-size:clamp(3rem,8vw,6rem); }
+  .question-image-box.hide { display:none; }
+  .question-word { font-family:'Fredoka One',cursive; font-size:clamp(2.5rem,7vw,var(--question-size)); color:#fff; background:linear-gradient(135deg,rgba(102,187,106,.92),rgba(41,182,246,.92)); backdrop-filter:blur(10px); border:4px solid rgba(255,255,255,.4); padding:10px 50px; border-radius:60px; box-shadow:0 8px 40px rgba(0,0,0,.4); animation:wordBounce .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes wordBounce { from{transform:scale(.4);opacity:0} to{transform:scale(1);opacity:1} }
+
+  /* tap hint — แสดงครั้งแรกเท่านั้น */
+  .tap-hint { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.25); color:#fff; font-size:1rem; padding:8px 24px; border-radius:30px; white-space:nowrap; opacity:0; transition:opacity .4s; pointer-events:none; z-index:30; }
+  .tap-hint.show { opacity:1; animation:pulseHint 1.5s ease-in-out infinite; }
+  @keyframes pulseHint { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.05)} }
+
+  /* Result flash */
+  .result-flash { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; font-family:'Fredoka One',cursive; font-size:clamp(2.5rem,8vw,6rem); opacity:0; pointer-events:none; transition:opacity .2s; z-index:100; }
+  .result-flash.correct { background:rgba(102,187,106,.45); color:#fff; }
+  .result-flash.wrong   { background:rgba(239,83,80,.45);   color:#fff; }
+  .result-flash.timeout { background:rgba(0,0,0,.6);         color:#fff; }
+  .result-flash.show { opacity:1; }
+  .result-sub { font-size:clamp(1rem,2.5vw,1.6rem); opacity:.9; }
+
+  /* Countdown overlay */
+  .countdown-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:200; flex-direction:column; gap:16px; }
+  .countdown-overlay.show { display:flex; }
+  .countdown-num { font-family:'Fredoka One',cursive; font-size:clamp(5rem,18vw,12rem); color:var(--yellow); animation:countPop .8s cubic-bezier(.34,1.56,.64,1); text-shadow:0 0 60px rgba(255,202,40,.5); }
+  .countdown-hint { color:rgba(255,255,255,.75); font-size:clamp(1rem,2.5vw,1.5rem); text-align:center; padding:0 20px; }
+  @keyframes countPop { from{transform:scale(2.5);opacity:0} to{transform:scale(1);opacity:1} }
+
+  /* ===== END SCREEN ===== */
+  #endScreen { background:linear-gradient(160deg,#1a237e,#283593,#3949ab); gap:14px; padding:20px; overflow-y:auto; }
+  .end-trophy { font-size:clamp(3.5rem,9vw,6rem); animation:trophySpin .8s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes trophySpin { from{transform:scale(0) rotate(-180deg)} to{transform:scale(1) rotate(0deg)} }
+  .end-title  { font-family:'Fredoka One',cursive; font-size:clamp(1.6rem,4.5vw,2.8rem); color:var(--yellow); }
+  .end-stars  { font-size:clamp(1.8rem,4.5vw,3rem); }
+  .end-score  { color:#90caf9; font-size:clamp(1rem,2.5vw,1.4rem); }
+  .end-score span { color:#fff; font-weight:700; font-size:1.2em; }
+
+  /* สรุปรายข้อ */
+  .result-summary {
+    width:min(500px,90vw); max-height:28vh;
+    overflow-y:auto; display:flex; flex-direction:column; gap:6px;
+    padding-right:4px;
+  }
+  .result-summary::-webkit-scrollbar { width:4px; }
+  .result-summary::-webkit-scrollbar-thumb { background:rgba(255,255,255,.3); border-radius:4px; }
+
+  .result-row {
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.08); border-radius:12px;
+    padding:8px 14px; font-size:clamp(.8rem,1.8vw,1rem); color:#fff;
+    border-left:4px solid transparent;
+  }
+  .result-row.ok  { border-color:#66bb6a; }
+  .result-row.ng  { border-color:#ef5350; }
+  .result-row .ri { font-size:1.2rem; flex-shrink:0; }
+  .result-row .rq { flex:1; font-weight:700; color:#ffca28; }
+  .result-row .ra { flex:2; font-size:.88em; opacity:.85; }
+
+  .btn-group  { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .btn-outline { font-family:'Fredoka One',cursive; font-size:clamp(.9rem,2vw,1.1rem); padding:10px 28px; background:rgba(255,255,255,.12); color:#fff; border:2px solid rgba(255,255,255,.35); border-radius:50px; cursor:pointer; transition:all .2s; backdrop-filter:blur(10px); }
+  .btn-outline:hover { background:rgba(255,255,255,.22); transform:translateY(-3px); }
+
+  .particle { position:fixed; pointer-events:none; border-radius:50%; z-index:999; animation:particleFall 1.6s ease-out forwards; }
+  @keyframes particleFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(360deg);opacity:0} }
+</style>
+</head>
+<body>
+
+<!-- ===== START ===== -->
+<div id="startScreen" class="screen active">
+  <div class="game-title">🏃 Body Move Quiz!</div>
+  <div class="game-subtitle">ขยับตัว โบกมือ ไปฝั่งที่ถูกต้อง!</div>
+
+  <div class="sheet-selector">
+    <label>🎮 ชุดคำถาม (ชื่อ Sheet Tab)</label>
+    <input class="sheet-input" id="sheetNameInput" type="text" value="animals" placeholder="เช่น animals, colors, numbers">
+  </div>
+  <div class="sheet-selector">
+    <label>📋 Spreadsheet ID (เว้นว่างใช้ค่าเริ่มต้น)</label>
+    <input class="sheet-input" id="spreadsheetId" type="text" placeholder="วางได้เลย (ไม่บังคับ)">
+  </div>
+
+  <details class="font-settings">
+    <summary>⚙️ ตั้งค่าขนาดตัวอักษร (ไม่บังคับ)</summary>
+    <div class="font-row">
+      <label>ขนาดคำตอบ <span id="labelSizeVal">3.6</span> rem</label>
+      <input type="range" id="labelSizeSlider" min="1.5" max="6" step="0.1" value="3.6">
+    </div>
+    <div class="font-row">
+      <label>ขนาดคำถาม <span id="questionSizeVal">5</span> rem</label>
+      <input type="range" id="questionSizeSlider" min="2" max="8" step="0.1" value="5">
+    </div>
+    <button class="font-reset" id="btnResetFont" onclick="resetFontOverride()">↺ ใช้ค่าจาก Sheet</button>
+  </details>
+
+  <div class="cam-box">
+    <video id="previewVideo" autoplay muted playsinline></video>
+    <div class="cam-label">📷 ตรวจสอบกล้อง</div>
+  </div>
+
+  <button class="btn-start" id="btnStart" onclick="startGame()">▶ เริ่มเกม!</button>
+  <div class="status-text" id="statusText">กำลังโหลดกล้อง...</div>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="gameScreen" class="screen">
+  <video id="camVideo" autoplay muted playsinline></video>
+  <canvas id="motionCanvas"></canvas>
+
+  <!-- โซนซ้าย ชิดขอบ -->
+  <div class="motion-zone left" id="zoneLeft">
+    <div class="choice-card left-card" id="leftCard">
+      <div class="choice-label" id="leftLabel">cat</div>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar left-bar" id="barLeft"></div>
+    </div>
+  </div>
+
+  <!-- โซนขวา ชิดขอบ -->
+  <div class="motion-zone right" id="zoneRight">
+    <div class="choice-card right-card" id="rightCard">
+      <div class="choice-label" id="rightLabel">dog</div>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar right-bar" id="barRight"></div>
+    </div>
+  </div>
+
+  <!-- UI บนสุด -->
+  <div class="game-overlay-top">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="score-box">คะแนน: <span id="scoreDisplay">0</span></div>
+        <div class="progress-info" id="progressInfo">ข้อ 1/5</div>
+      </div>
+      <div class="top-controls">
+        <button class="btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+        <div class="timer-wrap">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle class="timer-bg" cx="32" cy="32" r="26"/>
+            <circle class="timer-fg" id="timerCircle" cx="32" cy="32" r="26" stroke-dasharray="163" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num" id="timerNum">15</div>
+        </div>
+        <button class="btn-exit" onclick="exitGame()">✕ ออก</button>
+      </div>
+    </div>
+    <div class="question-area">
+      <div class="question-image-box hide" id="questionImageBox"></div>
+      <div class="q-label">????...</div>
+      <div class="question-word" id="questionWord">cat</div>
+    </div>
+  </div>
+
+  <!-- hint ข้อแรกเท่านั้น -->
+  <div class="tap-hint" id="tapHint">👋 โบกมือที่ขอบจอฝั่งที่ถูกต้อง!</div>
+
+  <div class="result-flash" id="resultFlash">
+    <span id="resultIcon">✓</span>
+    <span class="result-sub" id="resultSub"></span>
+  </div>
+
+  <div class="countdown-overlay" id="countdownOverlay">
+    <div class="countdown-num" id="countdownNum">3</div>
+    <div class="countdown-hint">ยืนตรงกลาง เตรียมตัว!</div>
+  </div>
+</div>
+
+<!-- ===== END ===== -->
+<div id="endScreen" class="screen">
+  <div class="end-trophy" id="endTrophy">🏆</div>
+  <div class="end-title">จบเกมแล้ว!</div>
+  <div class="end-stars" id="endStars">⭐⭐⭐</div>
+  <div class="end-score">ได้ <span id="finalScore">0</span> จาก <span id="totalQ">0</span> ข้อ</div>
+
+  <!-- สรุปรายข้อ -->
+  <div class="result-summary" id="resultSummary"></div>
+
+  <div class="btn-group">
+    <button class="btn-start" onclick="restartGame()">🔄 เล่นอีกครั้ง</button>
+    <button class="btn-outline" onclick="goHome()">🏠 หน้าหลัก</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYkYWir6TS4qLndpf__SuDSXkwbT6ZGOFGjEhGq5kWSi-YXKkjPvFbdbv7Dgkue6Gj/exec';
+let TIMER_SEC = 15;
+
+// ============================================================
+// AUDIO
+// ============================================================
+let audioCtx=null, bgmNode=null, bgmGain=null, isMuted=false;
+function getAC() { if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function startBGM() {
+  if(isMuted) return; stopBGM();
+  try {
+    const ctx=getAC(); bgmGain=ctx.createGain(); bgmGain.gain.value=0.07; bgmGain.connect(ctx.destination);
+    const notes=[523,659,784,1047,784,659,523,392,523,659,880,784,659,523,392,330];
+    const step=60/160; let t=ctx.currentTime+0.1;
+    function loop() {
+      notes.forEach((f,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(bgmGain);
+        o.type='square'; o.frequency.value=f;
+        g.gain.setValueAtTime(0,t+i*step); g.gain.linearRampToValueAtTime(0.5,t+i*step+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001,t+i*step+step*0.7); o.start(t+i*step); o.stop(t+i*step+step);
+      }); t+=notes.length*step;
+    }
+    loop(); bgmNode=setInterval(()=>{ if(!isMuted&&bgmGain) loop(); },(notes.length*step*1000)-100);
+  } catch(e){}
+}
+function stopBGM() { if(bgmNode){clearInterval(bgmNode);bgmNode=null;} if(bgmGain){try{bgmGain.disconnect();}catch(e){}bgmGain=null;} }
+function toggleMute() { isMuted=!isMuted; document.getElementById('btnMute').textContent=isMuted?'🔇':'🔊'; isMuted?stopBGM():startBGM(); }
+
+function sfxCorrect() {
+  if(isMuted)return; try{ const ctx=getAC(); [523,659,784,1047].forEach((f,i)=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=f; const t=ctx.currentTime+i*0.1; g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3); o.start(t); o.stop(t+0.3); }); }catch(e){}
+}
+function sfxWrong() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sawtooth'; o.frequency.setValueAtTime(300,ctx.currentTime); o.frequency.linearRampToValueAtTime(100,ctx.currentTime+0.4); g.gain.setValueAtTime(0.25,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5); o.start(); o.stop(ctx.currentTime+0.5); }catch(e){}
+}
+function sfxCountdown() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.2,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.15); o.start(); o.stop(ctx.currentTime+0.15); }catch(e){}
+}
+function sfxGo() {
+  if(isMuted)return; try{ const ctx=getAC(); [523,659,1047].forEach((f,i)=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=f; const t=ctx.currentTime+i*0.07; g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.25); o.start(t); o.stop(t+0.25); }); }catch(e){}
+}
+function sfxTick() {
+  if(isMuted)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=440; g.gain.setValueAtTime(0.1,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08); o.start(); o.stop(ctx.currentTime+0.08); }catch(e){}
+}
+function sfxProgress(pct) {
+  if(isMuted||pct<20||pct%20>5)return; try{ const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value=300+pct*5; o.type='sine'; g.gain.setValueAtTime(0.07,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.06); o.start(); o.stop(ctx.currentTime+0.06); }catch(e){}
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let sheetFontSizes={label:3.6,question:5};
+let stream=null, questions=[], currentQ=0, score=0;
+let timeLeft=TIMER_SEC, timerInterval=null, answered=false;
+let motionInterval=null, prevFrameData=null;
+let leftProgress=0, rightProgress=0;
+const PROGRESS_MAX=100;
+let hintShown=false; // แสดง hint ครั้งแรกเท่านั้น
+let resultLog=[]; // เก็บผลรายข้อ
+
+const motionCanvas=document.getElementById('motionCanvas');
+const motionCtx=motionCanvas.getContext('2d');
+
+// ============================================================
+// CAMERA
+// ============================================================
+async function initCamera(videoEl) {
+  try {
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:'user'},audio:false});
+    videoEl.srcObject=stream; return true;
+  } catch(e) { setStatus('❌ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง'); return false; }
+}
+
+// ============================================================
+// LOAD QUESTIONS
+// ============================================================
+async function loadQuestions(sheetName) {
+  setStatus('⏳ กำลังโหลดคำถาม...'); document.getElementById('btnStart').disabled=true;
+  try {
+    const sid=document.getElementById('spreadsheetId').value.trim();
+    const url=sid?`${APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}&sid=${encodeURIComponent(sid)}`:`${APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}`;
+    const res=await fetch(url); const data=await res.json();
+    if(!data.questions?.length){ setStatus('❌ ไม่พบข้อมูลใน Sheet: '+sheetName); document.getElementById('btnStart').disabled=false; return false; }
+    if(data.settings?.timePerQuestion) TIMER_SEC=Number(data.settings.timePerQuestion);
+    sheetFontSizes.label=Number(data.settings?.fontSizeLabel)||3.6;
+    sheetFontSizes.question=Number(data.settings?.fontSizeQuestion)||5;
+    applyFontVars(getOverride('fontSizeLabelOverride',sheetFontSizes.label),getOverride('fontSizeQuestionOverride',sheetFontSizes.question));
+    questions=data.questions.sort(()=>Math.random()-.5);
+    setStatus(`✅ โหลดสำเร็จ ${questions.length} ข้อ — พร้อมเล่น!`); document.getElementById('btnStart').disabled=false; return true;
+  } catch(e) { setStatus('❌ โหลดไม่ได้ ตรวจสอบอินเทอร์เน็ต'); document.getElementById('btnStart').disabled=false; return false; }
+}
+function setStatus(msg){ document.getElementById('statusText').textContent=msg; }
+
+// ============================================================
+// FONT SIZE OVERRIDE (localStorage ผู้เล่นปรับเอง ชนะค่าจาก Sheet)
+// ============================================================
+function getOverride(key,fallback){ const v=localStorage.getItem(key); return v!==null?Number(v):fallback; }
+
+function applyFontVars(labelRem,questionRem){
+  document.documentElement.style.setProperty('--label-size',labelRem+'rem');
+  document.documentElement.style.setProperty('--question-size',questionRem+'rem');
+  document.getElementById('labelSizeSlider').value=labelRem;
+  document.getElementById('questionSizeSlider').value=questionRem;
+  document.getElementById('labelSizeVal').textContent=labelRem;
+  document.getElementById('questionSizeVal').textContent=questionRem;
+}
+
+function resetFontOverride(){
+  localStorage.removeItem('fontSizeLabelOverride');
+  localStorage.removeItem('fontSizeQuestionOverride');
+  applyFontVars(sheetFontSizes.label,sheetFontSizes.question);
+}
+
+document.getElementById('labelSizeSlider').addEventListener('input',e=>{
+  const v=Number(e.target.value); document.getElementById('labelSizeVal').textContent=v;
+  document.documentElement.style.setProperty('--label-size',v+'rem');
+  localStorage.setItem('fontSizeLabelOverride',v);
+});
+document.getElementById('questionSizeSlider').addEventListener('input',e=>{
+  const v=Number(e.target.value); document.getElementById('questionSizeVal').textContent=v;
+  document.documentElement.style.setProperty('--question-size',v+'rem');
+  localStorage.setItem('fontSizeQuestionOverride',v);
+});
+
+// ============================================================
+// START / RESTART / EXIT
+// ============================================================
+async function startGame() {
+  const sheet=document.getElementById('sheetNameInput').value.trim()||'animals';
+  const ok=await loadQuestions(sheet); if(!ok) return;
+  currentQ=0; score=0; hintShown=false; resultLog=[];
+  document.getElementById('scoreDisplay').textContent='0';
+  showScreen('gameScreen');
+  document.getElementById('camVideo').srcObject=stream;
+  getAC(); startBGM(); startCountdown();
+}
+function restartGame() {
+  questions=questions.sort(()=>Math.random()-.5); currentQ=0; score=0; hintShown=false; resultLog=[];
+  document.getElementById('scoreDisplay').textContent='0';
+  showScreen('gameScreen'); startBGM(); startCountdown();
+}
+function exitGame(){ clearInterval(timerInterval); stopMotion(); endGame(); }
+function goHome(){ stopBGM(); showScreen('startScreen'); setStatus('พร้อมเล่น!'); }
+
+// ============================================================
+// COUNTDOWN
+// ============================================================
+function startCountdown() {
+  const overlay=document.getElementById('countdownOverlay'), numEl=document.getElementById('countdownNum');
+  overlay.classList.add('show');
+  ['leftCard','rightCard'].forEach(id=>{ const el=document.getElementById(id); el.classList.remove('fly-correct','fly-wrong'); el.style.opacity='1'; el.style.transform='scale(1)'; });
+  let c=3; numEl.textContent=c; animEl(numEl); sfxCountdown();
+  const cd=setInterval(()=>{ c--; if(c<=0){ clearInterval(cd); overlay.classList.remove('show'); sfxGo(); loadQuestion(); } else { numEl.textContent=c; animEl(numEl); sfxCountdown(); } },900);
+}
+function animEl(el){ el.style.animation='none'; void el.offsetWidth; el.style.animation='countPop .8s cubic-bezier(.34,1.56,.64,1)'; }
+
+// ============================================================
+// LOAD QUESTION
+// ============================================================
+function loadQuestion() {
+  if(currentQ>=questions.length){ endGame(); return; }
+  answered=false;
+  const q=questions[currentQ];
+  document.getElementById('progressInfo').textContent=`ข้อ ${currentQ+1}/${questions.length}`;
+  const qw=document.getElementById('questionWord'); qw.textContent=q.question; animEl(qw);
+  renderQuestionImage(q.question_image);
+
+  renderChoice('leftLabel',q.left_label);
+  renderChoice('rightLabel',q.right_label);
+
+  // reset card styles ให้ถูกต้อง (ไม่ใช้ cssText เพื่อไม่ override border-radius)
+  const lc=document.getElementById('leftCard'), rc=document.getElementById('rightCard');
+  lc.style.borderColor='#4fc3f7'; lc.style.transform='scale(1)'; lc.style.opacity='1'; lc.style.boxShadow='';
+  rc.style.borderColor='#ab47bc'; rc.style.transform='scale(1)'; rc.style.opacity='1'; rc.style.boxShadow='';
+  document.getElementById('zoneLeft').classList.remove('zone-active');
+  document.getElementById('zoneRight').classList.remove('zone-active');
+
+  // hint ครั้งแรกเท่านั้น
+  if(!hintShown){ hintShown=true; const h=document.getElementById('tapHint'); h.classList.add('show'); setTimeout(()=>h.classList.remove('show'),3000); }
+
+  startTimer(); startMotion();
+}
+
+function renderChoice(labelId,label) {
+  document.getElementById(labelId).textContent=label;
+}
+
+function renderQuestionImage(image) {
+  const box=document.getElementById('questionImageBox');
+  if(image&&(image.startsWith('http')||image.startsWith('/'))) {
+    box.classList.remove('hide','emoji-mode');
+    box.innerHTML=`<img src="${image}" alt="" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('hide')">`;
+  } else if(image) {
+    box.classList.remove('hide'); box.classList.add('emoji-mode');
+    box.textContent=image;
+  } else {
+    box.classList.add('hide'); box.innerHTML='';
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  timeLeft=TIMER_SEC; updateTimer();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{ timeLeft--; updateTimer(); if(timeLeft<=3&&timeLeft>0) sfxTick(); if(timeLeft<=0){ clearInterval(timerInterval); if(!answered) handleAnswer(null); } },1000);
+}
+function updateTimer() {
+  document.getElementById('timerNum').textContent=timeLeft;
+  const r=26,circ=2*Math.PI*r,fg=document.getElementById('timerCircle');
+  fg.style.strokeDashoffset=circ*(1-Math.max(0,timeLeft)/Math.max(1,TIMER_SEC));
+  fg.style.stroke=timeLeft<=3?'#ef5350':'#ffca28';
+}
+
+// ============================================================
+// MOTION DETECTION
+// ============================================================
+function startMotion() {
+  if(motionInterval) clearInterval(motionInterval);
+  const W=160,H=90; motionCanvas.width=W; motionCanvas.height=H;
+  prevFrameData=null; leftProgress=0; rightProgress=0;
+  updateBar('left',0); updateBar('right',0);
+  const vid=document.getElementById('camVideo');
+
+  motionInterval=setInterval(()=>{
+    if(vid.readyState<2||answered) return;
+    motionCtx.drawImage(vid,0,0,W,H);
+    const frame=motionCtx.getImageData(0,0,W,H);
+    if(!prevFrameData){ prevFrameData=frame.data.slice(); return; }
+
+    let motL=0,motR=0;
+    const thresh=38;
+    const lEnd=W*0.25, rStart=W*0.75;
+
+    for(let i=0;i<frame.data.length;i+=4){
+      const diff=Math.abs(frame.data[i]-prevFrameData[i])+Math.abs(frame.data[i+1]-prevFrameData[i+1])+Math.abs(frame.data[i+2]-prevFrameData[i+2]);
+      if(diff>thresh){
+        const x=W-1-(i/4)%W; // mirror
+        if(x<lEnd) motL++;
+        else if(x>rStart) motR++;
+      }
+    }
+    prevFrameData=frame.data.slice();
+
+    const minPx=15;
+    if(motL>minPx&&motL>motR*1.5){ leftProgress=Math.min(PROGRESS_MAX,leftProgress+15); rightProgress=0; }
+    else if(motR>minPx&&motR>motL*1.5){ rightProgress=Math.min(PROGRESS_MAX,rightProgress+15); leftProgress=0; }
+    else { leftProgress=0; rightProgress=0; }
+
+    updateBar('left',leftProgress);
+    updateBar('right',rightProgress);
+
+    if(motL>minPx) sfxProgress(leftProgress);
+    else if(motR>minPx) sfxProgress(rightProgress);
+
+    if(leftProgress>=PROGRESS_MAX) handleAnswer('left');
+    else if(rightProgress>=PROGRESS_MAX) handleAnswer('right');
+  },100);
+}
+
+function updateBar(side,val){
+  document.getElementById(side==='left'?'barLeft':'barRight').style.width=val+'%';
+  const card=document.getElementById(side+'Card');
+  const zone=document.getElementById(side==='left'?'zoneLeft':'zoneRight');
+  if(val>10){ card.style.transform=`scale(${1+(val/100)*0.08})`; zone.classList.add('zone-active'); }
+  else { card.style.transform='scale(1)'; zone.classList.remove('zone-active'); }
+}
+
+function stopMotion(){
+  if(motionInterval){ clearInterval(motionInterval); motionInterval=null; }
+  prevFrameData=null;
+}
+
+// ============================================================
+// HANDLE ANSWER
+// ============================================================
+function handleAnswer(zone){
+  if(answered) return;
+  answered=true; clearInterval(timerInterval); stopMotion();
+
+  const q=questions[currentQ];
+  const correctSide=(q.correct_side||'').toLowerCase().trim();
+  const correct=zone===correctSide;
+
+  // บันทึกผลรายข้อ
+  const correctLabel=correctSide==='left'?q.left_label:q.right_label;
+  const chosenLabel=zone?(zone==='left'?q.left_label:q.right_label):'หมดเวลา';
+  resultLog.push({ q:q.question, correct, correctLabel, chosenLabel, timeout:!zone });
+
+  if(!zone){ showFlash('timeout','⏰','หมดเวลา!'); sfxWrong(); }
+  else {
+    const chosenCard=zone==='left'?'leftCard':'rightCard';
+    document.getElementById(chosenCard).classList.add(correct?'fly-correct':'fly-wrong');
+    if(correct){ score++; showFlash('correct','✓','ถูกต้อง! 🎉'); sfxCorrect(); spawnParticles(); }
+    else {
+      showFlash('wrong','✗','ผิด!'); sfxWrong();
+      const correctCard=correctSide==='left'?'leftCard':'rightCard';
+      document.getElementById(correctCard).style.borderColor='#66bb6a';
+      document.getElementById(correctCard).style.boxShadow='0 0 20px rgba(102,187,106,.6)';
+    }
+  }
+  document.getElementById('scoreDisplay').textContent=score;
+  setTimeout(()=>{ hideFlash(); currentQ++; currentQ<questions.length?startCountdown():endGame(); },2200);
+}
+
+function showFlash(type,icon,sub){
+  const el=document.getElementById('resultFlash'); el.className=`result-flash ${type} show`;
+  document.getElementById('resultIcon').textContent=icon; document.getElementById('resultSub').textContent=sub;
+}
+function hideFlash(){ document.getElementById('resultFlash').classList.remove('show'); }
+
+// ============================================================
+// END GAME
+// ============================================================
+function endGame(){
+  clearInterval(timerInterval); stopMotion(); stopBGM(); showScreen('endScreen');
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('totalQ').textContent=questions.length;
+  const pct=score/questions.length;
+  document.getElementById('endTrophy').textContent=pct>=.8?'🏆':pct>=.5?'🥈':'🎖️';
+  document.getElementById('endStars').textContent=pct>=.8?'⭐⭐⭐':pct>=.5?'⭐⭐':'⭐';
+  const t=document.getElementById('endTrophy'); t.style.animation='none'; void t.offsetWidth; t.style.animation='trophySpin .8s cubic-bezier(.34,1.56,.64,1)';
+
+  // สร้างสรุปรายข้อ
+  const summary=document.getElementById('resultSummary');
+  summary.innerHTML=resultLog.map((r,i)=>`
+    <div class="result-row ${r.correct?'ok':'ng'}">
+      <span class="ri">${r.correct?'✅':'❌'}</span>
+      <span class="rq">ข้อ ${i+1}: ${r.q}</span>
+      <span class="ra">${r.correct?'ถูก! → '+r.correctLabel:r.timeout?'หมดเวลา (เฉลย: '+r.correctLabel+')':'เลือก: '+r.chosenLabel+' → เฉลย: '+r.correctLabel}</span>
+    </div>`).join('');
+
+  spawnParticles(35); if(pct>=.8) sfxCorrect();
+}
+
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function spawnParticles(n=18){
+  const colors=['#ffca28','#66bb6a','#4fc3f7','#ef5350','#ab47bc','#fff'];
+  for(let i=0;i<n;i++) setTimeout(()=>{ const p=document.createElement('div'); p.className='particle'; const s=8+Math.random()*14; p.style.cssText=`width:${s}px;height:${s}px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}vw;top:${15+Math.random()*50}vh;animation-duration:${1+Math.random()}s;animation-delay:${Math.random()*.3}s`; document.body.appendChild(p); setTimeout(()=>p.remove(),2500); },i*40);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async()=>{
+  const ok=await initCamera(document.getElementById('previewVideo'));
+  if(ok){
+    setStatus('⏳ โหลดคำถาม animals...');
+    await loadQuestions('animals');
+  }
+})();
+</script>
+</body>
+</html>
