@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Stable)</title>
+    <title>💊 ภารกิจพิชิตตู้ยา - AR Game (Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -45,7 +45,7 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
         .ar-hover-active { 
-            transform: scale(1.03) !important; 
+            transform: scale(1.05) !important; 
             box-shadow: 0 0 30px rgba(56,189,248,0.8) !important; 
             border-color: #38bdf8 !important; 
         }
@@ -57,7 +57,46 @@
         .timer-warning { animation: pulse-red 0.5s infinite; }
         
         .game-canvas { touch-action: none; }
-        .option-btn { transition: all 0.2s ease; position: relative; }
+        
+        /* FIXED: Option buttons - responsive & larger */
+        .option-btn { 
+            transition: all 0.2s ease; 
+            position: relative;
+            min-height: 70px;
+            touch-action: manipulation;
+        }
+        
+        /* iPad/Mobile specific */
+        @media (max-width: 768px) {
+            .option-btn {
+                min-height: 80px;
+                padding: 16px 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .option-btn {
+                min-height: 90px;
+                padding: 20px 12px;
+            }
+        }
+        
+        /* Visual feedback when hovering */
+        .option-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(56,189,248,0.4);
+        }
+        
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* Highlight when being pointed at */
+        .option-btn.pointed-at {
+            border-color: #38bdf8 !important;
+            background: rgba(56,189,248,0.1) !important;
+            transform: scale(1.03);
+        }
         
         #fps-counter {
             position: fixed;
@@ -94,7 +133,6 @@
         }
         .gesture-hint.show { opacity: 1; }
         
-        /* HUD Toggle Button */
         .hud-toggle-btn {
             position: fixed;
             top: 10px;
@@ -118,12 +156,10 @@
             transform: scale(1.1);
         }
         
-        /* HUD Position Modes */
         .hud-normal { top: 10px; }
         .hud-compact { top: 0; padding: 4px 8px; }
         .hud-hidden { display: none !important; }
         
-        /* Smooth transitions for HUD */
         .hud-panel {
             transition: all 0.3s ease;
         }
@@ -131,8 +167,9 @@
         .responsive-text { font-size: clamp(12px, 2.5vw, 24px); }
         .responsive-title { font-size: clamp(20px, 5vw, 48px); }
         
+        /* Prevent zoom on double tap */
         @media (max-width: 768px) {
-            .option-btn { min-height: 60px; }
+            .option-btn { min-height: 80px; }
         }
     </style>
 </head>
@@ -141,7 +178,6 @@
 <div id="fps-counter">FPS: 0</div>
 <div id="gesture-hint" class="gesture-hint"></div>
 
-<!-- HUD Toggle Button (แสดงเฉพาะตอนเล่นเกม) -->
 <button id="hud-toggle" class="hud-toggle-btn hidden" onclick="toggleHUD()" title="ซ่อน/แสดง HUD">
     <i class="fa-solid fa-eye"></i>
 </button>
@@ -255,7 +291,6 @@
     <!-- ========== SCREEN 2: GAMEPLAY ========== -->
     <div id="game-screen" class="hidden absolute inset-0 z-20 flex flex-col p-2 md:p-3 pointer-events-none">
         
-        <!-- HUD Top - เพิ่ม class hud-panel และ id hud-main -->
         <div id="hud-main" class="hud-panel hud-normal flex justify-between items-start gap-1 md:gap-2 pointer-events-auto mb-1 md:mb-2">
             <div id="hud-hp" class="bg-white/90 dark:bg-slate-900/90 backdrop-blur p-1.5 md:p-2 rounded-xl border border-slate-200 dark:border-slate-700 w-28 md:w-40 shadow">
                 <div class="flex justify-between text-xs font-bold mb-1">
@@ -299,7 +334,7 @@
             </div>
         </div>
 
-        <!-- Quiz Mode Content -->
+        <!-- Quiz Mode Content - FIXED for iPad -->
         <div id="quiz-content" class="hidden my-auto max-w-2xl w-full mx-auto space-y-2 md:space-y-3 pointer-events-auto px-2">
             <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur p-3 md:p-4 rounded-2xl border-2 border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-2 md:gap-3">
                 <div id="q-avatar" class="text-3xl md:text-4xl bg-sky-100 dark:bg-slate-800 p-1.5 md:p-2 rounded-xl flex-shrink-0">🤒</div>
@@ -309,29 +344,29 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-1.5 md:gap-2">
-                <button id="opt-a" onclick="handleAnswer('A')" class="option-btn w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-sky-300 dark:border-sky-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
+            <div class="grid grid-cols-1 gap-2 md:gap-2">
+                <button id="opt-a" onclick="handleAnswer('A')" class="option-btn w-full p-3 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-sky-300 dark:border-sky-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-a" class="absolute inset-y-0 left-0 bg-sky-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-sky-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ก</span>
-                    <span id="txt-a" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก A</span>
+                    <span class="w-10 h-10 md:w-10 md:h-10 rounded-lg bg-sky-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-base md:text-base">ก</span>
+                    <span id="txt-a" class="text-sm md:text-sm flex-1 z-10 break-words font-medium">ตัวเลือก A</span>
                     <span id="badge-a" class="hidden text-xs px-2 py-1 rounded-full bg-sky-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-b" onclick="handleAnswer('B')" class="option-btn w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-emerald-300 dark:border-emerald-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
+                <button id="opt-b" onclick="handleAnswer('B')" class="option-btn w-full p-3 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-emerald-300 dark:border-emerald-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-b" class="absolute inset-y-0 left-0 bg-emerald-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ข</span>
-                    <span id="txt-b" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก B</span>
+                    <span class="w-10 h-10 md:w-10 md:h-10 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-base md:text-base">ข</span>
+                    <span id="txt-b" class="text-sm md:text-sm flex-1 z-10 break-words font-medium">ตัวเลือก B</span>
                     <span id="badge-b" class="hidden text-xs px-2 py-1 rounded-full bg-emerald-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-c" onclick="handleAnswer('C')" class="option-btn hidden w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-purple-300 dark:border-purple-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
+                <button id="opt-c" onclick="handleAnswer('C')" class="option-btn hidden w-full p-3 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-purple-300 dark:border-purple-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-c" class="absolute inset-y-0 left-0 bg-purple-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-purple-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ค</span>
-                    <span id="txt-c" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก C</span>
+                    <span class="w-10 h-10 md:w-10 md:h-10 rounded-lg bg-purple-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-base md:text-base">ค</span>
+                    <span id="txt-c" class="text-sm md:text-sm flex-1 z-10 break-words font-medium">ตัวเลือก C</span>
                     <span id="badge-c" class="hidden text-xs px-2 py-1 rounded-full bg-purple-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
-                <button id="opt-d" onclick="handleAnswer('D')" class="option-btn hidden w-full p-2 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-amber-300 dark:border-amber-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
+                <button id="opt-d" onclick="handleAnswer('D')" class="option-btn hidden w-full p-3 md:p-3 bg-white/95 dark:bg-slate-900/95 rounded-xl border-2 border-amber-300 dark:border-amber-500/50 text-left flex items-center gap-2 md:gap-3 shadow pointer-events-auto">
                     <div id="prog-d" class="absolute inset-y-0 left-0 bg-amber-400/30 w-0 pointer-events-none"></div>
-                    <span class="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-sm md:text-base">ง</span>
-                    <span id="txt-d" class="text-xs md:text-sm flex-1 z-10 break-words">ตัวเลือก D</span>
+                    <span class="w-10 h-10 md:w-10 md:h-10 rounded-lg bg-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 z-10 text-base md:text-base">ง</span>
+                    <span id="txt-d" class="text-sm md:text-sm flex-1 z-10 break-words font-medium">ตัวเลือก D</span>
                     <span id="badge-d" class="hidden text-xs px-2 py-1 rounded-full bg-amber-500 text-white animate-pulse z-10">เลือก...</span>
                 </button>
             </div>
@@ -388,7 +423,7 @@
                 <div class="flex justify-between text-sm"><span>ตอบถูก:</span><span id="res-correct" class="font-bold text-emerald-600">8</span></div>
                 <div class="flex justify-between text-sm"><span>ความถูกต้อง:</span><span id="res-accuracy" class="font-bold text-purple-600">80%</span></div>
             </div>
-            <div class="p-2 md:p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">🎖️ เภสัชกรอัจฉริยะ</div>
+            <div class="p-2 md:p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">️ เภสัชกรอัจฉริยะ</div>
             <div class="flex gap-2">
                 <button onclick="restartGame()" class="flex-1 py-2.5 md:py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow text-sm md:text-base">
                     <i class="fa-solid fa-rotate-right"></i> เล่นใหม่
@@ -449,7 +484,7 @@
             </div>
 
             <div class="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow">
-                <h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4"> สถิติตามตอน</h2>
+                <h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4">📚 สถิติตามตอน</h2>
                 <div class="space-y-2" id="episode-stats"></div>
             </div>
 
@@ -522,7 +557,6 @@
                         </div>
                     </div>
                     
-                    <!-- NEW: HUD Position Setting -->
                     <div class="space-y-2 md:space-y-3 bg-sky-50 dark:bg-sky-900/20 p-3 rounded-xl border border-sky-200 dark:border-sky-700">
                         <h3 class="font-bold flex items-center gap-2 text-sm md:text-base"><i class="fa-solid fa-display text-sky-500"></i> ตำแหน่งกระดานคะแนน (HUD)</h3>
                         <p class="text-xs text-slate-600 dark:text-slate-400">เลือกตำแหน่งแสดงผลของ HUD ระหว่างเล่นเกม</p>
@@ -618,10 +652,10 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q3", avatar:"", speaker:"หมอ", story:"กินยาฆ่าเชื้อไม่ครบ แบคทีเรียจะเป็นไง?", options:[
             {id:"A",text:"จะดื้อยา รักษายากขึ้น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"จะอ่อนแอลง",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q4", avatar:"👦", speaker:"น้อง", story:"ยาพาราเซตามอลช่วยเรื่องอะไร?", options:[
+        { id:"EP1_Q4", avatar:"", speaker:"น้อง", story:"ยาพาราเซตามอลช่วยเรื่องอะไร?", options:[
             {id:"A",text:"ลดไข้ แก้ปวด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฆ่าเชื้อแบคทีเรีย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q5", avatar:"👩‍️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
+        { id:"EP1_Q5", avatar:"‍⚕️", speaker:"พยาบาล", story:"ซื้อยาฆ่าเชื้อกินเองบ่อยๆ ดีไหม?", options:[
             {id:"A",text:"ดี สะดวก",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ดี เป็นอันตราย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP1_Q6", avatar:"🤔", speaker:"นักเรียน", story:"ยาปฏิชีวนะกับยาแก้ปวดเหมือนกันไหม?", options:[
@@ -636,7 +670,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP1_Q9", avatar:"🤧", speaker:"เพื่อน", story:"คอแดง เจ็บคอ ควรดูแลยังไง?", options:[
             {id:"A",text:"กลั้วคอด้วยน้ำเกลืออุ่น",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดื่มน้ำเย็นจัด",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP1_Q10", avatar:"🦠", speaker:"หมอ", story:"ยาฆ่าเชื้อฆ่าไวรัสได้ไหม?", options:[
+        { id:"EP1_Q10", avatar:"", speaker:"หมอ", story:"ยาฆ่าเชื้อฆ่าไวรัสได้ไหม?", options:[
             {id:"A",text:"ฆ่าไม่ได้ ได้แค่แบคทีเรีย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฆ่าไวรัสได้",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]}
     ]},
@@ -673,7 +707,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ห้ามกินเด็ดขาด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]}
     ]},
     ep3: { title: "ตอนที่ 3: ยาสามัญ & การลืมกินยา", questions: [
-        { id:"EP3_Q1", avatar:"⏰", speaker:"แม่", story:"ลืมกินยามื้อเช้า นึกได้ตอนเย็น ควรทำไง?", options:[
+        { id:"EP3_Q1", avatar:"", speaker:"แม่", story:"ลืมกินยามื้อเช้า นึกได้ตอนเย็น ควรทำไง?", options:[
             {id:"A",text:"กินรวบ 2 เม็ด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ข้ามมื้อเช้า กินมื้อเย็นปกติ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP3_Q2", avatar:"🟢", speaker:"ครู", story:"ยาสามัญประจำบ้าน มีสัญลักษณ์อะไร?", options:[
@@ -682,10 +716,10 @@ const DEFAULT_QUESTIONS = {
         { id:"EP3_Q3", avatar:"", speaker:"นักเรียน", story:"ควรเก็บยาไว้ที่ไหน?", options:[
             {id:"A",text:"ในรถตากแดด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตู้ยา อุณหภูมิห้อง พ้นแดด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP3_Q4", avatar:"💊", speaker:"เพื่อน", story:"ยาเปลี่ยนสี ชื้น เยิ้ม ทำไง?", options:[
+        { id:"EP3_Q4", avatar:"", speaker:"เพื่อน", story:"ยาเปลี่ยนสี ชื้น เยิ้ม ทำไง?", options:[
             {id:"A",text:"ตากแดดแล้วกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ทิ้งไปเลย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP3_Q5", avatar:"👁️", speaker:"ตา", story:"ยาหยอดตา เปิดแล้วเก็บได้นานแค่ไหน?", options:[
+        { id:"EP3_Q5", avatar:"️", speaker:"ตา", story:"ยาหยอดตา เปิดแล้วเก็บได้นานแค่ไหน?", options:[
             {id:"A",text:"1 เดือน (30 วัน)",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"1 ปี",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP3_Q6", avatar:"", speaker:"น้อง", story:"ควรกินยาพาราตอนไหน?", options:[
@@ -705,13 +739,13 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ควรมี เป็นยาสามัญ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]}
     ]},
     ep4: { title: "ตอนที่ 4: ความเชื่อ vs ความจริง", questions: [
-        { id:"EP4_Q1", avatar:"🔥", speaker:"เพื่อน", story:"โดนน้ำร้อนลวก ทายาสีฟันได้ไหม?", options:[
+        { id:"EP4_Q1", avatar:"", speaker:"เพื่อน", story:"โดนน้ำร้อนลวก ทายาสีฟันได้ไหม?", options:[
             {id:"A",text:"ได้ เย็นดี",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ล้างน้ำสะอาด",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP4_Q2", avatar:"🥛", speaker:"น้อง", story:"กินยากับนมสด ดีไหม?", options:[
             {id:"A",text:"ไม่ดี ยาไม่ออกฤทธิ์",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ดี นมมีประโยชน์",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP4_Q3", avatar:"☔", speaker:"แม่", story:"ตากฝนมา กินพาราดักไข้ได้ไหม?", options:[
+        { id:"EP4_Q3", avatar:"", speaker:"แม่", story:"ตากฝนมา กินพาราดักไข้ได้ไหม?", options:[
             {id:"A",text:"ไม่ได้ ยาดักไข้ไม่มีจริง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ได้ จะได้ไม่ป่วย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP4_Q4", avatar:"🩹", speaker:"นักเรียน", story:"แผลถลอก ล้างด้วยน้ำเปล่าได้ไหม?", options:[
@@ -729,7 +763,7 @@ const DEFAULT_QUESTIONS = {
         { id:"EP4_Q8", avatar:"", speaker:"ตา", story:"ยาลูกกลอนสมุนไพร ปลอดภัย 100% จริงไหม?", options:[
             {id:"A",text:"ไม่จริง อาจผสมสเตียรอยด์",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"จริง ปลอดภัย",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP4_Q9", avatar:"🤒", speaker:"เพื่อน", story:"กินยาเยอะๆ จะได้หายไว จริงไหม?", options:[
+        { id:"EP4_Q9", avatar:"", speaker:"เพื่อน", story:"กินยาเยอะๆ จะได้หายไว จริงไหม?", options:[
             {id:"A",text:"จริง ยิ่งเยอะยิ่งดี",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่จริง ยาเกินขนาดเป็นพิษ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP4_Q10", avatar:"💊", speaker:"เภสัชกร", story:"กินยาสมุนไพรคู่ยาแผนปัจจุบัน ได้เลยไหม?", options:[
@@ -746,22 +780,22 @@ const DEFAULT_QUESTIONS = {
         { id:"EP5_Q3", avatar:"👨", speaker:"พ่อ", story:"ปวดหัวมาก กินพาราวันละ 10 เม็ด ได้ไหม?", options:[
             {id:"A",text:"ได้ ถ้าปวดมาก",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ห้ามเกิน 8 เม็ด/วัน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP5_Q4", avatar:"🚨", speaker:"พยาบาล", story:"อาการแพ้ยารุนแรง เป็นยังไง?", options:[
+        { id:"EP5_Q4", avatar:"", speaker:"พยาบาล", story:"อาการแพ้ยารุนแรง เป็นยังไง?", options:[
             {id:"A",text:"ผื่นขึ้นเต็มตัว หายใจไม่ออก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ง่วงนอนนิดหน่อย",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP5_Q5", avatar:"", speaker:"ผู้ใหญ่บ้าน", story:"กินยาแก้แพ้แล้วง่วง ควรทำไง?", options:[
             {id:"A",text:"ไปวิ่งให้ตื่น",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"นอนพัก ห้ามขับรถ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP5_Q6", avatar:"😱", speaker:"เพื่อน", story:"กินยาแล้วผื่นขึ้น ปากบวม ทำไง?", options:[
+        { id:"EP5_Q6", avatar:"", speaker:"เพื่อน", story:"กินยาแล้วผื่นขึ้น ปากบวม ทำไง?", options:[
             {id:"A",text:"หยุดยา รีบไปหาหมอ",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"กินต่อไป เดี๋ยวหาย",hpChange:-25,isCorrect:false,feedback:"ผิด!"}]},
         { id:"EP5_Q7", avatar:"⚖️", speaker:"เภสัชกร", story:"ปริมาณยาพาราเด็ก คิดจากอะไร?", options:[
             {id:"A",text:"น้ำหนักตัว",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"อายุ",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q8", avatar:"🍔", speaker:"นักเรียน", story:"กิน NSAIDs ตอนท้องว่าง เป็นไง?", options:[
+        { id:"EP5_Q8", avatar:"", speaker:"นักเรียน", story:"กิน NSAIDs ตอนท้องว่าง เป็นไง?", options:[
             {id:"A",text:"กัดกระเพาะ ปวดท้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ยาออกฤทธิ์ดี",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP5_Q9", avatar:"️", speaker:"ตา", story:"ไข้สูง กินพาราทุก 1 ชั่วโมง ได้ไหม?", options:[
+        { id:"EP5_Q9", avatar:"⏱️", speaker:"ตา", story:"ไข้สูง กินพาราทุก 1 ชั่วโมง ได้ไหม?", options:[
             {id:"A",text:"ได้ ไข้ลดเร็ว",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ไม่ได้ ต้องห่าง 4-6 ชม.",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
         { id:"EP5_Q10", avatar:"🤝", speaker:"เพื่อน", story:"เอายาที่หมอสั่งให้ ไปแบ่งเพื่อนกิน ได้ไหม?", options:[
@@ -769,11 +803,11 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ไม่ได้ ยาใครยามัน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]}
     ]},
     ep6: { title: "ตอนที่ 6: พื้นฐานการใช้ยา (Easy)", questions: [
-        { id:"EP6_Q1", avatar:"", speaker:"ครู", story:"กินคู่กับยาทุกชนิดดีที่สุดคือ?", options:[
+        { id:"EP6_Q1", avatar:"💧", speaker:"ครู", story:"กินคู่กับยาทุกชนิดดีที่สุดคือ?", options:[
             {id:"A",text:"น้ำเปล่าอุณหภูมิห้อง",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"น้ำส้มสายชู",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"กาแฟร้อน",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP6_Q2", avatar:"📅", speaker:"เภสัชกร", story:"ก่อนกินยาต้องดูอะไรบนฉลาก?", options:[
+        { id:"EP6_Q2", avatar:"", speaker:"เภสัชกร", story:"ก่อนกินยาต้องดูอะไรบนฉลาก?", options:[
             {id:"A",text:"สีกล่อง",hpChange:-10,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"วันหมดอายุ (EXP)",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ราคา",hpChange:-10,isCorrect:false,feedback:"ผิด!"}]},
@@ -793,7 +827,7 @@ const DEFAULT_QUESTIONS = {
             {id:"A",text:"กินต่อ",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ตากแดดแล้วกิน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ทิ้งไป ห้ามกิน",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP6_Q7", avatar:"👩‍⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
+        { id:"EP6_Q7", avatar:"👩⚕️", speaker:"พยาบาล", story:"'กินยาหลังอาหาร' หมายถึง?", options:[
             {id:"A",text:"ตื่นนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"หลังมื้ออาหารหรือพร้อมมื้ออาหาร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ท้องว่างก่อนนอน",hpChange:-15,isCorrect:false,feedback:"ผิด!"}]},
@@ -826,7 +860,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"คนแปลกหน้า",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"แพทย์หรือเภสัชกร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"ใครก็ได้",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q4", avatar:"️", speaker:"หมวด 1", story:"ยาหมดอายุควรทำอย่างไร?", options:[
+        { id:"EP7_Q4", avatar:"🗑️", speaker:"หมวด 1", story:"ยาหมดอายุควรทำอย่างไร?", options:[
             {id:"A",text:"กินให้หมด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"แบ่งให้เพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"เก็บไว้กินภายหลัง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
@@ -846,7 +880,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"หยุดยาทันที",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ขอคำแนะนำจากผู้ใหญ่/เภสัชกร",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"D",text:"กินยาของเพื่อน",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q8", avatar:"", speaker:"หมวด 2", story:"ยาน้ำควรตวงด้วยอะไร?", options:[
+        { id:"EP7_Q8", avatar:"🥄", speaker:"หมวด 2", story:"ยาน้ำควรตวงด้วยอะไร?", options:[
             {id:"A",text:"ช้อนตวงยา",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"B",text:"ฝาขวดทุกชนิด",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ช้อนกินข้าว",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
@@ -861,7 +895,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"ที่เหมาะสมตามฉลาก พ้นมือเด็ก",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"ในรถร้อนจัด",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"กลางแดด",hpChange:-20,isCorrect:false,feedback:"ผิด!"}]},
-        { id:"EP7_Q11", avatar:"️", speaker:"หมวด 3: อันตราย", story:"กินยาเกินขนาดอาจเกิดอะไร?", options:[
+        { id:"EP7_Q11", avatar:"⚠️", speaker:"หมวด 3: อันตราย", story:"กินยาเกินขนาดอาจเกิดอะไร?", options:[
             {id:"A",text:"แข็งแรงทันที",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"หายป่วยทันที",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"เกิดอันตราย",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
@@ -896,7 +930,7 @@ const DEFAULT_QUESTIONS = {
             {id:"B",text:"เก็บไว้กินทีหลัง",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
             {id:"C",text:"ให้เพื่อนกิน",hpChange:-25,isCorrect:false,feedback:"ผิด!"},
             {id:"D",text:"ไม่กินและแจ้งผู้ใหญ่",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"}]},
-        { id:"EP7_Q18", avatar:"👨‍👩‍👧", speaker:"หมวด 4", story:"ใครควรดูแลการกินยาของเด็ก?", options:[
+        { id:"EP7_Q18", avatar:"👨‍👩‍", speaker:"หมวด 4", story:"ใครควรดูแลการกินยาของเด็ก?", options:[
             {id:"A",text:"เพื่อนร่วมชั้น",hpChange:-15,isCorrect:false,feedback:"ผิด!"},
             {id:"B",text:"ผู้ปกครองหรือผู้ใหญ่",hpChange:0,isCorrect:true,feedback:"ถูกต้อง!"},
             {id:"C",text:"คนที่เดินผ่านมา",hpChange:-20,isCorrect:false,feedback:"ผิด!"},
@@ -974,7 +1008,7 @@ let gameSettings = {
     timerDuration: 15,
     optionsPerQuestion: 4,
     isMuted: false,
-    hudPosition: 'normal'  // NEW: 'normal', 'compact', 'hidden'
+    hudPosition: 'normal'
 };
 
 let stats = {
@@ -1005,8 +1039,8 @@ const hoverState = {
     single: { 
         target: null, start: 0, selecting: false, 
         grabbing: false, grabTarget: null,
-        lastTarget: null, lastTargetTime: 0,  // NEW: memory
-        missedFrames: 0  // NEW: tolerance counter
+        lastTarget: null, lastTargetTime: 0,
+        missedFrames: 0
     },
     A: { 
         target: null, start: 0, selecting: false, 
@@ -1072,7 +1106,7 @@ window.onload = async function() {
     if (window.location.protocol === 'file:') {
         Swal.fire({
             icon: 'warning',
-            title: '️ ต้องเปิดผ่าน Live Server',
+            title: '⚠️ ต้องเปิดผ่าน Live Server',
             html: 'คุณกำลังเปิดไฟล์จาก <b>file://</b> ซึ่งเบราว์เซอร์จะบล็อกการเข้าถึงกล้อง<br><br>กรุณาใช้ <b>VS Code + Live Server</b> หรืออัปโหลดขึ้นเว็บที่รองรับ HTTPS',
             confirmButtonText: 'เข้าใจแล้ว',
             confirmButtonColor: '#0ea5e9'
@@ -1139,7 +1173,7 @@ function toggleHUD() {
         icon.className = 'fa-solid fa-eye-slash';
     }
     
-    showGestureHint(hudVisible ? '👁️ แสดง HUD' : '🙈 ซ่อน HUD (กด H เพื่อสลับ)');
+    showGestureHint(hudVisible ? '👁️ แสดง HUD' : ' ซ่อน HUD (กด H เพื่อสลับ)');
 }
 
 function applyHUDPosition() {
@@ -1200,7 +1234,7 @@ function loadFromStorage() {
         try { stats = Object.assign(stats, JSON.parse(savedS)); } catch(e) {}
     }
     
-    const savedSet = localStorage.getItem('medSettings_v3');  // NEW version
+    const savedSet = localStorage.getItem('medSettings_v3');
     if (savedSet) {
         try { gameSettings = Object.assign(gameSettings, JSON.parse(savedSet)); } catch(e) {}
     }
@@ -1209,7 +1243,7 @@ function loadFromStorage() {
 function saveToStorage() {
     localStorage.setItem('medQuestions_v8', JSON.stringify(allEpisodes));
     localStorage.setItem('medStats_v2', JSON.stringify(stats));
-    localStorage.setItem('medSettings_v3', JSON.stringify(gameSettings));  // NEW version
+    localStorage.setItem('medSettings_v3', JSON.stringify(gameSettings));
 }
 
 function initTheme() {
@@ -1300,7 +1334,7 @@ function renderEpisodeList() {
 // ==================== START GAME ====================
 async function startGame() {
     if (!handLandmarker) {
-        Swal.fire({icon:'warning',title:'⏳ กำลังโหลดระบบ AR...',text:'กรุณารอสักครู่แล้วลองใหม่',timer:3000});
+        Swal.fire({icon:'warning',title:' กำลังโหลดระบบ AR...',text:'กรุณารอสักครู่แล้วลองใหม่',timer:3000});
         return;
     }
     
@@ -1351,7 +1385,6 @@ async function startGame() {
     document.getElementById('webcam').classList.remove('hidden');
     arCanvas.classList.remove('hidden');
     
-    // Show HUD toggle button
     document.getElementById('hud-toggle').classList.remove('hidden');
     
     await new Promise(resolve => {
@@ -1366,7 +1399,6 @@ async function startGame() {
     gameCanvas.width = displayWidth;
     gameCanvas.height = displayHeight;
     
-    // Apply HUD position setting
     applyHUDPosition();
     
     if (currentPlayMode === 'team') {
@@ -1406,14 +1438,14 @@ async function startGame() {
         document.getElementById('balloon-hud').classList.remove('hidden');
         document.getElementById('fillblank-hud').classList.add('hidden');
         gameCanvas.classList.remove('hidden');
-        document.getElementById('game-hint').textContent = ' ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
+        document.getElementById('game-hint').textContent = '🎈 ชี้ค้าง 0.5 วินาทีเพื่อหยิบลูกโป่ง → ลากไปใส่ตะกร้า | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
         startBalloonGame();
     } else if (currentMode === 'fillblank') {
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('balloon-hud').classList.add('hidden');
         document.getElementById('fillblank-hud').classList.remove('hidden');
         gameCanvas.classList.remove('hidden');
-        document.getElementById('game-hint').textContent = '👆 ชี้ค้าง 0.5 วินาทีเพื่อหยิบคำ → ลากไปวางในช่องว่าง |  หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
+        document.getElementById('game-hint').textContent = '📝 ชี้ค้าง 0.5 วินาทีเพื่อหยิบคำ → ลากไปวางในช่องว่าง | 🤏 หรือใช้นิ้วโป้ง+ชี้บีบเพื่อหยิบ';
         startFillBlankGame();
     }
     
@@ -1493,7 +1525,6 @@ async function predictWebcam() {
         arCtx.setLineDash([]);
     }
     
-    // FIXED: Frame-based detection (ทุก 2 เฟรม) แทน time-based
     detectionFrame++;
     let newHandData = null;
     
@@ -1522,7 +1553,6 @@ async function predictWebcam() {
         }
     }
     
-    // ถ้ามีข้อมูลมือใหม่ ใช้อันใหม่ ถ้าไม่มี ใช้ค่าเก่า (smooth)
     if (newHandData) {
         smoothCursor.targetX = newHandData.x;
         smoothCursor.targetY = newHandData.y;
@@ -1535,22 +1565,17 @@ async function predictWebcam() {
         
         checkIntersection(newHandData.x, newHandData.y, team, newHandData.isPinching);
     } else {
-        // ไม่มีข้อมูลใหม่ - ใช้ค่า smooth เดิม แต่เพิ่ม missed frame counter
-        // ถ้า smoothCursor ยัง visible อยู่ ให้ check intersection ด้วยตำแหน่งเดิม
         if (smoothCursor.visible) {
-            // ยังคงตรวจสอบ intersection ด้วยตำแหน่งล่าสุด
-            // แต่ไม่ reset hover state (ให้ tolerance)
+            // Still check intersection with last position
         }
     }
     
-    // Smooth cursor position (lerp) - ทำให้ลื่นไหล
     if (smoothCursor.visible) {
-        const lerpFactor = 0.35;  // เพิ่มจาก 0.3 → 0.35 ให้ตามเร็วขึ้นเล็กน้อย
+        const lerpFactor = 0.35;
         smoothCursor.x += (smoothCursor.targetX - smoothCursor.x) * lerpFactor;
         smoothCursor.y += (smoothCursor.targetY - smoothCursor.y) * lerpFactor;
     }
     
-    // วาด cursor ทุกเฟรม (ไม่กระพริบ)
     if (smoothCursor.visible) {
         const state = hoverState['single'];
         const isPinching = state.grabbing;
@@ -1559,7 +1584,6 @@ async function predictWebcam() {
     
     arCtx.restore();
     
-    // Game-specific rendering
     if (currentMode === 'balloon' && balloonState.running) {
         renderBalloonGame();
     } else if (currentMode === 'fillblank') {
@@ -1580,10 +1604,8 @@ function drawCursor(x, y, team, isPinching) {
         color = '#fbbf24';
     }
     
-    // OFFSET: ย้าย cursor ขึ้นไปด้านบน 60px
     const cursorY = y - 60;
     
-    // Outer glow
     arCtx.beginPath();
     arCtx.arc(x, cursorY, 20, 0, Math.PI * 2);
     arCtx.fillStyle = color;
@@ -1591,14 +1613,12 @@ function drawCursor(x, y, team, isPinching) {
     arCtx.shadowBlur = 12;
     arCtx.fill();
     
-    // Inner white dot
     arCtx.beginPath();
     arCtx.arc(x, cursorY, 8, 0, Math.PI * 2);
     arCtx.fillStyle = '#ffffff';
     arCtx.shadowBlur = 0;
     arCtx.fill();
     
-    // Pinch indicator
     if (isPinching) {
         arCtx.beginPath();
         arCtx.arc(x, cursorY, 28, 0, Math.PI * 2);
@@ -1607,7 +1627,6 @@ function drawCursor(x, y, team, isPinching) {
         arCtx.stroke();
     }
     
-    // Progress ring
     if (state && state.target && state.start > 0 && !state.grabbing) {
         const elapsed = performance.now() - state.start;
         const progress = Math.min(elapsed / 1000, 1.0);
@@ -1624,7 +1643,8 @@ function checkIntersection(x, y, team, isPinching) {
     const state = hoverState[team];
     let hitBtn = null;
     
-    const HOVER_TOLERANCE = 30; // pixels - ขยาย hit area
+    // FIXED: Increased tolerance to 50px for better detection
+    const HOVER_TOLERANCE = 50;
     
     const isInside = (x, y, rect, tolerance = 0) => {
         if (!rect) return false;
@@ -1643,10 +1663,28 @@ function checkIntersection(x, y, team, isPinching) {
             const btnC = document.getElementById('opt-c');
             const btnD = document.getElementById('opt-d');
             
-            if (btnA && !btnA.classList.contains('hidden') && isInside(x,y,btnA.getBoundingClientRect(), HOVER_TOLERANCE)) hitBtn = {type:'quiz', id:'opt-a', choice:'A'};
-            else if (btnB && !btnB.classList.contains('hidden') && isInside(x,y,btnB.getBoundingClientRect(), HOVER_TOLERANCE)) hitBtn = {type:'quiz', id:'opt-b', choice:'B'};
-            else if (btnC && !btnC.classList.contains('hidden') && isInside(x,y,btnC.getBoundingClientRect(), HOVER_TOLERANCE)) hitBtn = {type:'quiz', id:'opt-c', choice:'C'};
-            else if (btnD && !btnD.classList.contains('hidden') && isInside(x,y,btnD.getBoundingClientRect(), HOVER_TOLERANCE)) hitBtn = {type:'quiz', id:'opt-d', choice:'D'};
+            // Remove previous pointed-at class
+            ['a','b','c','d'].forEach(k => {
+                const btn = document.getElementById(`opt-${k}`);
+                if (btn) btn.classList.remove('pointed-at');
+            });
+            
+            if (btnA && !btnA.classList.contains('hidden') && isInside(x,y,btnA.getBoundingClientRect(), HOVER_TOLERANCE)) {
+                hitBtn = {type:'quiz', id:'opt-a', choice:'A'};
+                btnA.classList.add('pointed-at');
+            }
+            else if (btnB && !btnB.classList.contains('hidden') && isInside(x,y,btnB.getBoundingClientRect(), HOVER_TOLERANCE)) {
+                hitBtn = {type:'quiz', id:'opt-b', choice:'B'};
+                btnB.classList.add('pointed-at');
+            }
+            else if (btnC && !btnC.classList.contains('hidden') && isInside(x,y,btnC.getBoundingClientRect(), HOVER_TOLERANCE)) {
+                hitBtn = {type:'quiz', id:'opt-c', choice:'C'};
+                btnC.classList.add('pointed-at');
+            }
+            else if (btnD && !btnD.classList.contains('hidden') && isInside(x,y,btnD.getBoundingClientRect(), HOVER_TOLERANCE)) {
+                hitBtn = {type:'quiz', id:'opt-d', choice:'D'};
+                btnD.classList.add('pointed-at');
+            }
         }
     }
     
@@ -1703,7 +1741,6 @@ function checkIntersection(x, y, team, isPinching) {
     }
     
     if (hitBtn) {
-        // Reset missed frames counter
         state.missedFrames = 0;
         state.lastTarget = hitBtn;
         state.lastTargetTime = performance.now();
@@ -1724,7 +1761,7 @@ function checkIntersection(x, y, team, isPinching) {
             } else if (hitBtn.type === 'blank' && state.grabTarget.type === 'word') {
                 handleWordDrop(state.grabTarget.word, hitBtn.blank);
             } else {
-                showGestureHint('❌ วางไม่ถูกที่');
+                showGestureHint(' วางไม่ถูกที่');
             }
             state.grabbing = false;
             state.grabTarget = null;
@@ -1760,15 +1797,11 @@ function checkIntersection(x, y, team, isPinching) {
             }
         }
     } else {
-        // NEW: Tolerance - ถ้าเพิ่งหลุดไม่เกิน 5 เฟรม (~100ms) ยังนับว่าจับอยู่
         if (state.target && state.lastTarget) {
             state.missedFrames++;
             const timeSinceLastHit = performance.now() - state.lastTargetTime;
             
-            // Grace period: 150ms (~7-8 เฟรมที่ 50fps)
             if (state.missedFrames < 8 && timeSinceLastHit < 150) {
-                // ยังนับว่าจับ target เดิมอยู่ - ไม่ reset
-                // ค้างเวลาต่อไป
                 return;
             }
         }
@@ -1801,8 +1834,10 @@ function resetAllHover() {
     ['a','b','c','d'].forEach(k => {
         const prog = document.getElementById(`prog-${k}`);
         const badge = document.getElementById(`badge-${k}`);
+        const btn = document.getElementById(`opt-${k}`);
         if (prog) prog.style.width = '0%';
         if (badge) badge.classList.add('hidden');
+        if (btn) btn.classList.remove('pointed-at');
     });
 }
 
@@ -2262,7 +2297,7 @@ function renderFillBlankGame() {
     ctx.fillStyle = '#0f172a';
     ctx.font = `bold ${titleFontSize}px Kanit, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText((q.avatar || '') + ' ' + (q.speaker || ''), displayWidth / 2, boxY + titleFontSize + 10);
+    ctx.fillText((q.avatar || '👤') + ' ' + (q.speaker || ''), displayWidth / 2, boxY + titleFontSize + 10);
     
     ctx.font = `${storyFontSize}px Kanit, sans-serif`;
     ctx.fillStyle = '#1e293b';
@@ -2433,7 +2468,7 @@ function showResult() {
     
     let badge = '🔰 ผู้ฝึกหัด';
     let emoji = '📚';
-    if (accuracy >= 80) { badge = '️ เภสัชกรอัจฉริยะ'; emoji = '🏆'; triggerConfetti(); }
+    if (accuracy >= 80) { badge = '🎖️ เภสัชกรอัจฉริยะ'; emoji = '🏆'; triggerConfetti(); }
     else if (accuracy >= 60) { badge = '🛡️ ผู้พิทักษ์ตู้ยา'; emoji = '🎉'; }
     else if (accuracy >= 40) { badge = '👍 ผู้เรียนรู้'; emoji = '👍'; }
     
@@ -2675,7 +2710,6 @@ function populateSettings() {
     const optcountRadio = document.querySelector(`input[name="optcount"][value="${gameSettings.optionsPerQuestion}"]`);
     if (optcountRadio) optcountRadio.checked = true;
     
-    // NEW: HUD position
     const hudRadio = document.querySelector(`input[name="hud-position"][value="${gameSettings.hudPosition || 'normal'}"]`);
     if (hudRadio) hudRadio.checked = true;
 }
@@ -2691,7 +2725,6 @@ function saveSettings(e) {
     const optcountEl = document.querySelector('input[name="optcount"]:checked');
     if (optcountEl) gameSettings.optionsPerQuestion = parseInt(optcountEl.value);
     
-    // NEW: HUD position
     const hudEl = document.querySelector('input[name="hud-position"]:checked');
     if (hudEl) gameSettings.hudPosition = hudEl.value;
     
