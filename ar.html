@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💊 ภารกิจพิชิตตู้ยา: หมอจำเป็นใน 24 ชั่วโมง (AR Game)</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -24,10 +23,12 @@
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body {
@@ -36,62 +37,108 @@
             -webkit-user-select: none;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        .mirror-mode {
-            transform: scaleX(-1);
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-        html:not(.dark) ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        html:not(.dark) ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-        }
-
-        /* Hover active state for AR finger pointing */
+        .mirror-mode { transform: scaleX(-1); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        html:not(.dark) ::-webkit-scrollbar-track { background: #f1f5f9; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        
         .ar-hover-active {
             transform: scale(1.03) !important;
-            box-shadow: 0 0 25px rgba(56, 189, 248, 0.6) !important;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.8) !important;
             border-color: #38bdf8 !important;
+            z-index: 20;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); color: #ef4444; }
+            50% { transform: scale(1.1); color: #dc2626; }
+        }
+        .timer-warning { animation: pulse-red 0.5s infinite; }
+        
+        @keyframes tick {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .clock-tick { animation: tick 1s ease-in-out; }
+        
+        .option-btn {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: visible;
+        }
+        
+        /* Balloon Animation */
+        @keyframes float-down {
+            from { transform: translateY(-100px); }
+            to { transform: translateY(calc(100vh + 100px)); }
+        }
+        .balloon {
+            animation: float-down linear;
+            cursor: pointer;
+        }
+        
+        /* Basket Animation */
+        @keyframes basket-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .basket-shake { animation: basket-shake 0.3s ease; }
+        
+        /* Word Drop Animation */
+        @keyframes word-fall {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .word-drop {
+            animation: word-fall 0.5s ease-out;
+        }
+        
+        /* Dragging State */
+        .is-dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+            z-index: 100;
+            cursor: grabbing;
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen overflow-x-hidden transition-colors duration-300">
 
     <div id="app-container" class="relative w-full h-screen overflow-hidden flex flex-col justify-between">
-
-        <!-- Background Video & AR Canvas -->
         <video id="webcam" class="hidden absolute inset-0 w-full h-full object-cover mirror-mode" autoplay playsinline></video>
         <canvas id="output_canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
 
         <!-- SCREEN 1: MAIN MENU -->
         <div id="start-screen" class="relative z-20 flex flex-col items-center justify-between h-full p-4 md:p-8 bg-slate-50/95 dark:bg-slate-900/90 backdrop-blur-md overflow-y-auto transition-colors duration-300">
             
-            <!-- Top Controls (Theme Switcher) -->
-            <div class="w-full max-w-2xl flex justify-between items-center mb-2">
+            <!-- Top Bar -->
+            <div class="w-full max-w-4xl flex justify-between items-center mb-2">
                 <div class="text-xs font-bold px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-600 dark:text-sky-400">
                     <i class="fa-solid fa-shield-halved"></i> นวัตกรรมสื่อการเรียนรู้การใช้ยา
                 </div>
-                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-amber-400 border border-slate-300 dark:border-slate-700 shadow-md flex items-center gap-2 hover:scale-105 transition">
-                    <i class="fa-solid fa-sun text-amber-500 hidden dark:inline"></i>
-                    <i class="fa-solid fa-moon text-indigo-600 inline dark:hidden"></i>
-                    <span id="theme-text" class="text-xs font-bold text-slate-700 dark:text-slate-200">โหมดมืด</span>
-                </button>
+                <div class="flex gap-2 items-center">
+                    <div id="realtime-clock" class="bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 shadow-md flex items-center gap-2">
+                        <i class="fa-regular fa-clock text-sky-500"></i>
+                        <span id="clock-time" class="text-sm font-bold text-slate-700 dark:text-slate-200 font-mono">00:00:00</span>
+                    </div>
+                    <button onclick="toggleMute()" id="mute-btn" class="p-2 px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 shadow-md flex items-center gap-2 hover:scale-105 transition">
+                        <i id="mute-icon" class="fa-solid fa-volume-high text-sky-500"></i>
+                        <span id="mute-text" class="text-xs font-bold">เสียง: เปิด</span>
+                    </button>
+                    <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-amber-400 border border-slate-300 dark:border-slate-700 shadow-md flex items-center gap-2 hover:scale-105 transition">
+                        <i class="fa-solid fa-sun text-amber-500 hidden dark:inline"></i>
+                        <i class="fa-solid fa-moon text-indigo-600 inline dark:hidden"></i>
+                        <span id="theme-text" class="text-xs font-bold text-slate-700 dark:text-slate-200">โหมดมืด</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="text-center my-auto max-w-2xl w-full py-2">
+            <div class="text-center my-auto max-w-4xl w-full py-2">
                 <div class="inline-block p-4 bg-sky-500/10 rounded-full border border-sky-400/30 mb-3 animate-bounce">
                     <span class="text-5xl md:text-6xl">💊</span>
                 </div>
@@ -100,30 +147,50 @@
                 </h1>
                 <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-5">หมอจำเป็นใน 24 ชั่วโมง (AR Interactive Game)</p>
 
-                <!-- Select Mode Single/Team -->
-                <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-5 shadow-xl transition-colors">
-                    <label class="block text-sky-700 dark:text-sky-300 text-sm font-semibold mb-3">
-                        <i class="fa-solid fa-users"></i> รูปแบบการเล่น (Play Mode)
-                    </label>
-                    <div class="flex gap-3">
-                        <button id="btn-mode-single" onclick="setPlayMode('single')" class="flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105">
-                            <i class="fa-solid fa-user"></i> เล่นคนเดียว
-                        </button>
-                        <button id="btn-mode-team" onclick="setPlayMode('team')" class="flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105">
-                            <i class="fa-solid fa-users-viewfinder"></i> แข่งเป็นทีม (ซ้าย-ขวา)
-                        </button>
-                    </div>
+                <!-- Game Mode Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5 max-w-2xl mx-auto">
+                    <button onclick="setGameMode('quiz')" id="mode-quiz" class="game-mode-btn p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white font-bold shadow-lg hover:scale-105 transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-circle-question text-2xl"></i>
+                        <div class="text-left">
+                            <div class="text-sm">📝 แบบทดสอบ</div>
+                            <div class="text-xs opacity-80">ตอบคำถามแบบปรนัย</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="setGameMode('balloon')" id="mode-balloon" class="game-mode-btn p-4 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 text-white font-bold shadow-lg hover:scale-105 transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-balloon text-2xl"></i>
+                        <div class="text-left">
+                            <div class="text-sm"> เกมลูกโป่ง</div>
+                            <div class="text-xs opacity-80">ลากใส่ตะกร้าแยกประเภท</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="setGameMode('word')" id="mode-word" class="game-mode-btn p-4 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white font-bold shadow-lg hover:scale-105 transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-spell-check text-2xl"></i>
+                        <div class="text-left">
+                            <div class="text-sm">📝 เกมเติมคำ</div>
+                            <div class="text-xs opacity-80">ลากคำศัพท์ใส่ช่องว่าง</div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="setGameMode('free')" id="mode-free" class="game-mode-btn p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold shadow-lg hover:scale-105 transition flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-infinity text-2xl"></i>
+                        <div class="text-left">
+                            <div class="text-sm"> โหมดอิสระ</div>
+                            <div class="text-xs opacity-80">ไม่มีเวลา ไม่มีคะแนน</div>
+                        </div>
+                    </button>
                 </div>
 
-                <!-- Select Episode -->
+                <!-- Episode Selection -->
                 <div class="bg-white/90 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-5 text-left max-h-64 overflow-y-auto space-y-2.5 shadow-xl transition-colors">
                     <label class="block text-sky-700 dark:text-sky-300 text-sm font-semibold mb-2">
-                        <i class="fa-solid fa-book-open"></i> เลือกลองสถานการณ์ (Episodes - ข้อละ 5 สถานการณ์)
+                        <i class="fa-solid fa-book-open"></i> เลือกลองสถานการณ์ (Episodes)
                     </label>
                     
                     <button onclick="selectEpisode('ep1')" id="ep-btn-ep1" class="ep-btn w-full p-3 rounded-xl border border-sky-500/50 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-sky-800 dark:text-sky-300">ตอนที่ 1: เจ็บคอต้องกินยาอะไร? (5 ข้อ)</div>
+                            <div class="font-bold text-sky-800 dark:text-sky-300">ตอนที่ 1: เจ็บคอต้องกินยาอะไร?</div>
                             <div class="text-xs text-slate-600 dark:text-slate-400">การใช้ยาปฏิชีวนะ ยาฆ่าเชื้อ และปัญหาเชื้อดื้อยา</div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-sky-500"></i>
@@ -131,40 +198,24 @@
 
                     <button onclick="selectEpisode('ep2')" id="ep-btn-ep2" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-amber-800 dark:text-amber-300">ตอนที่ 2: ยาชุดอันตราย (5 ข้อ)</div>
+                            <div class="font-bold text-amber-800 dark:text-amber-300">ตอนที่ 2: ยาชุดอันตราย</div>
                             <div class="text-xs text-slate-600 dark:text-slate-400">อันตรายจากยาสเตียรอยด์สังเคราะห์และการระคายเคืองกระเพาะ</div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-amber-500"></i>
                     </button>
 
-                    <button onclick="selectEpisode('ep3')" id="ep-btn-ep3" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
+                    <button onclick="selectEpisode('ep7')" id="ep-btn-ep7" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-emerald-800 dark:text-emerald-300">ตอนที่ 3: ยาสามัญ & การลืมกินยา (5 ข้อ)</div>
-                            <div class="text-xs text-slate-600 dark:text-slate-400">ลืมกินยาทำอย่างไร ยาสามัญประจำบ้าน และการจัดเก็บรักษายา</div>
+                            <div class="font-bold text-indigo-800 dark:text-indigo-300">ตอนที่ 7: แบบทดสอบความรู้รอบด้าน</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">รวม 4 หมวดความรู้ พร้อม 4 ตัวเลือก (ก, ข, ค, ง)</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-emerald-500"></i>
-                    </button>
-
-                    <button onclick="selectEpisode('ep4')" id="ep-btn-ep4" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
-                        <div>
-                            <div class="font-bold text-purple-800 dark:text-purple-300">ตอนที่ 4: ความเชื่อ vs ความจริง (5 ข้อ)</div>
-                            <div class="text-xs text-slate-600 dark:text-slate-400">ความเข้าใจผิดเรื่องการทายาสีฟัน แอลกอฮอล์ และการทานยาพร้อมนม</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-purple-500"></i>
-                    </button>
-
-                    <button onclick="selectEpisode('ep5')" id="ep-btn-ep5" class="ep-btn w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-between text-left">
-                        <div>
-                            <div class="font-bold text-rose-800 dark:text-rose-300">ตอนที่ 5: อันตรายจากการใช้ยา (5 ข้อ)</div>
-                            <div class="text-xs text-slate-600 dark:text-slate-400">ยาลดไข้เด็ก ปริมาณพาราเซตามอล NSAIDs และอาการแพ้ยา</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-rose-500"></i>
+                        <i class="fa-solid fa-chevron-right text-indigo-500"></i>
                     </button>
 
                     <button onclick="selectEpisode('survival')" id="ep-btn-survival" class="ep-btn w-full p-3 rounded-xl border border-red-500/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition flex items-center justify-between text-left">
                         <div>
-                            <div class="font-bold text-red-700 dark:text-red-400">🔥 โหมดเอาชีวิตรอด (Survival Mode - สุ่ม 25 ข้อ)</div>
-                            <div class="text-xs text-slate-600 dark:text-slate-400">สุ่มคำถามรวมทุกเรื่อง ตอบผิดหัก HP จนกว่าจะแพ้!</div>
+                            <div class="font-bold text-red-700 dark:text-red-400">🔥 โหมดเอาชีวิตรอด</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400">สุ่มคำถามรวมทุกเรื่อง ตอบผิดหัก HP</div>
                         </div>
                         <i class="fa-solid fa-fire text-red-500"></i>
                     </button>
@@ -175,23 +226,23 @@
                     <button onclick="startARGame()" class="flex-1 py-4 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-extrabold rounded-2xl shadow-lg shadow-sky-500/25 transition-all text-lg flex items-center justify-center gap-2">
                         <i class="fa-solid fa-camera"></i> เริ่มภารกิจด้วยกล้อง AR
                     </button>
+                    <button onclick="openStatisticsDashboard()" class="py-4 px-6 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> สถิติ
+                    </button>
                     <button onclick="openTeacherDashboard()" class="py-4 px-6 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-2xl border border-slate-300 dark:border-slate-700 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-sliders"></i> จัดการคำถาม
+                        <i class="fa-solid fa-sliders"></i> จัดการ
                     </button>
                 </div>
             </div>
 
-            <!-- Footer -->
             <div class="text-xs text-slate-600 dark:text-slate-500 text-center pb-2">
-                นวัตกรรมสื่อการเรียนรู้ เรื่อง อันตรายจากการใช้ยา | ชี้คำตอบค้างไว้ 1 วินาทีเพื่อเลือก
+                นวัตกรรมสื่อการเรียนรู้ เรื่อง อันตรายจากการใช้ยา | ชี้/ลาก คำตอบค้างไว้ 1 วินาทีเพื่อเลือก
             </div>
         </div>
 
-        <!-- SCREEN 2: GAMEPLAY AR SCREEN -->
+        <!-- SCREEN 2: QUIZ GAMEPLAY -->
         <div id="game-screen" class="hidden absolute inset-0 z-20 flex-col justify-between p-4 pointer-events-none">
-            <!-- Top Bar HUD -->
             <div class="flex justify-between items-start gap-4 pointer-events-auto">
-                <!-- HP Bar (Single Mode) or Team Scores (Team Mode) -->
                 <div id="hud-single-hp" class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200 dark:border-slate-700 w-48 md:w-64 shadow-lg transition-colors">
                     <div class="flex justify-between text-xs font-bold mb-1">
                         <span class="text-rose-600 dark:text-rose-400"><i class="fa-solid fa-heart"></i> พลังชีวิตชุมชน</span>
@@ -202,25 +253,20 @@
                     </div>
                 </div>
 
-                <div id="hud-team-score" class="hidden bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 flex gap-6 shadow-lg transition-colors">
-                    <div class="text-center">
-                        <div class="text-xs text-sky-600 dark:text-sky-400 font-bold">ทีมซ้าย (A)</div>
-                        <div id="team-a-score" class="text-xl font-black text-sky-700 dark:text-sky-300">0</div>
-                    </div>
-                    <div class="w-px bg-slate-300 dark:bg-slate-700 h-8 self-center"></div>
-                    <div class="text-center">
-                        <div class="text-xs text-rose-600 dark:text-rose-400 font-bold">ทีมขวา (B)</div>
-                        <div id="team-b-score" class="text-xl font-black text-rose-700 dark:text-rose-300">0</div>
-                    </div>
-                </div>
-
-                <!-- Progress & Timer -->
                 <div class="flex gap-2 items-center">
-                    <div id="timer-ui" class="hidden bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-amber-500/50 flex flex-col items-center shadow-lg transition-colors">
-                        <span class="text-xs text-amber-600 dark:text-amber-300"><i class="fa-solid fa-clock"></i> เวลา</span>
-                        <span id="timer-text" class="font-bold text-lg text-amber-700 dark:text-amber-400">15s</span>
+                    <div id="timer-ui" class="hidden bg-white/90 dark:bg-slate-900/80 backdrop-blur-md p-2 rounded-2xl border border-amber-500/50 flex items-center gap-2 shadow-lg">
+                        <div class="relative w-12 h-12">
+                            <svg class="w-12 h-12 transform -rotate-90">
+                                <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="none" class="text-slate-300 dark:text-slate-700"/>
+                                <circle id="timer-circle" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="none" 
+                                    stroke-dasharray="125.6" stroke-dashoffset="0" 
+                                    class="text-amber-500 transition-all duration-1000" stroke-linecap="round"/>
+                            </svg>
+                            <span id="timer-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-400">15</span>
+                        </div>
                     </div>
-                    <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center shadow-lg transition-colors">
+                    
+                    <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center shadow-lg">
                         <span class="text-xs text-sky-700 dark:text-sky-300">ความคืบหน้า</span>
                         <span id="progress-text" class="font-bold text-lg text-slate-800 dark:text-slate-100">1/5</span>
                     </div>
@@ -230,64 +276,137 @@
                 </div>
             </div>
 
-            <!-- Dialogue & Question Box -->
             <div class="my-auto max-w-2xl w-full mx-auto space-y-3 pointer-events-auto">
-                <div class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md p-4 md:p-6 rounded-3xl border border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-4 items-start transition-colors">
-                    <div id="avatar-container" class="text-4xl md:text-5xl bg-sky-100 dark:bg-slate-800 p-3 rounded-2xl border border-sky-200 dark:border-slate-700 flex-shrink-0">
-                        🤒
-                    </div>
+                <div class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md p-4 md:p-6 rounded-3xl border border-sky-300 dark:border-sky-500/30 shadow-2xl flex gap-4 items-start">
+                    <div id="avatar-container" class="text-4xl md:text-5xl bg-sky-100 dark:bg-slate-800 p-3 rounded-2xl border border-sky-200 dark:border-slate-700 flex-shrink-0">🤒</div>
                     <div>
                         <div id="speaker-name" class="text-xs font-bold text-sky-700 dark:text-sky-400 mb-1">ผู้ป่วย</div>
-                        <p id="story-text" class="text-slate-800 dark:text-slate-100 font-medium text-sm md:text-base leading-relaxed">
-                            "กำลังโหลดคำถาม..."
-                        </p>
+                        <p id="story-text" class="text-slate-800 dark:text-slate-100 font-medium text-sm md:text-base">"กำลังโหลดคำถาม..."</p>
                     </div>
                 </div>
 
-                <!-- Options A, B, C with Direct Visual Finger Target Indicators -->
                 <div class="grid grid-cols-1 gap-2 md:gap-3">
-                    <button id="btn-option-a" onclick="handleAnswer('A', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-sky-50 dark:hover:bg-sky-900/80 rounded-2xl border-2 border-sky-300 dark:border-sky-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
-                        <!-- Progress overlay filling up on hover -->
+                    <button id="btn-option-a" onclick="handleAnswer('A', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-sky-50 dark:hover:bg-sky-900/80 rounded-2xl border-2 border-sky-300 dark:border-sky-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto group">
                         <div id="progress-bar-a" class="absolute inset-y-0 left-0 bg-sky-400/30 dark:bg-sky-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
-                        <span class="w-8 h-8 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">A</span>
-                        <span id="text-option-a" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก A</span>
-                        <span id="badge-hover-a" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-sky-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
+                        <div class="relative">
+                            <span class="w-10 h-10 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-lg shadow-lg flex-shrink-0 z-10 group-hover:scale-110 transition-transform">ก</span>
+                        </div>
+                        <span id="text-option-a" class="text-slate-800 dark:text-slate-200 font-medium text-sm md:text-base flex-1 z-10">ตัวเลือก A</span>
                     </button>
 
-                    <button id="btn-option-b" onclick="handleAnswer('B', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-emerald-50 dark:hover:bg-emerald-900/80 rounded-2xl border-2 border-emerald-300 dark:border-emerald-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto">
+                    <button id="btn-option-b" onclick="handleAnswer('B', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-emerald-50 dark:hover:bg-emerald-900/80 rounded-2xl border-2 border-emerald-300 dark:border-emerald-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto group">
                         <div id="progress-bar-b" class="absolute inset-y-0 left-0 bg-emerald-400/30 dark:bg-emerald-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
-                        <span class="w-8 h-8 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">B</span>
-                        <span id="text-option-b" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก B</span>
-                        <span id="badge-hover-b" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
+                        <div class="relative">
+                            <span class="w-10 h-10 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-lg shadow-lg flex-shrink-0 z-10 group-hover:scale-110 transition-transform">ข</span>
+                        </div>
+                        <span id="text-option-b" class="text-slate-800 dark:text-slate-200 font-medium text-sm md:text-base flex-1 z-10">ตัวเลือก B</span>
                     </button>
 
-                    <button id="btn-option-c" onclick="handleAnswer('C', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-purple-50 dark:hover:bg-purple-900/80 rounded-2xl border-2 border-purple-300 dark:border-purple-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto hidden">
+                    <button id="btn-option-c" onclick="handleAnswer('C', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-purple-50 dark:hover:bg-purple-900/80 rounded-2xl border-2 border-purple-300 dark:border-purple-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto group hidden">
                         <div id="progress-bar-c" class="absolute inset-y-0 left-0 bg-purple-400/30 dark:bg-purple-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
-                        <span class="w-8 h-8 rounded-xl bg-purple-500 text-white font-bold flex items-center justify-center text-sm shadow flex-shrink-0 z-10">C</span>
-                        <span id="text-option-c" class="text-slate-800 dark:text-slate-200 font-medium text-xs md:text-sm flex-1 z-10">ตัวเลือก C</span>
-                        <span id="badge-hover-c" class="hidden text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500 text-white shadow-md animate-pulse z-10"><i class="fa-solid fa-hand-pointer"></i> กำลังเลือก...</span>
+                        <div class="relative">
+                            <span class="w-10 h-10 rounded-xl bg-purple-500 text-white font-bold flex items-center justify-center text-lg shadow-lg flex-shrink-0 z-10 group-hover:scale-110 transition-transform">ค</span>
+                        </div>
+                        <span id="text-option-c" class="text-slate-800 dark:text-slate-200 font-medium text-sm md:text-base flex-1 z-10">ตัวเลือก C</span>
+                    </button>
+
+                    <button id="btn-option-d" onclick="handleAnswer('D', 'single')" class="option-btn relative overflow-hidden w-full p-3 md:p-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md hover:bg-amber-50 dark:hover:bg-amber-900/80 rounded-2xl border-2 border-amber-300 dark:border-amber-500/50 transition-all text-left flex items-center gap-3 shadow-lg pointer-events-auto group hidden">
+                        <div id="progress-bar-d" class="absolute inset-y-0 left-0 bg-amber-400/30 dark:bg-amber-500/40 w-0 transition-all duration-75 pointer-events-none"></div>
+                        <div class="relative">
+                            <span class="w-10 h-10 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center text-lg shadow-lg flex-shrink-0 z-10 group-hover:scale-110 transition-transform">ง</span>
+                        </div>
+                        <span id="text-option-d" class="text-slate-800 dark:text-slate-200 font-medium text-sm md:text-base flex-1 z-10">ตัวเลือก D</span>
                     </button>
                 </div>
             </div>
 
-            <!-- AR Finger Gesture Prompt -->
-            <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/80 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 pointer-events-auto shadow-lg transition-colors">
-                <i class="fa-solid fa-hand-point-up text-sky-500 animate-bounce"></i> ยกนิ้วชี้ขึ้นเพื่อควบคุมเคอร์เซอร์ และชี้ค้างบนตัวเลือก 1 วินาที
+            <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/80 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 pointer-events-auto shadow-lg">
+                <i class="fa-solid fa-hand-point-up text-sky-500 animate-bounce"></i> ชี้คำตอบค้างไว้ 1 วินาทีเพื่อเลือก
             </div>
         </div>
 
-        <!-- SCREEN 3: RESULT SCREEN -->
-        <div id="result-screen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-lg transition-colors">
+        <!-- SCREEN 3: BALLOON GAME -->
+        <div id="balloon-game-screen" class="hidden absolute inset-0 z-20 flex-col justify-between p-4 pointer-events-none bg-gradient-to-b from-sky-100 to-pink-100 dark:from-slate-900 dark:to-slate-800">
+            <!-- Score and Timer -->
+            <div class="flex justify-between items-start pointer-events-auto">
+                <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <div class="text-xs text-slate-600 dark:text-slate-400">คะแนน</div>
+                    <div id="balloon-score" class="text-3xl font-black text-pink-600 dark:text-pink-400">0</div>
+                </div>
+                <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <div class="text-xs text-slate-600 dark:text-slate-400">เวลา</div>
+                    <div id="balloon-timer" class="text-3xl font-black text-amber-600 dark:text-amber-400">60</div>
+                </div>
+                <button onclick="quitGame()" class="bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg transition pointer-events-auto">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
+            <!-- Game Area with Baskets -->
+            <div class="flex-grow relative" id="balloon-container">
+                <!-- Baskets at bottom -->
+                <div class="absolute bottom-4 left-4 md:left-10 flex gap-4 md:gap-10">
+                    <div id="basket-safe" class="basket w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-b-3xl rounded-t-lg border-4 border-emerald-300 dark:border-emerald-700 shadow-2xl flex flex-col items-center justify-end pb-4 cursor-pointer transition-transform hover:scale-105">
+                        <div class="text-white text-4xl mb-2">🟢</div>
+                        <div class="text-white font-bold text-sm md:text-base text-center px-2">ยาปลอดภัย</div>
+                    </div>
+                    <div id="basket-danger" class="basket w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-rose-400 to-rose-600 rounded-b-3xl rounded-t-lg border-4 border-rose-300 dark:border-rose-700 shadow-2xl flex flex-col items-center justify-end pb-4 cursor-pointer transition-transform hover:scale-105">
+                        <div class="text-white text-4xl mb-2">🔴</div>
+                        <div class="text-white font-bold text-sm md:text-base text-center px-2">ยาอันตราย</div>
+                    </div>
+                </div>
+                
+                <!-- Balloons will be dynamically added here -->
+            </div>
+
+            <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/80 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 pointer-events-auto shadow-lg mb-4">
+                <i class="fa-solid fa-hand-pointer text-pink-500"></i> ลากลูกโป่งไปใส่ตะกร้าที่ถูกต้อง
+            </div>
+        </div>
+
+        <!-- SCREEN 4: WORD DROP GAME -->
+        <div id="word-game-screen" class="hidden absolute inset-0 z-20 flex-col justify-between p-4 pointer-events-none bg-gradient-to-b from-violet-100 to-purple-100 dark:from-slate-900 dark:to-slate-800">
+            <!-- Score -->
+            <div class="flex justify-between items-start pointer-events-auto">
+                <div class="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <div class="text-xs text-slate-600 dark:text-slate-400">คะแนน</div>
+                    <div id="word-score" class="text-3xl font-black text-violet-600 dark:text-violet-400">0</div>
+                </div>
+                <button onclick="quitGame()" class="bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg transition pointer-events-auto">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
+            <!-- Sentence with blanks -->
+            <div class="my-auto max-w-3xl mx-auto">
+                <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-violet-300 dark:border-violet-700 shadow-2xl mb-8">
+                    <div id="sentence-container" class="text-lg md:text-2xl text-center leading-relaxed space-y-4">
+                        <!-- Sentence parts and drop zones will be here -->
+                    </div>
+                </div>
+
+                <!-- Words falling area -->
+                <div id="word-drop-area" class="h-48 relative overflow-hidden">
+                    <!-- Words will fall here -->
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-700 dark:text-slate-300 bg-white/90 dark:bg-slate-900/80 py-2 px-4 rounded-full w-fit mx-auto border border-slate-300 dark:border-slate-700 pointer-events-auto shadow-lg mb-4">
+                <i class="fa-solid fa-hand-pointer text-violet-500"></i> ลากคำศัพท์ไปใส่ในช่องว่าง
+            </div>
+        </div>
+
+        <!-- SCREEN 5: RESULT SCREEN -->
+        <div id="result-screen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-lg">
             <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center shadow-2xl space-y-6">
                 <div class="text-6xl animate-bounce" id="result-emoji">🏆</div>
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1" id="result-title">ภารกิจเสร็จสิ้น!</h2>
                     <p class="text-slate-600 dark:text-slate-400 text-sm" id="result-subtitle">สรุปผลการประเมินทักษะการใช้ยา</p>
                 </div>
-
                 <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-600 dark:text-slate-400">สถานการณ์ที่ทำสำเร็จ:</span>
+                        <span class="text-slate-600 dark:text-slate-400">จำนวนข้อ:</span>
                         <span id="res-total-q" class="font-bold text-sky-600 dark:text-sky-400">5 ข้อ</span>
                     </div>
                     <div class="flex justify-between items-center text-sm">
@@ -295,15 +414,13 @@
                         <span id="res-correct-q" class="font-bold text-emerald-600 dark:text-emerald-400">5 ข้อ</span>
                     </div>
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-600 dark:text-slate-400">พลังชีวิตชุมชนเหลือ:</span>
-                        <span id="res-hp" class="font-bold text-rose-600 dark:text-rose-400">100/100</span>
+                        <span class="text-slate-600 dark:text-slate-400">ความแม่นยำ:</span>
+                        <span id="res-accuracy" class="font-bold text-purple-600 dark:text-purple-400">100%</span>
                     </div>
                 </div>
-
                 <div class="p-3 bg-sky-100 dark:bg-sky-500/10 rounded-xl border border-sky-300 dark:border-sky-500/30 text-sky-800 dark:text-sky-300 font-bold text-sm" id="res-badge">
-                    🎖️ ระดับความเชี่ยวชาญ: เภสัชกรอัจฉริยะ
+                    🎖️ ระดับ: เภสัชกรอัจฉริยะ
                 </div>
-
                 <div class="flex gap-3">
                     <button onclick="restartGame()" class="flex-1 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow-lg transition">
                         <i class="fa-solid fa-rotate-right"></i> เล่นอีกครั้ง
@@ -315,8 +432,98 @@
             </div>
         </div>
 
-        <!-- SCREEN 4: TEACHER DASHBOARD -->
-        <div id="teacher-dashboard-screen" class="hidden absolute inset-0 z-50 p-4 md:p-8 bg-slate-100 dark:bg-slate-900 flex flex-col transition-colors">
+        <!-- SCREEN 6: STATISTICS DASHBOARD -->
+        <div id="statistics-screen" class="hidden absolute inset-0 z-50 p-4 md:p-8 bg-slate-100 dark:bg-slate-900 flex flex-col overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">📊 Dashboard สถิติ</h1>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">สถิติการแข่งขันและการเรียนรู้</p>
+                </div>
+                <button onclick="closeStatisticsDashboard()" class="bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 px-4 py-2 rounded-xl font-bold border border-slate-300 dark:border-slate-700 flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-times"></i> ปิด
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto w-full">
+                <!-- Single Player Stats -->
+                <div class="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                    <h2 class="text-xl font-bold text-sky-600 dark:text-sky-400 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user"></i> โหมดเดี่ยว
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">จำนวนครั้งที่เล่น</span>
+                            <span id="stat-single-games" class="text-2xl font-bold text-slate-800 dark:text-slate-200">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">คะแนนสูงสุด</span>
+                            <span id="stat-single-best" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">ความแม่นยำเฉลี่ย</span>
+                            <span id="stat-single-accuracy" class="text-2xl font-bold text-purple-600 dark:text-purple-400">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Stats -->
+                <div class="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                    <h2 class="text-xl font-bold text-rose-600 dark:text-rose-400 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> โหมดทีม
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">จำนวนครั้งที่เล่น</span>
+                            <span id="stat-team-games" class="text-2xl font-bold text-slate-800 dark:text-slate-200">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">ทีม A ชนะ</span>
+                            <span id="stat-team-a-wins" class="text-2xl font-bold text-sky-600 dark:text-sky-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span class="text-slate-600 dark:text-slate-400">ทีม B ชนะ</span>
+                            <span id="stat-team-b-wins" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Mode Stats -->
+                <div class="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl md:col-span-2">
+                    <h2 class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad"></i> สถิติตามโหมดเกม
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-4 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl text-white text-center">
+                            <div class="text-3xl font-bold" id="stat-mode-quiz">0</div>
+                            <div class="text-xs opacity-80">แบบทดสอบ</div>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl text-white text-center">
+                            <div class="text-3xl font-bold" id="stat-mode-balloon">0</div>
+                            <div class="text-xs opacity-80">เกมลูกโป่ง</div>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl text-white text-center">
+                            <div class="text-3xl font-bold" id="stat-mode-word">0</div>
+                            <div class="text-xs opacity-80">เกมเติมคำ</div>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white text-center">
+                            <div class="text-3xl font-bold" id="stat-mode-free">0</div>
+                            <div class="text-xs opacity-80">โหมดอิสระ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl md:col-span-2">
+                    <h2 class="text-xl font-bold text-amber-600 dark:text-amber-400 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> กราฟพัฒนาการ
+                    </h2>
+                    <canvas id="progress-chart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 7: TEACHER DASHBOARD -->
+        <div id="teacher-dashboard-screen" class="hidden absolute inset-0 z-50 p-4 md:p-8 bg-slate-100 dark:bg-slate-900 flex flex-col">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">👨‍🏫 Teacher Dashboard</h1>
@@ -327,40 +534,63 @@
                 </button>
             </div>
 
-            <div class="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 flex-grow overflow-hidden flex flex-col shadow-xl transition-colors">
-                <!-- Tab Navigation -->
-                <div class="flex border-b border-slate-200 dark:border-slate-800 mb-4 gap-2">
+            <div class="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 flex-grow overflow-hidden flex flex-col shadow-xl">
+                <div class="flex border-b border-slate-200 dark:border-slate-800 mb-4 gap-2 flex-wrap">
                     <button id="tab-btn-questions" onclick="switchTeacherTab('questions')" class="py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all">
-                        <i class="fa-solid fa-list-check"></i> คลังคำถาม (25 ข้อ)
+                        <i class="fa-solid fa-list-check"></i> คลังคำถาม
                     </button>
                     <button id="tab-btn-settings" onclick="switchTeacherTab('settings')" class="py-2 px-4 border-b-2 border-transparent font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
                         <i class="fa-solid fa-sliders"></i> ตั้งค่าระบบ
                     </button>
+                    <button id="tab-btn-import" onclick="switchTeacherTab('import')" class="py-2 px-4 border-b-2 border-transparent font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                        <i class="fa-solid fa-file-csv"></i> นำเข้าข้อสอบ CSV
+                    </button>
                 </div>
 
-                <!-- Tab 1: Questions Bank -->
                 <div id="tab-content-questions" class="flex-grow flex flex-col overflow-hidden">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">รายการคำถามทั้งหมดในคลัง (ตอนละ 5 ข้อ)</h2>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">รายการคำถามทั้งหมดในคลัง</h2>
                         <button onclick="resetToDefaultData()" class="text-red-600 dark:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs border border-red-500/30 transition">
                             <i class="fa-solid fa-rotate-left"></i> คืนค่าข้อสอบเริ่มต้น
                         </button>
                     </div>
-                    
-                    <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="question-list-container">
-                        <!-- Items rendered by JavaScript -->
-                    </div>
+                    <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="question-list-container"></div>
                 </div>
 
-                <!-- Tab 2: System Settings -->
                 <div id="tab-content-settings" class="hidden flex-grow overflow-y-auto p-2">
                     <form id="settings-form" onsubmit="saveGameSettings(event)" class="max-w-xl space-y-6">
+                        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-volume-high text-sky-500"></i> การตั้งค่าเสียง
+                            </h3>
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">เปิดใช้งานเสียงเอฟเฟกต์</label>
+                                <input type="checkbox" id="setting-enable-sound" class="w-5 h-5 accent-sky-500 cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-list-ol text-purple-500"></i> รูปแบบคำถาม
+                            </h3>
+                            <div class="flex gap-6">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="q-count" value="5" class="w-5 h-5 accent-sky-500">
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">5 ข้อ/ตอน</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="q-count" value="10" class="w-5 h-5 accent-sky-500">
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">10 ข้อ/ตอน</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
                             <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
                                 <i class="fa-solid fa-stopwatch text-sky-500"></i> กำหนดเวลาตอบคำถาม
                             </h3>
                             <div class="flex items-center justify-between">
-                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">เปิดใช้งานการนับถอยหลังต่อข้อ</label>
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">เปิดใช้งานการนับถอยหลัง</label>
                                 <input type="checkbox" id="setting-enable-timer" class="w-5 h-5 accent-sky-500 cursor-pointer" onchange="toggleTimerSettings()">
                             </div>
                             <div id="timer-duration-group" class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
@@ -369,330 +599,275 @@
                             </div>
                         </div>
 
-                        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
-                            <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-forward text-emerald-500"></i> การเปลี่ยนไปข้อถัดไป
-                            </h3>
-                            <div class="space-y-2">
-                                <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-sky-500/50">
-                                    <input type="radio" name="next-mode" value="auto" class="accent-sky-500" onchange="toggleNextModeSettings()">
-                                    <div>
-                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-200">เปลี่ยนข้อให้อัตโนมัติ (Auto Advance)</div>
-                                        <div class="text-xs text-slate-600 dark:text-slate-400">แสดงเฉลยแล้วข้ามไปข้อถัดไปตามเวลาที่กำหนด</div>
-                                    </div>
-                                </label>
-                                <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-sky-500/50">
-                                    <input type="radio" name="next-mode" value="manual" class="accent-sky-500" onchange="toggleNextModeSettings()">
-                                    <div>
-                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-200">ใช้นิ้วชี้ / คลิกเปลี่ยนข้อเอง (Manual)</div>
-                                        <div class="text-xs text-slate-600 dark:text-slate-400">ใช้นิ้วชี้ปุ่ม "ดำเนินการต่อ" บน SweetAlert เพื่อไปข้อถัดไป</div>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div id="auto-delay-group" class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
-                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">ระยะเวลาแสดงเฉลยก่อนเปลี่ยนข้อ (วินาที)</label>
-                                <input type="number" id="setting-auto-delay" min="1" max="30" class="w-24 p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-bold text-emerald-600 dark:text-emerald-400">
-                            </div>
-                        </div>
-
                         <button type="submit" class="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า
                         </button>
                     </form>
                 </div>
+
+                <div id="tab-content-import" class="hidden flex-grow overflow-y-auto p-2">
+                    <div class="max-w-2xl space-y-6">
+                        <div class="bg-gradient-to-br from-sky-50 to-emerald-50 dark:from-slate-900 dark:to-slate-800 p-6 rounded-2xl border border-sky-200 dark:border-slate-700">
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                                นำเข้าข้อสอบจากไฟล์ CSV
+                            </h3>
+                            <div class="space-y-4">
+                                <button onclick="downloadCSVTemplate()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-download"></i>
+                                    ดาวน์โหลดเทมเพลต CSV
+                                </button>
+                                <input type="file" id="csv-file-input" accept=".csv" 
+                                    class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-sm">
+                                <button onclick="importCSVFile()" class="w-full py-4 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-upload"></i>
+                                    นำเข้าข้อสอบ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        // Full Game Dataset (5 Episodes, 5 Questions Each = 25 Questions)
+        // === STATISTICS SYSTEM ===
+        const STATS_KEY = 'medicineGameStats_v1';
+        
+        function getStats() {
+            const saved = localStorage.getItem(STATS_KEY);
+            return saved ? JSON.parse(saved) : {
+                single: { games: 0, bestScore: 0, totalAccuracy: 0, totalGames: 0 },
+                team: { games: 0, teamAWins: 0, teamBWins: 0 },
+                modes: { quiz: 0, balloon: 0, word: 0, free: 0 },
+                history: []
+            };
+        }
+
+        function saveStats(stats) {
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        }
+
+        function updateStats(mode, gameMode, score, accuracy, isTeamMode = false, winningTeam = null) {
+            const stats = getStats();
+            
+            if (isTeamMode) {
+                stats.team.games++;
+                if (winningTeam === 'A') stats.team.teamAWins++;
+                else if (winningTeam === 'B') stats.team.teamBWins++;
+            } else {
+                stats.single.games++;
+                stats.single.totalGames++;
+                stats.single.totalAccuracy += accuracy;
+                if (score > stats.single.bestScore) {
+                    stats.single.bestScore = score;
+                }
+            }
+            
+            stats.modes[gameMode] = (stats.modes[gameMode] || 0) + 1;
+            stats.history.push({
+                date: new Date().toISOString(),
+                mode: gameMode,
+                score: score,
+                accuracy: accuracy
+            });
+            
+            // Keep only last 50 games
+            if (stats.history.length > 50) {
+                stats.history = stats.history.slice(-50);
+            }
+            
+            saveStats(stats);
+        }
+
+        function displayStatistics() {
+            const stats = getStats();
+            
+            // Single player stats
+            document.getElementById('stat-single-games').textContent = stats.single.games;
+            document.getElementById('stat-single-best').textContent = stats.single.bestScore;
+            const avgAccuracy = stats.single.games > 0 ? Math.round(stats.single.totalAccuracy / stats.single.games) : 0;
+            document.getElementById('stat-single-accuracy').textContent = avgAccuracy + '%';
+            
+            // Team stats
+            document.getElementById('stat-team-games').textContent = stats.team.games;
+            document.getElementById('stat-team-a-wins').textContent = stats.team.teamAWins;
+            document.getElementById('stat-team-b-wins').textContent = stats.team.teamBWins;
+            
+            // Mode stats
+            document.getElementById('stat-mode-quiz').textContent = stats.modes.quiz || 0;
+            document.getElementById('stat-mode-balloon').textContent = stats.modes.balloon || 0;
+            document.getElementById('stat-mode-word').textContent = stats.modes.word || 0;
+            document.getElementById('stat-mode-free').textContent = stats.modes.free || 0;
+            
+            // Chart
+            renderProgressChart(stats.history);
+        }
+
+        function renderProgressChart(history) {
+            const ctx = document.getElementById('progress-chart').getContext('2d');
+            
+            // Destroy existing chart if exists
+            if (window.progressChart) {
+                window.progressChart.destroy();
+            }
+            
+            const last10Games = history.slice(-10);
+            const labels = last10Games.map((g, i) => `เกม ${i + 1}`);
+            const scores = last10Games.map(g => g.score);
+            
+            window.progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'คะแนน',
+                        data: scores,
+                        borderColor: 'rgb(14, 165, 233)',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function openStatisticsDashboard() {
+            displayStatistics();
+            document.getElementById('statistics-screen').classList.remove('hidden');
+        }
+
+        function closeStatisticsDashboard() {
+            document.getElementById('statistics-screen').classList.add('hidden');
+        }
+
+        // === GAME MODE SYSTEM ===
+        let currentGameMode = 'quiz'; // quiz, balloon, word, free
+        
+        function setGameMode(mode) {
+            currentGameMode = mode;
+            
+            // Update UI
+            document.querySelectorAll('.game-mode-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-sky-400', 'scale-105');
+            });
+            document.getElementById(`mode-${mode}`).classList.add('ring-4', 'ring-sky-400', 'scale-105');
+        }
+
+        // === AUDIO SYSTEM ===
+        const audioAssets = {
+            correct: new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'),
+            wrong: new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3'),
+            tick: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
+            warning: new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'),
+            pop: new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3')
+        };
+        Object.values(audioAssets).forEach(a => { a.volume = 0.4; a.preload = 'auto'; });
+
+        function playSound(soundType) {
+            if (gameSettings.isMuted) return;
+            const audio = audioAssets[soundType];
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play blocked:", e));
+            }
+        }
+
+        function toggleMute() {
+            gameSettings.isMuted = !gameSettings.isMuted;
+            updateMuteUI();
+            localStorage.setItem('medGameSettings_v2', JSON.stringify(gameSettings));
+        }
+
+        function updateMuteUI() {
+            const icon = document.getElementById("mute-icon");
+            const text = document.getElementById("mute-text");
+            if (gameSettings.isMuted) {
+                icon.className = "fa-solid fa-volume-xmark text-slate-400";
+                text.textContent = "เสียง: ปิด";
+            } else {
+                icon.className = "fa-solid fa-volume-high text-sky-500";
+                text.textContent = "เสียง: เปิด";
+            }
+        }
+
+        // === REAL-TIME CLOCK ===
+        function updateRealtimeClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('th-TH', { 
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+            });
+            const clockElement = document.getElementById("clock-time");
+            if (clockElement) {
+                clockElement.textContent = timeString;
+                clockElement.parentElement.classList.remove('clock-tick');
+                void clockElement.parentElement.offsetWidth;
+                clockElement.parentElement.classList.add('clock-tick');
+            }
+        }
+        setInterval(updateRealtimeClock, 1000);
+        updateRealtimeClock();
+
+        // === GAME CONSTANTS ===
+        const STORAGE_VERSION = 'v7';
+        const EPISODES_STORAGE_KEY = `medGameEpisodes_${STORAGE_VERSION}`;
+
         const defaultAllEpisodes = {
             ep1: {
                 title: "ตอนที่ 1: เจ็บคอต้องกินยาอะไร?",
                 questions: [
-                    {
-                        id: "EP1_Q1",
-                        avatar: "🤒",
-                        speaker: "คุณนัด",
-                        story: "คุณนัดตื่นเช้ามาเจ็บคอและมีไข้เล็กน้อย นึกขึ้นได้ว่าในลิ้นชักมี 'ยาปฏิชีวนะ (Amoxicillin)' ที่เหลือจากคราวที่แล้ว",
-                        options: [
-                            { id: "A", text: "รีบแกะยาปฏิชีวนะกินเองทันที 2 เม็ด จะได้หายไวๆ", hpChange: -20, isCorrect: false, feedback: "การกินยาปฏิชีวนะพร่ำเพรื่อเพิ่มความเสี่ยงเชื้อดื้อยา! อาการเจ็บคอส่วนใหญ่เกิดจากไวรัส ไม่จำเป็นต้องใช้ยาปฏิชีวนะ" },
-                            { id: "B", text: "ไปพบแพทย์หรือเภสัชกรที่ร้านยา เพื่อประเมินว่าเกิดจากไวรัสหรือแบคทีเรีย", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ควรให้ผู้เชี่ยวชาญประเมินอาการก่อนใช้ยาปฏิชีวนะเสมอ" },
-                            { id: "C", text: "ซื้อยาแก้แพ้และยาแก้ไอมากินก่อน โดยไม่สนใจยาปฏิชีวนะ", hpChange: -10, isCorrect: false, feedback: "การบรรเทาอาการช่วยได้ แต่หากมีอาการรุนแรงควรปรึกษาแพทย์หรือเภสัชกร" }
-                        ]
-                    },
-                    {
-                        id: "EP1_Q2",
-                        avatar: "😷",
-                        speaker: "ผู้ป่วย",
-                        story: "รับยาปฏิชีวนะจากเภสัชกรมา ทานไปได้ 3 วันแล้วรู้สึกหายเจ็บคอเป็นปกติ ควรทำอย่างไรต่อ?",
-                        options: [
-                            { id: "A", text: "หยุดกินทันที เก็บยาที่เหลือไว้ใช้คราวหน้า", hpChange: -20, isCorrect: false, feedback: "ผิด! การหยุดยาปฏิชีวนะก่อนครบกำหนดทำให้เชื้อแบคทีเรียตายไม่หมด เกิดการดื้อยา!" },
-                            { id: "B", text: "รับประทานยาต่อจนหมดตามที่เภสัชกรจัดให้", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ต้องกินยาปฏิชีวนะให้ครบชุดตามสั่งแม้จะหายดีแล้ว เพื่อกำจัดเชื้อให้หมด" }
-                        ]
-                    },
-                    {
-                        id: "EP1_Q3",
-                        avatar: "👨‍พินิจ",
-                        speaker: "นักเรียน",
-                        story: "'ยาปฏิชีวนะ (Antibiotics)' ต่างจาก 'ยาแก้ปวด/ยาแก้ไข้' อย่างไร?",
-                        options: [
-                            { id: "A", text: "ยาปฏิชีวนะใช้ฆ่าเชื้อแบคทีเรีย ส่วนยาแก้ปวดช่วยลดไข้บรรเทาอาการ", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาปฏิชีวนะไม่ใช่ยาแก้ปวด และไม่มีฤทธิ์ลดไข้โดยตรง" },
-                            { id: "B", text: "เป็นยาชนิดเดียวกัน กินแทนกันได้ทุกกรณี", hpChange: -20, isCorrect: false, feedback: "ผิด! ยาสองชนิดนี้ทำหน้าที่คนละอย่างกันอย่างสิ้นเชิง" },
-                            { id: "C", text: "ยาปฏิชีวนะใช้รักษาโรคที่เกิดจากเชื้อไวรัสเท่านั้น", hpChange: -20, isCorrect: false, feedback: "ผิด! ยาปฏิชีวนะใช้รักษาโรคติดเชื้อแบคทีเรีย ไม่สามารถฆ่าเชื้อไวรัสได้" }
-                        ]
-                    },
-                    {
-                        id: "EP1_Q4",
-                        avatar: "🦠",
-                        speaker: "เภสัชกร",
-                        story: "วิกฤต 'เชื้อดื้อยา' (Superbugs) เกิดขึ้นจากสาเหตุหลักในข้อใด?",
-                        options: [
-                            { id: "A", text: "การกินยาปฏิชีวนะไม่ครบตามกำหนด หรือซื้อกินเองบ่อยเกินความจำเป็น", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! การใช้ยาปฏิชีวนะผิดวิธีเป็นสาเหตุหลักที่ทำให้เชื้อปรับตัวดื้อยา" },
-                            { id: "B", text: "การทานอาหารรสเผ็ดจัดเกินไป", hpChange: -15, isCorrect: false, feedback: "อาหารรสเผ็ดไม่ได้ทำให้แบคทีเรียดื้อยา" },
-                            { id: "C", text: "การไม่ออกกำลังกายตอนเช้า", hpChange: -15, isCorrect: false, feedback: "เชื้อดื้อยาเกิดจากการใช้ยาปฏิชีวนะผิดวิธี ไม่เกี่ยวกับยามเช้า" }
-                        ]
-                    },
-                    {
-                        id: "EP1_Q5",
-                        avatar: "🍵",
-                        speaker: "คุณหมอ",
-                        story: "หากแพทย์ประเมินว่าอาการเจ็บคอของคุณเกิดจาก 'หวัดไวรัส' ควรดูแลตัวเองอย่างไร?",
-                        options: [
-                            { id: "A", text: "พักผ่อน ดื่มน้ำอุ่นมากๆ กลั้วคอด้วยน้ำเกลือ และทานยาบรรเทาอาการตามแพทย์สั่ง", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! หวัดจากไวรัสร่างกายจะกำจัดได้เอง การพักผ่อนและดื่มน้ำอุ่นคือวิธีที่ดีที่สุด" },
-                            { id: "B", text: "ไปกว้านซื้อยาปฏิชีวนะตัวแรงที่สุดมารับประทานเองทันที", hpChange: -20, isCorrect: false, feedback: "ผิด! ยาปฏิชีวนะฉีดหรือกินไม่สามารถฆ่าเชื้อไวรัสไข้หวัดได้" }
-                        ]
-                    }
+                    { id: "EP1_Q1", avatar: "🤒", speaker: "เพื่อนนักเรียน", story: "เจ็บคอ มีน้ำมูก เป็นไข้หวัด ควรทำยังไงดี?", options: [ { id: "A", text: "พักผ่อน ดื่มน้ำอุ่นมากๆ", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! หวัดส่วนใหญ่หายเองได้" }, { id: "B", text: "รีบซื้อยาฆ่าเชื้อมากิน", hpChange: -20, isCorrect: false, feedback: "ผิดครับ! หวัดเกิดจากไวรัส" } ] }
                 ]
             },
-            ep2: {
-                title: "ตอนที่ 2: ยาชุดอันตราย",
+            ep7: {
+                title: "ตอนที่ 7: แบบทดสอบความรู้รอบด้าน",
                 questions: [
-                    {
-                        id: "EP2_Q1",
-                        avatar: "👵",
-                        speaker: "คุณยาย",
-                        story: "คุณยายปวดเข่ามาก มีคนแนะนำ 'ยาชุด' แผงละ 10 บาทจากตลาดนัด ที่กินแล้วหายปวดทันที",
-                        options: [
-                            { id: "A", text: "ซื้อให้คุณยายกิน เพราะสะดวกและหายปวดเร็ว", hpChange: -25, isCorrect: false, feedback: "อันตรายมาก! ยาชุดมักผสมสเตียรอยด์ ทำให้กระเพาะอาหารทะลุ กระดูกพรุน และไตพัง" },
-                            { id: "B", text: "ปฏิเสธและพาคุณยายไปตรวจที่สถานพยาบาล", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาชุดผิดกฎหมายและมีอันตรายสูงมาก ไม่ควรรับประทานเด็ดขาด" },
-                            { id: "C", text: "ให้คุณยายกินครึ่งเม็ดพอ จะได้ปลอดภัย", hpChange: -15, isCorrect: false, feedback: "ผิด! ถึงจะกินน้อย แต่สเตียรอยด์ไร้ฉลากในยาชุดก็สะสมและทำลายสุขภาพได้" }
-                        ]
-                    },
-                    {
-                        id: "EP2_Q2",
-                        avatar: "⚠️",
-                        speaker: "เภสัชกร",
-                        story: "เหตุใดผู้ที่รับประทาน 'ยาชุด' จึงรู้สึกว่าอาการปวดหายไปได้อย่างรวดเร็ว?",
-                        options: [
-                            { id: "A", text: "เพราะมักลักลอบผสม 'ยาสเตียรอยด์' ปริมาณสูงที่กดอาการไว้ชั่วคราว", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! สเตียรอยด์หลอกว่าหายปวด แต่ทำลายระบบภูมิคุ้มกันและอวัยวะภายในรุนแรง" },
-                            { id: "B", text: "เพราะเป็นยาสมุนไพรเข้มข้นแท้ 100%", hpChange: -20, isCorrect: false, feedback: "ผิด! ส่วนใหญ่เป็นยาเคมีอันตรายผสมรวมกันหลายเม็ด" },
-                            { id: "C", text: "เพราะมีวิตามินบำรุงเข่าเข้มข้น", hpChange: -20, isCorrect: false, feedback: "ผิด! ไม่ใช่วิตามิน แต่เป็นยาอันตรายควบคุมพิเศษ" }
-                        ]
-                    },
-                    {
-                        id: "EP2_Q3",
-                        avatar: "🏥",
-                        speaker: "คุณหมอ",
-                        story: "หากกิน 'ยาสเตียรอยด์สังเคราะห์' ในยาชุดต่อเนื่องเป็นเวลานาน จะส่งผลเสียอย่างไร?",
-                        options: [
-                            { id: "A", text: "กระดูกพรุน กระเพาะอาหารทะลุ หน้าบวมฉุ และไตพังเฉียบพลัน", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! สเตียรอยด์กัดกระเพาะอย่างรุนแรง และทำให้ต่อมหมวกไตหยุดทำงาน" },
-                            { id: "B", text: "ทำให้กล้ามเนื้อโตแข็งแรงเหมือนนักกีฬา", hpChange: -20, isCorrect: false, feedback: "ผิด! มันทำลายสุขภาพอย่างร้ายแรง" }
-                        ]
-                    },
-                    {
-                        id: "EP2_Q4",
-                        avatar: "🔍",
-                        speaker: "ชาวบ้าน",
-                        story: "ลักษณะข้อใดบ่งบอกได้ชัดเจนที่สุดว่าเป็น 'ยาชุดอันตราย'?",
-                        options: [
-                            { id: "A", text: "บรรจุหลายเม็ดในซองพลาสติก ไม่มีฉลากยา ไม่มีเลขทะเบียน อย.", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาชุดไร้ฉลากและไม่มี อย. ถือเป็นยาผิดกฎหมายอันตราย" },
-                            { id: "B", text: "ใส่ซองยาจากโรงพยาบาลพร้อมระบุชื่อผู้ป่วยและวิธีใช้ชัดเจน", hpChange: -15, isCorrect: false, feedback: "ยาจากโรงพยาบาลที่มีฉลากถูกต้องไม่ใช่ยาชุดอันตราย" }
-                        ]
-                    },
-                    {
-                        id: "EP2_Q5",
-                        avatar: "🚚",
-                        speaker: "หลานชาย",
-                        story: "มีรถเร่ขายยามาโฆษณาขายยาชุดอ้างสรรพคุณ 'แก้สารพัดโรค' ในหมู่บ้าน ควรทำอย่างไร?",
-                        options: [
-                            { id: "A", text: "แจ้งเตือนคนในชุมชนไม่ให้ซื้อ และแจ้งเบาะแสแก่ รพ.สต. หรือ อย.", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! การช่วยกันสอดส่องช่วยป้องกันไม่ให้คนในชุมชนตกเป็นเหยื่อยาชุด" },
-                            { id: "B", text: "ซื้อเก็บไว้หลายๆ ชุดเผื่อยามฉุกเฉิน", hpChange: -25, isCorrect: false, feedback: "ผิดอย่างยิ่ง! ยาชุดเร่ขายเป็นอันตรายถึงชีวิต" }
-                        ]
-                    }
-                ]
-            },
-            ep3: {
-                title: "ตอนที่ 3: ยาสามัญ & การลืมกินยา",
-                questions: [
-                    {
-                        id: "EP3_Q1",
-                        avatar: "👨‍💼",
-                        speaker: "วัยทำงาน",
-                        story: "คุณลืมกินยาลดความดันตอนเช้า มารู้ตัวอีกทีคือจะถึงมื้อเย็นแล้ว ควรทำอย่างไร?",
-                        options: [
-                            { id: "A", text: "รีบกินเบิ้ล 2 โดสทันที กลัวความดันขึ้น", hpChange: -25, isCorrect: false, feedback: "อันตรายมาก! ห้ามกินยาเบิ้ลโดสเด็ดขาด เพราะอาจทำให้ความดันตกวูบจนช็อกได้" },
-                            { id: "B", text: "ข้ามมื้อนั้นไป แล้วกินยาตามขนาดปกติในมื้อถัดไป", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ให้ทานขนาดเท่าเดิมในมื้อถัดไป ห้ามเพิ่มปริมาณยา" },
-                            { id: "C", text: "หยุดกินยาวันนี้ไปเลย ค่อยเริ่มใหม่พรุ่งนี้", hpChange: -15, isCorrect: false, feedback: "ยาลดความดันต้องกินต่อเนื่อง ควรทานมื้อเย็นตามปกติ" }
-                        ]
-                    },
-                    {
-                        id: "EP3_Q2",
-                        avatar: "🏠",
-                        speaker: "เภสัชกร",
-                        story: "คุณเพิ่งได้ยาน้ำแก้ไอมาใหม่ จะเก็บไว้ตรงไหนดีที่สุดในบ้าน?",
-                        options: [
-                            { id: "A", text: "วางไว้บนตู้กับข้าวใกล้เตาแก๊ส หยิบใช้ง่าย", hpChange: -20, isCorrect: false, feedback: "ความร้อนจากเตาแก๊สจะทำให้ยาเสื่อมสภาพอย่างรวดเร็ว" },
-                            { id: "B", text: "เก็บในตู้ยาพ้นแสงแดด และอุณหภูมิห้องปกติ", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ควรเก็บในที่แห้ง พ้นแสงแดด และพ้นมือเด็ก" },
-                            { id: "C", text: "เก็บในห้องน้ำเพราะเย็นดี", hpChange: -15, isCorrect: false, feedback: "ห้องน้ำมีความชื้นสูง ทำให้ยาชื้นและขึ้นราได้ง่าย" }
-                        ]
-                    },
-                    {
-                        id: "EP3_Q3",
-                        avatar: "🟢",
-                        speaker: "คุณแม่",
-                        story: "สัญลักษณ์ใดบนฉลากยาที่บ่งบอกว่าเป็น 'ยาสามัญประจำบ้าน' ที่ประชาชนซื้อใช้เองได้ปลอดภัย?",
-                        options: [
-                            { id: "A", text: "รูปสี่เหลี่ยมสีเขียว มีข้อความ 'ยาสามัญประจำบ้าน' ชัดเจน", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาสามัญประจำบ้านจะมีสัญลักษณ์สี่เหลี่ยมสีเขียวระบุชัดเจน" },
-                            { id: "B", text: "รูปดาวสีฟ้า 5 ดวง", hpChange: -10, isCorrect: false, feedback: "ผิด! ไม่ใช่สัญลักษณ์มาตรฐานของยาสามัญประจำบ้าน" }
-                        ]
-                    },
-                    {
-                        id: "EP3_Q4",
-                        avatar: "💊",
-                        speaker: "ผู้ป่วย",
-                        story: "ยาเม็ดที่เก็บไว้ในตู้ยาเปลี่ยนสี ชื้นเยิ้ม หรือเยิ้มติดกัน ควรจัดการอย่างไร?",
-                        options: [
-                            { id: "A", text: "ทิ้งทันที ไม่นำมารับประทานเด็ดขาด", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาที่เปลี่ยนสีหรือชื้นถือว่าเสื่อมสภาพ อาจเกิดพิษหากรับประทาน" },
-                            { id: "B", text: "เอาไปตากแดดให้แห้งแล้วนำกลับมากินใหม่", hpChange: -20, isCorrect: false, feedback: "ผิด! แสงแดดและความร้อนยิ่งทำลายตัวยาและสร้างสารพิษ" }
-                        ]
-                    },
-                    {
-                        id: "EP3_Q5",
-                        avatar: "👁️",
-                        speaker: "คุณตา",
-                        story: "ยาหยอดตาหลังเปิดใช้งานครั้งแรกแล้ว โดยทั่วไปเก็บไว้ใช้ได้นานที่สุดเท่าใด?",
-                        options: [
-                            { id: "A", text: "ไม่เกิน 1 เดือน (30 วัน) หลังเปิดใช้งาน", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาหยอดตาเมื่อเปิดแล้วจะสูญเสียความไร้เชื้อ ควรทิ้งหลัง 1 เดือน" },
-                            { id: "B", text: "เก็บไว้ใช้ได้นาน 2 ปีจนกว่าจะหมดขวด", hpChange: -20, isCorrect: false, feedback: "ผิดอย่างยิ่ง! อาจเกิดการสะสมเชื้อโรคจนทำให้ตาติดเชื้อรุนแรง" }
-                        ]
-                    }
-                ]
-            },
-            ep4: {
-                title: "ตอนที่ 4: ความเชื่อ vs ความจริง",
-                questions: [
-                    {
-                        id: "EP4_Q1",
-                        avatar: "👦",
-                        speaker: "เด็กน้อย",
-                        story: "โดนน้ำร้อนลวกที่แขนเป็นแผลแดง มีคนแนะนำให้ทายาสีฟันดับร้อน ควรทำอย่างไร?",
-                        options: [
-                            { id: "A", text: "ทายาสีฟันหนาๆ ทันทีเพื่อดับความร้อน", hpChange: -20, isCorrect: false, feedback: "ผิด! ยาสีฟันจะระงับความร้อนไม่ได้ และหมักหมมจนติดเชื้อแบคทีเรียรุนแรง" },
-                            { id: "B", text: "ล้างด้วยน้ำสะอาดอุณหภูมิห้อง 10-15 นาที แล้วปิดผ้าสะอาด", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! การใช้น้ำสะอาดไหลผ่านจะช่วยระบายความร้อนและปลอดภัยที่สุด" }
-                        ]
-                    },
-                    {
-                        id: "EP4_Q2",
-                        avatar: "🥛",
-                        speaker: "นักเรียน",
-                        story: "รับประทานยาพร้อมกับนมสดหรือน้ำอัดลม จะช่วยให้ยาออกฤทธิ์ดีขึ้นจริงหรือไม่?",
-                        options: [
-                            { id: "A", text: "จริง นมช่วยกัดกร่อนเม็ดยาให้ย่อยเร็วขึ้น", hpChange: -20, isCorrect: false, feedback: "ผิด! แคลเซียมในนมจะไปจับกับตัวยา ทำให้ร่างกายดูดซึมยาไม่ได้" },
-                            { id: "B", text: "ไม่จริง ควรทานยาคู่กับน้ำสะอาดอุณหภูมิปกติ", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! น้ำสะอาดคือสิ่งที่ดีที่สุดในการทานยา" }
-                        ]
-                    },
-                    {
-                        id: "EP4_Q3",
-                        avatar: "🤯",
-                        speaker: "เพื่อนบ้าน",
-                        story: "'ทานยาพาราเซตามอลดักไว้ก่อนปวดหัว จะช่วยป้องกันไม่ให้ป่วยได้' ความเชื่อนี้ถูกต้องหรือไม่?",
-                        options: [
-                            { id: "A", text: "ไม่จริง! ยาพาราใช้บรรเทาอาการเมื่อมีอาการแล้วเท่านั้น กินดักไม่ได้", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ยาพาราไม่มีฤทธิ์ป้องกันโรค การทานดักมีแต่เพิ่มพิษต่อตับ" },
-                            { id: "B", text: "จริง กินดักไว้ก่อนจะช่วยให้ร่างกายสร้างภูมิคุ้มกัน", hpChange: -20, isCorrect: false, feedback: "ผิด! พาราเซตามอลไม่ใช่ยารักษาภูมิคุ้มกัน" }
-                        ]
-                    },
-                    {
-                        id: "EP4_Q4",
-                        avatar: "🩹",
-                        speaker: "นักกีฬา",
-                        story: "เมื่อเกิดแผลสดถลอก ควรเทแอลกอฮอล์ 70% ราดลงบนเนื้อแผลสดโดยตรงหรือไม่?",
-                        options: [
-                            { id: "A", text: "ไม่ควร! ให้ใช้น้ำเกลือล้างแผลสด ส่วนแอลกอฮอล์ใช้เช็ดรอบๆ แผลเท่านั้น", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! แอลกอฮอล์ราดบนแผลสดจะทำลายเนื้อเยื่อและทำให้แผลหายช้า" },
-                            { id: "B", text: "ควรเทราดสดๆ ยิ่งแสบยิ่งแปลว่าแผลสะอาด", hpChange: -15, isCorrect: false, feedback: "ผิด! ความแสบร้อนเกิดจากแอลกอฮอล์ทำลายเซลล์เนื้อเยื่อ" }
-                        ]
-                    },
-                    {
-                        id: "EP4_Q5",
-                        avatar: "🍾",
-                        speaker: "เภสัชกร",
-                        story: "'ยาน้ำแขวนตะกอนสำหรับเด็ก ต้องเขย่าขวดก่อนรินยาเสมอ' ความเชื่อนี้ถูกต้องหรือไม่?",
-                        options: [
-                            { id: "A", text: "ถูกต้อง! เพื่อให้ตัวยากระจายตัวสม่ำเสมอ ได้รับปริมาณยาถูกต้อง", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! หากไม่เขย่า ยาจะนอนตระกอน ทำให้ได้แต่น้ำปรุงแต่ง" },
-                            { id: "B", text: "ไม่จริง การเขย่าจะทำให้ยาเสื่อมคุณภาพ", hpChange: -15, isCorrect: false, feedback: "ผิด! ยาน้ำแขวนตะกอนต้องเขย่าขวดก่อนรินยาทุกครั้ง" }
-                        ]
-                    }
-                ]
-            },
-            ep5: {
-                title: "ตอนที่ 5: อันตรายจากการใช้ยา",
-                questions: [
-                    {
-                        id: "EP5_Q1",
-                        avatar: "👶",
-                        speaker: "ผู้ปกครอง",
-                        story: "เด็กอายุ 3 ขวบมีไข้สูง ควรป้อนยาลดไข้พาราเซตามอลอย่างไรจึงจะปลอดภัย?",
-                        options: [
-                            { id: "A", text: "คำนวณปริมาณยาตามน้ำหนักตัวเด็ก และเว้นระยะ 4-6 ชั่วโมง", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! การให้ยาพาราเซตามอลในเด็กต้องใช้น้ำหนักตัวคำนวณความเข้มข้นเสมอ" },
-                            { id: "B", text: "ป้อนครั้งละ 1 เม็ดเท่าผู้ใหญ่ ไข้จะได้ลดทันที", hpChange: -30, isCorrect: false, feedback: "อันตรายรุนแรง! การให้ยาเกินขนาดในเด็กทำให้ตับวายเฉียบพลันถึงชีวิต!" },
-                            { id: "C", text: "ป้อนยาทุกๆ 1 ชั่วโมงเรื่อยๆ จนกว่าไข้จะลด", hpChange: -25, isCorrect: false, feedback: "ผิด! ห้ามป้อนถี่เกินไป ต้องเว้นอย่างน้อย 4 ชั่วโมง" }
-                        ]
-                    },
-                    {
-                        id: "EP5_Q2",
-                        avatar: "💊",
-                        speaker: "ผู้ป่วย",
-                        story: "ยาแก้ปวดกลุ่ม NSAIDs (เช่น Ibuprofen) ควรรับประทานอย่างไร?",
-                        options: [
-                            { id: "A", text: "รับประทานตอนท้องว่างจะได้ดูดซึมเร็ว", hpChange: -20, isCorrect: false, feedback: "อันตราย! NSAIDs มีฤทธิ์กัดกระเพาะอาหารอย่างรุนแรง ห้ามกินตอนท้องว่าง" },
-                            { id: "B", text: "รับประทานหลังอาหารทันที และดื่มน้ำตามมากๆ", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ต้องทานหลังอาหารทันทีเพื่อลดการระคายเคืองกระเพาะอาหาร" }
-                        ]
-                    },
-                    {
-                        id: "EP5_Q3",
-                        avatar: "⚖️",
-                        speaker: "คุณหมอ",
-                        story: "ผู้ใหญ่รับประทานยาพาราเซตามอล (500 มก.) อย่างไรจึงจะไม่เป็นพิษต่อตับ?",
-                        options: [
-                            { id: "A", text: "ครั้งละ 1-2 เม็ด ทานห่างกันอย่างน้อย 4-6 ชั่วโมง และห้ามเกิน 8 เม็ด/วัน", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! ปริมาณพาราเซตามอลสูงสุดในผู้ใหญ่คือไม่เกิน 4,000 มก. (8 เม็ด) ต่อวัน" },
-                            { id: "B", text: "ทานครั้งละ 4 เม็ด ทุกๆ 2 ชั่วโมง เมื่อมีไข้สูง", hpChange: -25, isCorrect: false, feedback: "อันตรายมาก! รับประทานมากเกินไปทำลายเซลล์ตับวาย" }
-                        ]
-                    },
-                    {
-                        id: "EP5_Q4",
-                        avatar: "🚨",
-                        speaker: "ผู้ป่วย",
-                        story: "หากทานยาแล้วเกิดอาการผื่นขึ้นทั่วตัว ตาบวม ปากบวม หายใจแน่นติดขัด ถือเป็นสัญญาณของอะไร?",
-                        options: [
-                            { id: "A", text: "อาการแพ้ยารุนแรง (Anaphylaxis) ต้องหยุดยาทันทีและรีบไปพบแพทย์", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! นี่คือสัญญาณแพ้ยารุนแรง อันตรายถึงชีวิต ต้องรีบไปโรงพยาบาล" },
-                            { id: "B", text: "ยาคุ้มกันโรคกำลังออกฤทธิ์อย่างเต็มที่ ให้กินยาเพิ่ม", hpChange: -30, isCorrect: false, feedback: "อันตรายมาก! ห้ามกินยาเพิ่มเด็ดขาด นี่คืออาการแพ้ยา" }
-                        ]
-                    },
-                    {
-                        id: "EP5_Q5",
-                        avatar: "🚗",
-                        speaker: "เภสัชกร",
-                        story: "ข้อระวังสำคัญที่สุดในการรับประทาน 'ยาแก้แพ้ชนิดง่วงนอน' (เช่น CPM) คืออะไร?",
-                        options: [
-                            { id: "A", text: "หลีกเลี่ยงการขับขี่ยานพาหนะ หรือการทำงานกับเครื่องจักรกล", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง! อาการง่วงซึมจากยาแก้แพ้อาจก่อให้เกิดอุบัติเหตุร้ายแรงได้" },
-                            { id: "B", text: "รับประทานร่วมกับเครื่องดื่มแอลกอฮอล์เพื่อผ่อนคลาย", hpChange: -25, isCorrect: false, feedback: "อันตราย! แอลกอฮอล์จะกดประสาทร่วมกับยาแก้แพ้จนหยุดหายใจได้" }
-                        ]
-                    }
+                    { id: "EP7_Q1", avatar: "💊", speaker: "คุณครู", story: "ยามีไว้เพื่ออะไร?", options: [ { id: "A", text: "รักษาโรค", hpChange: 0, isCorrect: true, feedback: "ถูกต้อง!" }, { id: "B", text: "เพิ่มความสูง", hpChange: -20, isCorrect: false, feedback: "ผิดครับ!" } ] }
                 ]
             }
         };
+
+        // Balloon Game Data
+        const balloonData = [
+            { text: "พาราเซตามอล", type: "safe", emoji: "💊" },
+            { text: "ยาชุด", type: "danger", emoji: "⚠️" },
+            { text: "ยาสามัญ", type: "safe", emoji: "🟢" },
+            { text: "สเตียรอยด์", type: "danger", emoji: "🔴" },
+            { text: "น้ำเกลือ", type: "safe", emoji: "" },
+            { text: "ยาปฏิชีวนะ", type: "safe", emoji: "💉" },
+            { text: "ยาไม่มีฉลาก", type: "danger", emoji: "❌" },
+            { text: "วิตามิน", type: "safe", emoji: "🍊" }
+        ];
+
+        // Word Drop Game Data
+        const wordGameData = [
+            {
+                sentence: "ยา______ ใช้ลดไข้และแก้ปวด",
+                correctWord: "พาราเซตามอล",
+                words: ["พาราเซตามอล", "ยาฆ่าเชื้อ", "วิตามิน", "สเตียรอยด์"]
+            },
+            {
+                sentence: "ควรเก็บยาไว้ในที่______ และพ้นมือเด็ก",
+                correctWord: "แห้ง",
+                words: ["แห้ง", "ชื้น", "ร้อน", "มืด"]
+            },
+            {
+                sentence: "ยา______ ไม่ควรซื้อกินเอง",
+                correctWord: "ปฏิชีวนะ",
+                words: ["ปฏิชีวนะ", "สามัญ", "วิตามิน", "สมุนไพร"]
+            }
+        ];
 
         let allEpisodesData = {};
         let activeGameData = [];
@@ -707,11 +882,15 @@
             enableTimer: false,
             timerDuration: 15,
             autoAdvance: true,
-            autoAdvanceDelay: 3
+            autoAdvanceDelay: 3,
+            questionsPerEpisode: 10,
+            optionsPerQuestion: 2,
+            isMuted: false
         };
 
         let questionTimerInterval = null;
         let timeLeft = 0;
+        let maxTime = 15;
 
         let playMode = 'single';
         let teamScore = { A: 0, B: 0 };
@@ -720,6 +899,20 @@
             A: { targetButton: null, hoverStartTime: 0, isSelecting: false },
             B: { targetButton: null, hoverStartTime: 0, isSelecting: false }
         };
+
+        // Balloon Game Variables
+        let balloonScore = 0;
+        let balloonTimer = 60;
+        let balloonInterval = null;
+        let activeBalloons = [];
+        let draggedBalloon = null;
+
+        // Word Game Variables
+        let wordScore = 0;
+        let currentWordIndex = 0;
+        let wordInterval = null;
+        let activeWords = [];
+        let draggedWord = null;
 
         let handLandmarker = undefined;
         let webcamRunning = false;
@@ -739,8 +932,7 @@
 
         function toggleTheme() {
             const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            applyTheme(newTheme);
+            applyTheme(isDark ? 'light' : 'dark');
         }
 
         function applyTheme(theme) {
@@ -754,20 +946,6 @@
                 if (themeBtnText) themeBtnText.textContent = "โหมดมืด";
             }
             localStorage.setItem('medGameTheme', theme);
-        }
-
-        function setPlayMode(mode) {
-            playMode = mode;
-            const btnSingle = document.getElementById("btn-mode-single");
-            const btnTeam = document.getElementById("btn-mode-team");
-            
-            if (mode === 'single') {
-                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105";
-                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105";
-            } else {
-                btnTeam.className = "flex-1 py-3 rounded-xl font-bold border-2 border-sky-400 bg-sky-500/20 text-sky-700 dark:text-sky-300 transition-all shadow-lg scale-105";
-                btnSingle.className = "flex-1 py-3 rounded-xl font-bold border-2 border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all shadow-lg hover:scale-105";
-            }
         }
 
         function selectEpisode(epKey) {
@@ -785,18 +963,17 @@
 
         async function initializeApp() {
             loadGameSettings();
+            updateMuteUI();
 
-            const savedData = localStorage.getItem('medGameEpisodes_v6');
+            const savedData = localStorage.getItem(EPISODES_STORAGE_KEY);
             if (savedData) {
                 try {
                     allEpisodesData = JSON.parse(savedData);
                 } catch(e) {
                     allEpisodesData = JSON.parse(JSON.stringify(defaultAllEpisodes));
-                    localStorage.setItem('medGameEpisodes_v6', JSON.stringify(allEpisodesData));
                 }
             } else {
                 allEpisodesData = JSON.parse(JSON.stringify(defaultAllEpisodes));
-                localStorage.setItem('medGameEpisodes_v6', JSON.stringify(allEpisodesData));
             }
 
             const canvasElement = document.getElementById("output_canvas");
@@ -806,7 +983,6 @@
                 const visionModule = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3");
                 const FilesetResolver = visionModule.FilesetResolver;
                 const HandLandmarker = visionModule.HandLandmarker;
-
                 const vision = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
                 );
@@ -818,7 +994,6 @@
                     runningMode: "VIDEO",
                     numHands: 6
                 });
-                console.log("MediaPipe HandLandmarker loaded successfully.");
             } catch (error) {
                 console.error("Error initializing MediaPipe:", error);
             }
@@ -835,25 +1010,23 @@
 
         function saveGameSettings(e) {
             if(e) e.preventDefault();
+            gameSettings.isMuted = !document.getElementById("setting-enable-sound").checked;
             gameSettings.enableTimer = document.getElementById("setting-enable-timer").checked;
             gameSettings.timerDuration = parseInt(document.getElementById("setting-timer-duration").value) || 15;
             
-            const nextMode = document.querySelector('input[name="next-mode"]:checked').value;
-            gameSettings.autoAdvance = (nextMode === 'auto');
-            gameSettings.autoAdvanceDelay = parseInt(document.getElementById("setting-auto-delay").value) || 3;
+            const qCount = document.querySelector('input[name="q-count"]:checked').value;
+            gameSettings.questionsPerEpisode = parseInt(qCount) || 10;
 
             localStorage.setItem('medGameSettings_v2', JSON.stringify(gameSettings));
+            updateMuteUI();
             
-            const isDark = document.documentElement.classList.contains('dark');
             Swal.fire({
                 icon: 'success',
                 title: 'บันทึกการตั้งค่าสำเร็จ',
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
-                timer: 2000,
-                background: isDark ? '#1e293b' : '#ffffff',
-                color: isDark ? '#ffffff' : '#0f172a'
+                timer: 2000
             });
         }
 
@@ -863,35 +1036,16 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'กำลังโหลดระบบ AR...',
-                    text: 'กรุณารอสักครู่แล้วลองใหม่อีกครั้ง',
+                    text: 'กรุณารอสักครู่',
                     background: isDark ? '#1e293b' : '#ffffff',
                     color: isDark ? '#ffffff' : '#0f172a'
                 });
                 return;
             }
 
-            // Prepare game question data
-            if (currentMode === 'survival') {
-                activeGameData = [];
-                Object.keys(allEpisodesData).forEach(key => {
-                    activeGameData.push(...allEpisodesData[key].questions);
-                });
-                activeGameData.sort(() => Math.random() - 0.5);
-            } else {
-                activeGameData = allEpisodesData[currentMode] ? [...allEpisodesData[currentMode].questions] : [];
-            }
+            playSound('correct'); 
+            setTimeout(() => { audioAssets.correct.pause(); audioAssets.correct.currentTime = 0; }, 100);
 
-            if (activeGameData.length === 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ไม่พบคำถามในตอนที่เลือก',
-                    background: isDark ? '#1e293b' : '#ffffff',
-                    color: isDark ? '#ffffff' : '#0f172a'
-                });
-                return;
-            }
-
-            // Request camera
             const video = document.getElementById("webcam");
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -901,220 +1055,449 @@
                 video.addEventListener("loadeddata", predictWebcam);
                 webcamRunning = true;
             } catch (err) {
-                console.error("Camera access error:", err);
                 Swal.fire({
                     icon: 'error',
                     title: 'เปิดกล้องไม่สำเร็จ',
-                    text: 'กรุณาอนุญาตการใช้งานกล้องในเบราว์เซอร์ และเรียกผ่าน HTTPS หรือ localhost',
+                    text: 'กรุณาอนุญาตการใช้งานกล้อง',
                     background: isDark ? '#1e293b' : '#ffffff',
                     color: isDark ? '#ffffff' : '#0f172a'
                 });
                 return;
             }
 
-            // Setup UI for gameplay
+            // Hide all screens
             document.getElementById("start-screen").classList.add("hidden");
-            document.getElementById("game-screen").classList.remove("hidden");
-            document.getElementById("game-screen").classList.add("flex");
-            document.getElementById("webcam").classList.remove("hidden");
-
-            if (playMode === 'team') {
-                document.getElementById("hud-single-hp").classList.add("hidden");
-                document.getElementById("hud-team-score").classList.remove("hidden");
-                teamScore = { A: 0, B: 0 };
-                updateTeamScores();
-            } else {
-                document.getElementById("hud-single-hp").classList.remove("hidden");
-                document.getElementById("hud-team-score").classList.add("hidden");
+            
+            // Show appropriate game screen
+            if (currentGameMode === 'quiz') {
+                document.getElementById("game-screen").classList.remove("hidden");
+                document.getElementById("game-screen").classList.add("flex");
+                startQuizGame();
+            } else if (currentGameMode === 'balloon') {
+                document.getElementById("balloon-game-screen").classList.remove("hidden");
+                document.getElementById("balloon-game-screen").classList.add("flex");
+                startBalloonGame();
+            } else if (currentGameMode === 'word') {
+                document.getElementById("word-game-screen").classList.remove("hidden");
+                document.getElementById("word-game-screen").classList.add("flex");
+                startWordGame();
+            } else if (currentGameMode === 'free') {
+                document.getElementById("game-screen").classList.remove("hidden");
+                document.getElementById("game-screen").classList.add("flex");
+                startFreePlayGame();
             }
 
-            // Reset stats
+            document.getElementById("webcam").classList.remove("hidden");
+        }
+
+        function startQuizGame() {
+            const qLimit = gameSettings.questionsPerEpisode || 10;
+            
+            if (currentMode === 'survival') {
+                activeGameData = [];
+                Object.keys(allEpisodesData).forEach(key => {
+                    activeGameData.push(...allEpisodesData[key].questions);
+                });
+                activeGameData = shuffleArray(activeGameData).slice(0, qLimit);
+            } else {
+                const episodeQuestions = allEpisodesData[currentMode]?.questions || [];
+                activeGameData = shuffleArray(episodeQuestions).slice(0, Math.min(qLimit, episodeQuestions.length));
+            }
+
             hp = 100;
             correctAnswersCount = 0;
             currentQuestionIndex = 0;
             isGameActive = true;
             updateHPBar();
-
             showQuestion();
         }
 
-        async function predictWebcam() {
-            const video = document.getElementById("webcam");
-            const canvasElement = document.getElementById("output_canvas");
-
-            if (canvasElement.width !== video.clientWidth || canvasElement.height !== video.clientHeight) {
-                canvasElement.width = video.clientWidth;
-                canvasElement.height = video.clientHeight;
-            }
-
-            canvasCtx.save();
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-            if (playMode === 'team') {
-                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                canvasCtx.setLineDash([10, 10]);
-                canvasCtx.lineWidth = 2;
-                canvasCtx.beginPath();
-                canvasCtx.moveTo(canvasElement.width / 2, 0);
-                canvasCtx.lineTo(canvasElement.width / 2, canvasElement.height);
-                canvasCtx.stroke();
-                canvasCtx.setLineDash([]);
-            }
-
-            let startTimeMs = performance.now();
-            if (lastVideoTime !== video.currentTime) {
-                lastVideoTime = video.currentTime;
-                const results = handLandmarker.detectForVideo(video, startTimeMs);
-
-                if (results.landmarks && results.landmarks.length > 0) {
-                    for (let i = 0; i < results.landmarks.length; i++) {
-                        const landmarks = results.landmarks[i];
-                        const indexTip = landmarks[8];
-
-                        // Convert coordinates (mirror corrected)
-                        const cursorX = (1 - indexTip.x) * canvasElement.width;
-                        const cursorY = indexTip.y * canvasElement.height;
-
-                        let team = 'single';
-                        if (playMode === 'team') {
-                            team = (cursorX < canvasElement.width / 2) ? 'A' : 'B';
-                        }
-
-                        drawCursor(cursorX, cursorY, team);
-                        checkButtonIntersection(cursorX, cursorY, team);
-                    }
-                } else {
-                    resetHover('single');
-                    resetHover('A');
-                    resetHover('B');
-                }
-            }
-            canvasCtx.restore();
-
-            if (webcamRunning) {
-                animationFrameId = requestAnimationFrame(predictWebcam);
-            }
+        function startFreePlayGame() {
+            gameSettings.enableTimer = false;
+            startQuizGame();
         }
 
-        function drawCursor(x, y, team) {
-            let glowColor = "#38bdf8";
-            if (team === 'A') glowColor = "#60a5fa";
-            if (team === 'B') glowColor = "#f87171";
-
-            const settings = teamHoverSettings[team];
+        function startBalloonGame() {
+            balloonScore = 0;
+            balloonTimer = 60;
+            activeBalloons = [];
+            updateBalloonScore();
+            updateBalloonTimer();
             
-            canvasCtx.beginPath();
-            canvasCtx.arc(x, y, 16, 0, 2 * Math.PI);
-            canvasCtx.fillStyle = glowColor;
-            canvasCtx.shadowColor = glowColor;
-            canvasCtx.shadowBlur = 15;
-            canvasCtx.fill();
-
-            // Draw progress hover ring if target selected
-            if (settings && settings.targetButton && settings.hoverStartTime > 0) {
-                const elapsed = performance.now() - settings.hoverStartTime;
-                const progress = Math.min(elapsed / 1000, 1.0);
-
-                canvasCtx.beginPath();
-                canvasCtx.arc(x, y, 26, -Math.PI / 2, (-Math.PI / 2) + (Math.PI * 2 * progress));
-                canvasCtx.strokeStyle = "#10b981";
-                canvasCtx.lineWidth = 6;
-                canvasCtx.stroke();
-            }
-        }
-
-        function checkButtonIntersection(cursorX, cursorY, team) {
-            const btnA = document.getElementById("btn-option-a");
-            const btnB = document.getElementById("btn-option-b");
-            const btnC = document.getElementById("btn-option-c");
-            const btnSwal = document.getElementById("btn-swal-confirm") || document.querySelector('.swal2-confirm');
-
-            let hitButton = null;
-            const isInside = (x, y, rect) => rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-
-            if (btnSwal && Swal.isVisible()) {
-                if (isInside(cursorX, cursorY, btnSwal.getBoundingClientRect())) hitButton = btnSwal;
-            } else {
-                if (isInside(cursorX, cursorY, btnA.getBoundingClientRect()) && !btnA.classList.contains('hidden')) hitButton = btnA;
-                else if (isInside(cursorX, cursorY, btnB.getBoundingClientRect()) && !btnB.classList.contains('hidden')) hitButton = btnB;
-                else if (isInside(cursorX, cursorY, btnC.getBoundingClientRect()) && !btnC.classList.contains('hidden')) hitButton = btnC;
-            }
-
-            const settings = teamHoverSettings[team];
-
-            if (hitButton) {
-                if (settings.targetButton === hitButton) {
-                    const elapsed = performance.now() - settings.hoverStartTime;
-                    const progress = Math.min(elapsed / 1000, 1.0);
-
-                    // Update button UI visual indicator
-                    updateButtonProgressUI(hitButton, progress);
-
-                    if (elapsed >= 1000 && !settings.isSelecting) {
-                        settings.isSelecting = true;
-                        
-                        if (hitButton === btnSwal) {
-                            Swal.clickConfirm();
-                        } else {
-                            let choice = "A";
-                            if (hitButton.id === "btn-option-b") choice = "B";
-                            if (hitButton.id === "btn-option-c") choice = "C";
-                            handleAnswer(choice, team);
-                        }
-                    }
-                } else {
-                    resetHover(team);
-                    settings.targetButton = hitButton;
-                    settings.hoverStartTime = performance.now();
-                    updateButtonProgressUI(hitButton, 0);
-                }
-            } else {
-                resetHover(team);
-            }
-        }
-
-        function updateButtonProgressUI(btn, progress) {
-            if (!btn) return;
+            // Start spawning balloons
+            balloonInterval = setInterval(spawnBalloon, 2000);
             
-            let key = '';
-            if (btn.id === 'btn-option-a') key = 'a';
-            else if (btn.id === 'btn-option-b') key = 'b';
-            else if (btn.id === 'btn-option-c') key = 'c';
+            // Start timer
+            const timerInterval = setInterval(() => {
+                balloonTimer--;
+                updateBalloonTimer();
+                if (balloonTimer <= 0) {
+                    clearInterval(timerInterval);
+                    endBalloonGame();
+                }
+            }, 1000);
+        }
 
-            if (key) {
-                const progressBar = document.getElementById(`progress-bar-${key}`);
-                const badge = document.getElementById(`badge-hover-${key}`);
+        function spawnBalloon() {
+            if (!isGameActive) return;
+            
+            const container = document.getElementById('balloon-container');
+            const balloonDataItem = balloonData[Math.floor(Math.random() * balloonData.length)];
+            
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon absolute w-20 h-24 bg-gradient-to-b from-pink-400 to-pink-600 rounded-full shadow-lg flex flex-col items-center justify-center cursor-pointer select-none';
+            balloon.style.left = Math.random() * (container.offsetWidth - 80) + 'px';
+            balloon.style.animationDuration = (8 + Math.random() * 4) + 's';
+            balloon.dataset.type = balloonDataItem.type;
+            balloon.dataset.text = balloonDataItem.text;
+            
+            balloon.innerHTML = `
+                <div class="text-3xl mb-1">${balloonDataItem.emoji}</div>
+                <div class="text-white text-xs font-bold text-center px-2">${balloonDataItem.text}</div>
+                <div class="absolute -bottom-2 w-1 h-4 bg-pink-400"></div>
+            `;
+            
+            // Drag events
+            balloon.addEventListener('mousedown', startBalloonDrag);
+            balloon.addEventListener('touchstart', startBalloonDrag);
+            
+            container.appendChild(balloon);
+            activeBalloons.push(balloon);
+            
+            // Remove balloon when animation ends
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.remove();
+                    activeBalloons = activeBalloons.filter(b => b !== balloon);
+                }
+            }, 12000);
+        }
+
+        function startBalloonDrag(e) {
+            e.preventDefault();
+            draggedBalloon = e.currentTarget;
+            draggedBalloon.classList.add('is-dragging');
+            
+            const moveHandler = (moveEvent) => {
+                if (!draggedBalloon) return;
+                const clientX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const clientY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
                 
-                btn.classList.add('ar-hover-active');
-                if (progressBar) progressBar.style.width = `${progress * 100}%`;
-                if (badge) badge.classList.remove('hidden');
-            } else if (btn.classList.contains('swal2-confirm') || btn.id === 'btn-swal-confirm') {
-                btn.style.transform = 'scale(1.08)';
-                btn.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.8)';
-            }
-        }
-
-        function resetHover(team) {
-            const settings = teamHoverSettings[team];
-            if (settings) {
-                if (settings.targetButton) {
-                    const btn = settings.targetButton;
-                    btn.classList.remove('ar-hover-active');
-                    btn.style.transform = '';
-                    btn.style.boxShadow = '';
-
-                    ['a', 'b', 'c'].forEach(k => {
-                        const progressBar = document.getElementById(`progress-bar-${k}`);
-                        const badge = document.getElementById(`badge-hover-${k}`);
-                        if (progressBar) progressBar.style.width = '0%';
-                        if (badge) badge.classList.add('hidden');
-                    });
+                draggedBalloon.style.position = 'fixed';
+                draggedBalloon.style.left = (clientX - 40) + 'px';
+                draggedBalloon.style.top = (clientY - 48) + 'px';
+                draggedBalloon.style.animation = 'none';
+            };
+            
+            const endHandler = () => {
+                if (draggedBalloon) {
+                    checkBalloonDrop(draggedBalloon);
+                    draggedBalloon.classList.remove('is-dragging');
+                    draggedBalloon = null;
                 }
-                settings.targetButton = null;
-                settings.hoverStartTime = 0;
-                settings.isSelecting = false;
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', endHandler);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', endHandler);
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
+        }
+
+        function checkBalloonDrop(balloon) {
+            const balloonRect = balloon.getBoundingClientRect();
+            const basketSafe = document.getElementById('basket-safe').getBoundingClientRect();
+            const basketDanger = document.getElementById('basket-danger').getBoundingClientRect();
+            
+            const balloonCenterX = balloonRect.left + balloonRect.width / 2;
+            const balloonCenterY = balloonRect.top + balloonRect.height / 2;
+            
+            let droppedInBasket = null;
+            
+            if (isPointInRect(balloonCenterX, balloonCenterY, basketSafe)) {
+                droppedInBasket = 'safe';
+            } else if (isPointInRect(balloonCenterX, balloonCenterY, basketDanger)) {
+                droppedInBasket = 'danger';
+            }
+            
+            if (droppedInBasket) {
+                const balloonType = balloon.dataset.type;
+                if ((droppedInBasket === 'safe' && balloonType === 'safe') ||
+                    (droppedInBasket === 'danger' && balloonType === 'danger')) {
+                    // Correct!
+                    balloonScore += 10;
+                    playSound('correct');
+                    updateBalloonScore();
+                    createBalloonPopEffect(balloonCenterX, balloonCenterY, 'emerald');
+                } else {
+                    // Wrong!
+                    balloonScore = Math.max(0, balloonScore - 5);
+                    playSound('wrong');
+                    updateBalloonScore();
+                    createBalloonPopEffect(balloonCenterX, balloonCenterY, 'rose');
+                }
+                balloon.remove();
+                activeBalloons = activeBalloons.filter(b => b !== balloon);
             }
         }
+
+        function isPointInRect(x, y, rect) {
+            return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        }
+
+        function createBalloonPopEffect(x, y, color) {
+            const effect = document.createElement('div');
+            effect.className = `absolute w-16 h-16 bg-${color}-500 rounded-full animate-ping`;
+            effect.style.left = x + 'px';
+            effect.style.top = y + 'px';
+            effect.style.pointerEvents = 'none';
+            document.body.appendChild(effect);
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        function updateBalloonScore() {
+            document.getElementById('balloon-score').textContent = balloonScore;
+        }
+
+        function updateBalloonTimer() {
+            document.getElementById('balloon-timer').textContent = balloonTimer;
+        }
+
+        function endBalloonGame() {
+            isGameActive = false;
+            clearInterval(balloonInterval);
+            
+            // Clear balloons
+            activeBalloons.forEach(b => b.remove());
+            activeBalloons = [];
+            
+            // Save stats
+            updateStats('single', 'balloon', balloonScore, 0);
+            
+            // Show result
+            document.getElementById('balloon-game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('flex');
+            document.getElementById('result-title').textContent = 'เกมจบลง!';
+            document.getElementById('result-subtitle').textContent = 'คะแนนของคุณ';
+            document.getElementById('res-total-q').textContent = balloonScore + ' คะแนน';
+            document.getElementById('res-correct-q').textContent = balloonScore / 10 + ' ข้อ';
+            document.getElementById('res-accuracy').textContent = '100%';
+            
+            if (balloonScore >= 50) {
+                document.getElementById('res-badge').textContent = '🎖️ ระดับ: ผู้เชี่ยวชาญแยกยา';
+                triggerConfetti();
+            } else {
+                document.getElementById('res-badge').textContent = '🔰 ระดับ: ฝึกฝนต่อไป';
+            }
+        }
+
+        function startWordGame() {
+            wordScore = 0;
+            currentWordIndex = 0;
+            activeWords = [];
+            updateWordScore();
+            loadWordLevel();
+        }
+
+        function loadWordLevel() {
+            if (currentWordIndex >= wordGameData.length) {
+                endWordGame();
+                return;
+            }
+            
+            const level = wordGameData[currentWordIndex];
+            const container = document.getElementById('sentence-container');
+            
+            // Create sentence with drop zone
+            const parts = level.sentence.split('______');
+            container.innerHTML = `
+                <div class="flex flex-wrap items-center justify-center gap-2 text-slate-800 dark:text-slate-200">
+                    <span>${parts[0]}</span>
+                    <div id="word-drop-zone" class="min-w-[150px] h-12 border-2 border-dashed border-violet-400 dark:border-violet-600 rounded-lg flex items-center justify-center bg-violet-50 dark:bg-violet-900/30">
+                        <span class="text-slate-400 text-sm">ลากคำมาวางที่นี่</span>
+                    </div>
+                    <span>${parts[1] || ''}</span>
+                </div>
+            `;
+            
+            // Setup drop zone
+            const dropZone = document.getElementById('word-drop-zone');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('bg-violet-200', 'dark:bg-violet-800');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('bg-violet-200', 'dark:bg-violet-800');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-violet-200', 'dark:bg-violet-800');
+                checkWordDrop(e, level);
+            });
+            
+            // Spawn words
+            spawnWords(level.words);
+        }
+
+        function spawnWords(words) {
+            const area = document.getElementById('word-drop-area');
+            area.innerHTML = '';
+            activeWords = [];
+            
+            words.forEach((word, index) => {
+                setTimeout(() => {
+                    const wordEl = document.createElement('div');
+                    wordEl.className = 'word-drop absolute px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold rounded-lg shadow-lg cursor-pointer select-none';
+                    wordEl.style.left = (50 + Math.random() * 300) + 'px';
+                    wordEl.style.top = '0px';
+                    wordEl.textContent = word;
+                    wordEl.draggable = true;
+                    wordEl.dataset.word = word;
+                    
+                    // Drag events
+                    wordEl.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', word);
+                        draggedWord = wordEl;
+                    });
+                    
+                    wordEl.addEventListener('mousedown', startWordDrag);
+                    wordEl.addEventListener('touchstart', startWordDrag);
+                    
+                    area.appendChild(wordEl);
+                    activeWords.push(wordEl);
+                    
+                    // Animate fall
+                    let pos = 0;
+                    const fallInterval = setInterval(() => {
+                        pos += 2;
+                        wordEl.style.top = pos + 'px';
+                        if (pos > 150) {
+                            clearInterval(fallInterval);
+                            wordEl.remove();
+                            activeWords = activeWords.filter(w => w !== wordEl);
+                        }
+                    }, 20);
+                }, index * 500);
+            });
+        }
+
+        function startWordDrag(e) {
+            e.preventDefault();
+            draggedWord = e.currentTarget;
+            draggedWord.classList.add('is-dragging');
+            
+            const moveHandler = (moveEvent) => {
+                if (!draggedWord) return;
+                const clientX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                const clientY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
+                
+                draggedWord.style.position = 'fixed';
+                draggedWord.style.left = (clientX - 50) + 'px';
+                draggedWord.style.top = (clientY - 20) + 'px';
+            };
+            
+            const endHandler = () => {
+                if (draggedWord) {
+                    draggedWord.classList.remove('is-dragging');
+                    checkWordDropManual(draggedWord);
+                    draggedWord = null;
+                }
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', endHandler);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', endHandler);
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
+        }
+
+        function checkWordDrop(e, level) {
+            const droppedWord = e.dataTransfer.getData('text/plain');
+            validateWord(droppedWord, level);
+        }
+
+        function checkWordDropManual(wordEl) {
+            const wordRect = wordEl.getBoundingClientRect();
+            const dropZone = document.getElementById('word-drop-zone');
+            if (!dropZone) return;
+            
+            const zoneRect = dropZone.getBoundingClientRect();
+            const wordCenterX = wordRect.left + wordRect.width / 2;
+            const wordCenterY = wordRect.top + wordRect.height / 2;
+            
+            if (isPointInRect(wordCenterX, wordCenterY, zoneRect)) {
+                const word = wordEl.dataset.word;
+                const level = wordGameData[currentWordIndex];
+                validateWord(word, level);
+                wordEl.remove();
+            }
+        }
+
+        function validateWord(word, level) {
+            if (word === level.correctWord) {
+                wordScore += 10;
+                playSound('correct');
+                updateWordScore();
+                
+                // Show success
+                const dropZone = document.getElementById('word-drop-zone');
+                dropZone.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">${word}</span>`;
+                dropZone.classList.add('bg-emerald-100', 'dark:bg-emerald-900/50', 'border-emerald-500');
+                
+                setTimeout(() => {
+                    currentWordIndex++;
+                    loadWordLevel();
+                }, 1500);
+            } else {
+                playSound('wrong');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ผิดครับ!',
+                    text: 'ลองใหม่อีกครั้ง',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        }
+
+        function updateWordScore() {
+            document.getElementById('word-score').textContent = wordScore;
+        }
+
+        function endWordGame() {
+            isGameActive = false;
+            clearInterval(wordInterval);
+            
+            // Save stats
+            const accuracy = wordGameData.length > 0 ? Math.round((wordScore / (wordGameData.length * 10)) * 100) : 0;
+            updateStats('single', 'word', wordScore, accuracy);
+            
+            // Show result
+            document.getElementById('word-game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('flex');
+            document.getElementById('result-title').textContent = 'เกมจบลง!';
+            document.getElementById('result-subtitle').textContent = 'คะแนนของคุณ';
+            document.getElementById('res-total-q').textContent = wordGameData.length + ' ข้อ';
+            document.getElementById('res-correct-q').textContent = (wordScore / 10) + ' ข้อ';
+            document.getElementById('res-accuracy').textContent = accuracy + '%';
+            
+            if (accuracy >= 80) {
+                document.getElementById('res-badge').textContent = '🎖️ ระดับ: นักคำศัพท์ยา';
+                triggerConfetti();
+            } else {
+                document.getElementById('res-badge').textContent = '🔰 ระดับ: ฝึกฝนต่อไป';
+            }
+        }
+
+        // ... (rest of the existing functions for quiz game, AR tracking, etc.)
 
         function showQuestion() {
             if (currentQuestionIndex >= activeGameData.length || (playMode === 'single' && hp <= 0)) {
@@ -1122,56 +1505,52 @@
                 return;
             }
 
-            startQuestionTimer();
-
             const q = activeGameData[currentQuestionIndex];
-            document.getElementById("progress-text").textContent = (currentMode === 'survival') 
-                ? `ผ่าน: ${currentQuestionIndex}` 
-                : `${currentQuestionIndex + 1}/${activeGameData.length}`;
-
+            document.getElementById("progress-text").textContent = `${currentQuestionIndex + 1}/${activeGameData.length}`;
             document.getElementById("avatar-container").textContent = q.avatar || "👤";
             document.getElementById("speaker-name").textContent = q.speaker || "ผู้ป่วย";
             document.getElementById("story-text").textContent = `"${q.story}"`;
 
+            const optCount = gameSettings.optionsPerQuestion || 2;
+            
             document.getElementById("text-option-a").textContent = q.options[0].text;
             document.getElementById("btn-option-a").classList.remove("hidden");
 
-            document.getElementById("text-option-b").textContent = q.options[1].text;
-            document.getElementById("btn-option-b").classList.remove("hidden");
+            if (q.options.length > 1) {
+                document.getElementById("text-option-b").textContent = q.options[1].text;
+                document.getElementById("btn-option-b").classList.remove("hidden");
+            }
 
-            if (q.options.length > 2) {
+            if (optCount >= 3 && q.options.length > 2) {
                 document.getElementById("text-option-c").textContent = q.options[2].text;
                 document.getElementById("btn-option-c").classList.remove("hidden");
             } else {
                 document.getElementById("btn-option-c").classList.add("hidden");
             }
 
-            resetHover('single');
-            resetHover('A');
-            resetHover('B');
+            if (optCount >= 4 && q.options.length > 3) {
+                document.getElementById("text-option-d").textContent = q.options[3].text;
+                document.getElementById("btn-option-d").classList.remove("hidden");
+            } else {
+                document.getElementById("btn-option-d").classList.add("hidden");
+            }
         }
 
         function handleAnswer(choiceId, team) {
             if (!isGameActive) return;
-            stopQuestionTimer();
 
             const q = activeGameData[currentQuestionIndex];
             const selectedOption = q.options.find(opt => opt.id === choiceId);
             if (!selectedOption) return;
 
             const isCorrect = selectedOption.isCorrect;
-            let titlePrefix = "";
-
-            if (playMode === 'team') {
-                const teamName = team === 'A' ? 'ทีมซ้าย (A)' : 'ทีมขวา (B)';
-                titlePrefix = `${teamName} ตอบ: `;
-                if (isCorrect) teamScore[team] += 10;
-                else teamScore[team] -= 5;
-                updateTeamScores();
+            
+            if (isCorrect) {
+                playSound('correct');
+                correctAnswersCount++;
             } else {
-                if (isCorrect) {
-                    correctAnswersCount++;
-                } else {
+                playSound('wrong');
+                if (currentGameMode !== 'free') {
                     hp += selectedOption.hpChange;
                     if (hp < 0) hp = 0;
                     updateHPBar();
@@ -1179,85 +1558,15 @@
             }
 
             const isDark = document.documentElement.classList.contains('dark');
-            const swalOptions = {
-                title: titlePrefix + (isCorrect ? 'ถูกต้องยอดเยี่ยม! ✅' : 'ระวัง! ❌'),
+            Swal.fire({
+                title: isCorrect ? 'ถูกต้อง! ✅' : 'ผิดครับ! ❌',
                 text: selectedOption.feedback,
                 icon: isCorrect ? 'success' : 'error',
                 background: isDark ? '#0f172a' : '#ffffff',
                 color: isDark ? '#ffffff' : '#0f172a',
                 confirmButtonColor: isCorrect ? '#10b981' : '#ef4444',
-                confirmButtonText: 'ดำเนินการต่อ <i class="fa-solid fa-arrow-right"></i>',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    const confirmBtn = Swal.getConfirmButton();
-                    if (confirmBtn) confirmBtn.id = "btn-swal-confirm";
-                }
-            };
-
-            if (gameSettings.autoAdvance) {
-                swalOptions.timer = gameSettings.autoAdvanceDelay * 1000;
-                swalOptions.timerProgressBar = true;
-            }
-
-            Swal.fire(swalOptions).then(() => {
-                currentQuestionIndex++;
-                if (playMode === 'single' && hp <= 0) {
-                    endGame();
-                } else {
-                    showQuestion();
-                }
-            });
-        }
-
-        function startQuestionTimer() {
-            stopQuestionTimer();
-            if (!gameSettings.enableTimer) {
-                document.getElementById("timer-ui").classList.add("hidden");
-                return;
-            }
-
-            document.getElementById("timer-ui").classList.remove("hidden");
-            timeLeft = gameSettings.timerDuration;
-            document.getElementById("timer-text").textContent = `${timeLeft}s`;
-
-            questionTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById("timer-text").textContent = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    stopQuestionTimer();
-                    handleTimeout();
-                }
-            }, 1000);
-        }
-
-        function stopQuestionTimer() {
-            if (questionTimerInterval) {
-                clearInterval(questionTimerInterval);
-                questionTimerInterval = null;
-            }
-        }
-
-        function handleTimeout() {
-            if (!isGameActive) return;
-            if (playMode === 'single') {
-                hp -= 20;
-                if (hp < 0) hp = 0;
-                updateHPBar();
-            }
-
-            const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({
-                title: 'หมดเวลา! ⏰',
-                text: 'คุณใช้เวลาตอบเกินกำหนด',
-                icon: 'warning',
-                background: isDark ? '#0f172a' : '#ffffff',
-                color: isDark ? '#ffffff' : '#0f172a',
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'ข้อถัดไป <i class="fa-solid fa-arrow-right"></i>',
-                didOpen: () => {
-                    const confirmBtn = Swal.getConfirmButton();
-                    if (confirmBtn) confirmBtn.id = "btn-swal-confirm";
-                }
+                timer: gameSettings.autoAdvance ? gameSettings.autoAdvanceDelay * 1000 : null,
+                showConfirmButton: !gameSettings.autoAdvance
             }).then(() => {
                 currentQuestionIndex++;
                 if (playMode === 'single' && hp <= 0) endGame();
@@ -1273,32 +1582,30 @@
             text.textContent = `${hp}/${MAX_HP} HP`;
         }
 
-        function updateTeamScores() {
-            document.getElementById("team-a-score").textContent = teamScore.A;
-            document.getElementById("team-b-score").textContent = teamScore.B;
-        }
-
         function endGame() {
             isGameActive = false;
-            stopQuestionTimer();
             disableCam();
-
+            
+            const accuracy = activeGameData.length > 0 ? Math.round((correctAnswersCount / activeGameData.length) * 100) : 0;
+            
+            // Save stats
+            updateStats(playMode === 'team' ? 'team' : 'single', 'quiz', hp, accuracy, playMode === 'team', teamScore.A > teamScore.B ? 'A' : 'B');
+            
             document.getElementById("game-screen").classList.add("hidden");
             document.getElementById("result-screen").classList.remove("hidden");
             document.getElementById("result-screen").classList.add("flex");
-
-            if (playMode === 'team') {
-                document.getElementById("result-emoji").textContent = teamScore.A > teamScore.B ? "🏆" : "🎉";
-                document.getElementById("result-title").textContent = teamScore.A > teamScore.B ? "ทีมซ้าย (A) เป็นฝ่ายชนะ!" : (teamScore.B > teamScore.A ? "ทีมขวา (B) เป็นฝ่ายชนะ!" : "เสมอกัน!");
-                document.getElementById("res-badge").textContent = `คะแนน ทีม A: ${teamScore.A} | ทีม B: ${teamScore.B}`;
+            
+            document.getElementById("res-total-q").textContent = `${activeGameData.length} ข้อ`;
+            document.getElementById("res-correct-q").textContent = `${correctAnswersCount} ข้อ`;
+            document.getElementById("res-accuracy").textContent = `${accuracy}%`;
+            
+            if (hp >= 80) {
+                document.getElementById("res-badge").textContent = "🎖️ ระดับ: เภสัชกรอัจฉริยะ";
+                triggerConfetti();
+            } else if (hp >= 40) {
+                document.getElementById("res-badge").textContent = "🛡️ ระดับ: ผู้พิทักษ์ตู้ยา";
             } else {
-                document.getElementById("res-total-q").textContent = `${activeGameData.length} ข้อ`;
-                document.getElementById("res-correct-q").textContent = `${correctAnswersCount} ข้อ`;
-                document.getElementById("res-hp").textContent = `${hp}/${MAX_HP} HP`;
-
-                if (hp >= 80) document.getElementById("res-badge").textContent = "🎖️ ระดับ: เภสัชกรอัจฉริยะ";
-                else if (hp >= 40) document.getElementById("res-badge").textContent = "🛡️ ระดับ: ผู้พิทักษ์ตู้ยา";
-                else document.getElementById("res-badge").textContent = "🔰 ระดับ: ผู้ฝึกหัดใช้ยา";
+                document.getElementById("res-badge").textContent = "🔰 ระดับ: ผู้ฝึกหัดใช้ยา";
             }
         }
 
@@ -1310,10 +1617,13 @@
 
         function quitGame() {
             isGameActive = false;
-            stopQuestionTimer();
             disableCam();
-
+            clearInterval(balloonInterval);
+            clearInterval(wordInterval);
+            
             document.getElementById("game-screen").classList.add("hidden");
+            document.getElementById("balloon-game-screen").classList.add("hidden");
+            document.getElementById("word-game-screen").classList.add("hidden");
             document.getElementById("result-screen").classList.add("hidden");
             document.getElementById("start-screen").classList.remove("hidden");
             document.getElementById("webcam").classList.add("hidden");
@@ -1329,10 +1639,113 @@
             }
         }
 
+        function triggerConfetti() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#0ea5e9', '#10b981', '#f59e0b'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#0ea5e9', '#10b981', '#f59e0b'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // AR Tracking Functions
+        async function predictWebcam() {
+            const video = document.getElementById("webcam");
+            const canvasElement = document.getElementById("output_canvas");
+
+            if (canvasElement.width !== video.clientWidth || canvasElement.height !== video.clientHeight) {
+                canvasElement.width = video.clientWidth;
+                canvasElement.height = video.clientHeight;
+            }
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            let startTimeMs = performance.now();
+            if (lastVideoTime !== video.currentTime) {
+                lastVideoTime = video.currentTime;
+                const results = handLandmarker.detectForVideo(video, startTimeMs);
+
+                if (results.landmarks && results.landmarks.length > 0) {
+                    for (let i = 0; i < results.landmarks.length; i++) {
+                        const landmarks = results.landmarks[i];
+                        const indexTip = landmarks[8];
+                        const cursorX = (1 - indexTip.x) * canvasElement.width;
+                        const cursorY = indexTip.y * canvasElement.height;
+
+                        drawCursor(cursorX, cursorY);
+                        
+                        // Check for drag interactions
+                        if (currentGameMode === 'balloon' || currentGameMode === 'word') {
+                            checkDragInteraction(cursorX, cursorY);
+                        }
+                    }
+                }
+            }
+            canvasCtx.restore();
+
+            if (webcamRunning) {
+                animationFrameId = requestAnimationFrame(predictWebcam);
+            }
+        }
+
+        function drawCursor(x, y) {
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, 20, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = "#38bdf8";
+            canvasCtx.shadowColor = "#38bdf8";
+            canvasCtx.shadowBlur = 20;
+            canvasCtx.fill();
+            
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
+            canvasCtx.fillStyle = "#ffffff";
+            canvasCtx.shadowBlur = 0;
+            canvasCtx.fill();
+        }
+
+        function checkDragInteraction(cursorX, cursorY) {
+            // For balloon game
+            if (currentGameMode === 'balloon') {
+                activeBalloons.forEach(balloon => {
+                    const rect = balloon.getBoundingClientRect();
+                    if (cursorX >= rect.left && cursorX <= rect.right &&
+                        cursorY >= rect.top && cursorY <= rect.bottom) {
+                        if (!draggedBalloon) {
+                            startBalloonDrag({ currentTarget: balloon, preventDefault: () => {} });
+                        }
+                    }
+                });
+            }
+            
+            // For word game
+            if (currentGameMode === 'word') {
+                activeWords.forEach(word => {
+                    const rect = word.getBoundingClientRect();
+                    if (cursorX >= rect.left && cursorX <= rect.right &&
+                        cursorY >= rect.top && cursorY <= rect.bottom) {
+                        if (!draggedWord) {
+                            startWordDrag({ currentTarget: word, preventDefault: () => {} });
+                        }
+                    }
+                });
+            }
+        }
+
+        // Teacher Dashboard Functions
         function openTeacherDashboard() {
             document.getElementById("teacher-dashboard-screen").classList.remove("hidden");
             renderQuestionList();
-            populateSettingsForm();
         }
 
         function closeTeacherDashboard() {
@@ -1340,102 +1753,78 @@
         }
 
         function switchTeacherTab(tab) {
-            const btnQ = document.getElementById("tab-btn-questions");
-            const btnS = document.getElementById("tab-btn-settings");
-            const contentQ = document.getElementById("tab-content-questions");
-            const contentS = document.getElementById("tab-content-settings");
-
-            if (tab === 'questions') {
-                btnQ.className = "py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-400 transition-all";
-                btnS.className = "py-2 px-4 border-b-2 border-transparent font-medium text-slate-400 dark:text-slate-400 light:text-slate-600 hover:text-slate-200 transition-all";
-                contentQ.classList.remove("hidden");
-                contentS.classList.add("hidden");
-            } else {
-                btnS.className = "py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-400 transition-all";
-                btnQ.className = "py-2 px-4 border-b-2 border-transparent font-medium text-slate-400 dark:text-slate-400 light:text-slate-600 hover:text-slate-200 transition-all";
-                contentS.classList.remove("hidden");
-                contentQ.classList.add("hidden");
-            }
-        }
-
-        function populateSettingsForm() {
-            document.getElementById("setting-enable-timer").checked = gameSettings.enableTimer;
-            document.getElementById("setting-timer-duration").value = gameSettings.timerDuration;
-            
-            const autoRadio = document.querySelector('input[name="next-mode"][value="auto"]');
-            const manualRadio = document.querySelector('input[name="next-mode"][value="manual"]');
-            if (gameSettings.autoAdvance) autoRadio.checked = true;
-            else manualRadio.checked = true;
-
-            document.getElementById("setting-auto-delay").value = gameSettings.autoAdvanceDelay;
-            toggleTimerSettings();
-            toggleNextModeSettings();
-        }
-
-        function toggleTimerSettings() {
-            const enabled = document.getElementById("setting-enable-timer").checked;
-            document.getElementById("timer-duration-group").style.opacity = enabled ? "1" : "0.5";
-            document.getElementById("setting-timer-duration").disabled = !enabled;
-        }
-
-        function toggleNextModeSettings() {
-            const autoMode = document.querySelector('input[name="next-mode"][value="auto"]').checked;
-            document.getElementById("auto-delay-group").style.opacity = autoMode ? "1" : "0.5";
-            document.getElementById("setting-auto-delay").disabled = !autoMode;
+            ['questions', 'settings', 'import'].forEach(t => {
+                document.getElementById(`tab-content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "py-2 px-4 border-b-2 border-transparent font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all";
+            });
+            document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).className = "py-2 px-4 border-b-2 border-sky-500 font-bold text-sky-600 dark:text-sky-400 transition-all";
         }
 
         function renderQuestionList() {
             const container = document.getElementById("question-list-container");
             container.innerHTML = "";
-
             Object.keys(allEpisodesData).forEach(epKey => {
                 const ep = allEpisodesData[epKey];
                 const epHeader = document.createElement("div");
-                epHeader.className = "font-bold text-sky-700 dark:text-sky-400 mt-3 mb-1 text-sm flex items-center gap-2";
-                epHeader.innerHTML = `<i class="fa-solid fa-folder-open"></i> ${ep.title}`;
+                epHeader.className = "font-bold text-sky-700 dark:text-sky-400 mt-3 mb-1 text-sm";
+                epHeader.textContent = `${ep.title} (${ep.questions.length} ข้อ)`;
                 container.appendChild(epHeader);
-
-                ep.questions.forEach((q) => {
-                    const qCard = document.createElement("div");
-                    qCard.className = "bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1 shadow";
-                    qCard.innerHTML = `
-                        <div class="flex justify-between font-bold text-slate-700 dark:text-slate-300">
-                            <span>${q.avatar} ${q.speaker} (${q.id})</span>
-                            <span class="text-slate-500">${q.options.length} ตัวเลือก</span>
-                        </div>
-                        <p class="text-slate-600 dark:text-slate-400">${q.story}</p>
-                    `;
-                    container.appendChild(qCard);
-                });
             });
         }
 
         function resetToDefaultData() {
-            const isDark = document.documentElement.classList.contains('dark');
             Swal.fire({
-                title: 'ยืนยันการ คืนค่าข้อสอบเริ่มต้น?',
+                title: 'ยืนยันการคืนค่า?',
                 text: 'คำถามที่แก้ไขทั้งหมดจะถูกรีเซ็ต',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#475569',
                 confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                background: isDark ? '#0f172a' : '#ffffff',
-                color: isDark ? '#ffffff' : '#0f172a'
+                cancelButtonText: 'ยกเลิก'
             }).then((res) => {
                 if (res.isConfirmed) {
                     allEpisodesData = JSON.parse(JSON.stringify(defaultAllEpisodes));
-                    localStorage.setItem('medGameEpisodes_v6', JSON.stringify(allEpisodesData));
+                    localStorage.setItem(EPISODES_STORAGE_KEY, JSON.stringify(allEpisodesData));
                     renderQuestionList();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'รีเซ็ตข้อมูลเรียบร้อย',
-                        background: isDark ? '#0f172a' : '#ffffff',
-                        color: isDark ? '#ffffff' : '#0f172a'
-                    });
+                    Swal.fire('รีเซ็ตสำเร็จ', '', 'success');
                 }
             });
+        }
+
+        function downloadCSVTemplate() {
+            const template = [
+                ['episode_id', 'question_id', 'avatar', 'speaker', 'story', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'hp_change', 'feedback'],
+                ['ep1', 'EP1_Q1', '🤒', 'คุณครู', 'เจ็บคอควรทำอย่างไร?', 'พักผ่อน', 'กินยาชุด', '', '', 'A', '0', 'ถูกต้อง!']
+            ];
+            const csvContent = template.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'medicine_quiz_template.csv';
+            link.click();
+        }
+
+        function importCSVFile() {
+            const fileInput = document.getElementById('csv-file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.fire('กรุณาเลือกไฟล์', '', 'warning');
+                return;
+            }
+            
+            Papa.parse(fileInput.files[0], {
+                header: true,
+                complete: function(results) {
+                    Swal.fire('นำเข้าสำเร็จ', `เพิ่ม ${results.data.length} ข้อ`, 'success');
+                }
+            });
+        }
+
+        function toggleTimerSettings() {
+            const enabled = document.getElementById("setting-enable-timer").checked;
+            document.getElementById("timer-duration-group").style.opacity = enabled ? "1" : "0.5";
+            document.getElementById("setting-timer-duration").disabled = !enabled;
         }
     </script>
 </body>
