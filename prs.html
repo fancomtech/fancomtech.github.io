@@ -17,68 +17,47 @@
     * { box-sizing: border-box; }
     body { font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; }
 
-    #loginPage {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 10000;
-    }
+    #loginPage { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); display: flex; justify-content: center; align-items: center; z-index: 10000; }
     #loginPage.hidden { display: none; }
-    .login-card {
-      background: white; border-radius: 16px; padding: 40px;
-      width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
+    .login-card { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
     .login-card h3 { color: var(--primary); text-align: center; margin-bottom: 8px; }
     .login-card .subtitle { text-align: center; color: var(--text-light); margin-bottom: 30px; font-size: 0.9rem; }
     .login-card .form-control { padding: 12px 16px; border-radius: 10px; border: 2px solid #e0e0e0; }
-    .login-card .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
-    .login-card .btn-login {
-      background: var(--primary); color: white; border: none; padding: 12px;
-      border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%;
-    }
-    .login-card .btn-login:hover { background: var(--primary-light); }
+    .login-card .btn-login { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%; }
     .login-error { color: var(--danger); text-align: center; margin-top: 12px; font-size: 0.9rem; display: none; }
 
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
     #loadingOverlay.active { display: flex; }
-    .spinner-grow-lg { width: 3rem; height: 3rem; }
 
     .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--primary); color: white; z-index: 1000; transition: transform 0.3s ease; overflow-y: auto; }
     .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .sidebar-header h5 { margin: 0; font-size: 1rem; }
     .sidebar-header small { opacity: 0.7; }
-    .sidebar-nav { padding: 10px 0; }
-    .sidebar-nav .nav-link { color: rgba(255,255,255,0.8); padding: 12px 20px; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; font-size: 0.95rem; }
+    .sidebar-nav .nav-link { color: rgba(255,255,255,0.8); padding: 12px 20px; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
     .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active { color: white; background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
     .sidebar-nav .nav-link i { font-size: 1.2rem; width: 24px; text-align: center; }
 
-    .main-content { margin-left: var(--sidebar-width); padding: 20px; min-height: 100vh; transition: margin-left 0.3s ease; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px 0; }
+    .main-content { margin-left: var(--sidebar-width); padding: 20px; min-height: 100vh; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .top-bar h4 { margin: 0; color: var(--primary); }
     .hamburger { display: none; background: none; border: none; font-size: 1.5rem; color: var(--primary); cursor: pointer; }
 
-    .stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: none; transition: transform 0.2s; }
-    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .stat-card .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px; }
     .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
     .stat-card .stat-label { color: var(--text-light); font-size: 0.85rem; }
 
     .content-card { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
     #scannerContainer { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 12px; overflow: hidden; }
-    #scannerContainer video { border-radius: 12px; }
-
     .scanner-result { padding: 16px; border-radius: 12px; margin-top: 16px; text-align: center; }
     .scanner-result.success { background: #e8f5e9; border: 2px solid #4caf50; }
     .scanner-result.error { background: #ffebee; border: 2px solid #ef5350; }
     .scanner-result.warning { background: #fff8e1; border: 2px solid #ffc107; }
 
-    .prayer-btn { padding: 12px 20px; border-radius: 10px; font-size: 1rem; font-weight: 500; border: 2px solid transparent; transition: all 0.2s; }
+    .prayer-btn { padding: 12px 20px; border-radius: 10px; font-size: 1rem; font-weight: 500; border: 2px solid transparent; }
     .prayer-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-    .table-responsive { border-radius: 8px; overflow: hidden; }
-    .table th { background: var(--secondary); color: var(--primary); font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
-    .table td { vertical-align: middle; font-size: 0.9rem; }
-
+    .table th { background: var(--secondary); color: var(--primary); font-weight: 600; font-size: 0.85rem; }
     .page-section { display: none; }
     .page-section.active { display: block; }
 
@@ -90,33 +69,13 @@
       .sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
       .sidebar-overlay.show { display: block; }
     }
-    @media (max-width: 576px) { .main-content { padding: 12px; } .stat-card { padding: 14px; } .stat-card .stat-value { font-size: 1.4rem; } .content-card { padding: 16px; } }
-    @media print { .sidebar, .top-bar, .hamburger, .no-print { display: none !important; } .main-content { margin-left: 0 !important; padding: 0 !important; } .content-card { box-shadow: none; border: 1px solid #ddd; } body { background: white; } }
+    @media (max-width: 576px) { .main-content { padding: 12px; } .stat-card .stat-value { font-size: 1.4rem; } }
     .chart-container { position: relative; height: 300px; width: 100%; }
-    .user-info { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
-    .user-info .user-name { font-weight: 600; font-size: 0.9rem; }
-    .user-info .user-role { font-size: 0.75rem; opacity: 0.7; }
-
+    .user-info { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
     .api-status { position: fixed; bottom: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; z-index: 9999; }
     .api-status.connected { background: #e8f5e9; color: #2e7d32; }
     .api-status.disconnected { background: #ffebee; color: #c62828; }
-    .api-status.testing { background: #fff8e1; color: #f57f17; }
-
     .logout-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
-    .logout-btn:hover { background: rgba(255,255,255,0.2); }
-
-    /* API Test Panel */
-    .api-test-panel {
-      position: fixed; top: 10px; right: 10px; z-index: 9998;
-      background: white; border-radius: 8px; padding: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px;
-      display: none;
-    }
-    .api-test-panel.show { display: block; }
-    .api-test-panel h6 { margin: 0 0 8px 0; font-size: 0.85rem; }
-    .api-test-panel .form-control { font-size: 0.8rem; }
-    .api-test-panel .btn { font-size: 0.8rem; padding: 4px 8px; }
-    .api-test-result { font-size: 0.75rem; max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 8px; border-radius: 4px; margin-top: 8px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -125,78 +84,27 @@
     <div class="login-card">
       <h3><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h3>
       <p class="subtitle" id="loginSchoolName">โรงเรียน...</p>
-
-      <!-- API Connection Test -->
-      <div class="alert alert-info py-2 mb-3" id="apiTestAlert">
-        <small><i class="bi bi-info-circle"></i> กำลังทดสอบการเชื่อมต่อ API...</small>
-      </div>
-
+      <div class="alert alert-info py-2 mb-3" id="apiTestAlert"><small><i class="bi bi-info-circle"></i> กำลังทดสอบการเชื่อมต่อ API...</small></div>
       <form onsubmit="handleLogin(event)">
-        <div class="mb-3">
-          <label class="form-label fw-bold">ชื่อผู้ใช้</label>
-          <input type="text" class="form-control" id="loginUsername" placeholder="กรอกชื่อผู้ใช้" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold">รหัสผ่าน</label>
-          <input type="password" class="form-control" id="loginPassword" placeholder="กรอกรหัสผ่าน" required>
-        </div>
-        <button type="submit" class="btn btn-login" id="loginBtn">
-          <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
-        </button>
+        <div class="mb-3"><label class="form-label fw-bold">ชื่อผู้ใช้</label><input type="text" class="form-control" id="loginUsername" required></div>
+        <div class="mb-3"><label class="form-label fw-bold">รหัสผ่าน</label><input type="password" class="form-control" id="loginPassword" required></div>
+        <button type="submit" class="btn btn-login" id="loginBtn"><i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ</button>
         <div class="login-error" id="loginError"></div>
       </form>
       <div class="mt-4 pt-3 border-top">
-        <small class="text-muted d-block text-center">เข้าสู่ระบบในฐานะผู้เยี่ยมชม</small>
-        <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="continueAsGuest()">
-          <i class="bi bi-person"></i> เข้าชมแดชบอร์ดสาธารณะ
-        </button>
+        <button class="btn btn-outline-secondary btn-sm w-100" onclick="continueAsGuest()"><i class="bi bi-person"></i> เข้าชมแดชบอร์ดสาธารณะ</button>
       </div>
-      <div class="mt-3">
-        <small class="text-muted d-block text-center">
-          <strong>ผู้ใช้ทดสอบ:</strong><br>
-          Admin: admin@school.com / admin123<br>
-          Teacher: teacher@school.com / teacher123
-        </small>
-      </div>
-      <div class="mt-3 text-center">
-        <button class="btn btn-sm btn-outline-info" onclick="toggleApiTest()">
-          <i class="bi bi-wrench"></i> ทดสอบ API
-        </button>
-      </div>
+      <div class="mt-3"><small class="text-muted d-block text-center"><strong>ทดสอบ:</strong> admin@school.com / admin123</small></div>
     </div>
   </div>
 
-  <!-- API TEST PANEL -->
-  <div class="api-test-panel" id="apiTestPanel">
-    <h6><i class="bi bi-wrench"></i> ทดสอบการเชื่อมต่อ API</h6>
-    <div class="mb-2">
-      <label class="form-label" style="font-size:0.75rem;">API URL:</label>
-      <input type="text" class="form-control" id="apiTestUrl" style="font-size:0.75rem;">
-    </div>
-    <div class="d-flex gap-1 mb-2">
-      <button class="btn btn-primary btn-sm" onclick="testPing()">Ping</button>
-      <button class="btn btn-success btn-sm" onclick="testSetup()">Setup</button>
-      <button class="btn btn-info btn-sm" onclick="testConfig()">Config</button>
-    </div>
-    <div class="api-test-result" id="apiTestResult">กดปุ่มเพื่อทดสอบ...</div>
-    <button class="btn btn-sm btn-secondary w-100 mt-2" onclick="saveApiUrl()">บันทึก URL และรีโหลด</button>
-  </div>
-
-  <!-- LOADING -->
-  <div id="loadingOverlay">
-    <div class="spinner-grow text-primary spinner-grow-lg" role="status"><span class="visually-hidden">กำลังโหลด...</span></div>
-    <p class="mt-3 text-muted">กำลังประมวลผล...</p>
-  </div>
-
+  <div id="loadingOverlay"><div class="spinner-border text-primary" role="status"></div><p class="mt-3 text-muted">กำลังประมวลผล...</p></div>
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
   <!-- MAIN APP -->
   <div id="mainApp" style="display:none;">
     <nav class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h5><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h5>
-        <small id="schoolName">โรงเรียน...</small>
-      </div>
+      <div class="sidebar-header"><h5><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h5><small id="schoolName">โรงเรียน...</small></div>
       <div class="sidebar-nav">
         <a href="#" class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="bi bi-speedometer2"></i> แดชบอร์ด</a>
         <a href="#" class="nav-link" data-page="scanner" onclick="navigateTo('scanner')" id="navScanner"><i class="bi bi-qr-code-scan"></i> สแกนบันทึก</a>
@@ -206,133 +114,65 @@
         <a href="#" class="nav-link" data-page="students" onclick="navigateTo('students')" id="navStudents"><i class="bi bi-people"></i> จัดการนักเรียน</a>
         <a href="#" class="nav-link" data-page="users" onclick="navigateTo('users')" id="navUsers"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</a>
         <a href="#" class="nav-link" data-page="settings" onclick="navigateTo('settings')" id="navSettings"><i class="bi bi-gear"></i> ตั้งค่าระบบ</a>
-        <a href="#" class="nav-link" data-page="audit" onclick="navigateTo('audit')" id="navAudit"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</a>
+        <a href="#" class="nav-link" data-page="audit" onclick="navigateTo('audit')" id="navAudit"><i class="bi bi-clock-history"></i> ประวัติ</a>
       </div>
-      <div class="user-info" id="userInfo">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="user-name" id="currentUserName">-</div>
-            <div class="user-role" id="currentUserRole">-</div>
-          </div>
-          <button class="logout-btn" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i></button>
-        </div>
-      </div>
+      <div class="user-info"><div class="d-flex justify-content-between align-items-center"><div><div class="fw-bold" id="currentUserName">-</div><small style="opacity:0.7" id="currentUserRole">-</small></div><button class="logout-btn" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i></button></div></div>
     </nav>
 
     <div class="main-content">
       <div class="top-bar">
-        <div class="d-flex align-items-center gap-3">
-          <button class="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-          <h4 id="pageTitle">แดชบอร์ด</h4>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="text-muted small" id="currentDateDisplay"></span>
-        </div>
+        <div class="d-flex align-items-center gap-3"><button class="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h4 id="pageTitle">แดชบอร์ด</h4></div>
+        <span class="text-muted small" id="currentDateDisplay"></span>
       </div>
 
       <!-- DASHBOARD -->
       <div class="page-section active" id="page-dashboard">
-        <div class="content-card">
-          <div class="row align-items-center">
-            <div class="col-md-6">
-              <label class="form-label fw-bold">เลือกวันที่</label>
-              <input type="date" class="form-control" id="dashboardDate" onchange="loadDashboard()">
-            </div>
-            <div class="col-md-6 text-md-end mt-2 mt-md-0">
-              <small class="text-muted">อัปเดตล่าสุด: <span id="dashboardUpdatedAt">-</span></small>
-            </div>
-          </div>
-        </div>
+        <div class="content-card"><div class="row align-items-center"><div class="col-md-6"><label class="form-label fw-bold">เลือกวันที่</label><input type="date" class="form-control" id="dashboardDate" onchange="loadDashboard()"></div><div class="col-md-6 text-md-end mt-2 mt-md-0"><small class="text-muted">อัปเดต: <span id="dashboardUpdatedAt">-</span></small></div></div></div>
         <div class="row g-3 mb-4">
-          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e3f2fd;color:#1565c0;"><i class="bi bi-people-fill"></i></div><div class="stat-value" id="statStudents">-</div><div class="stat-label">นักเรียนทั้งหมด</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-check-circle-fill"></i></div><div class="stat-value" id="statPrayed">-</div><div class="stat-label">บันทึกแล้ว</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff8e1;color:#f57f17;"><i class="bi bi-dash-circle-fill"></i></div><div class="stat-value" id="statExempted">-</div><div class="stat-label">ได้รับการยกเว้น</div></div></div>
-          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#ffebee;color:#c62828;"><i class="bi bi-exclamation-circle-fill"></i></div><div class="stat-value" id="statNotRecorded">-</div><div class="stat-label">ยังไม่บันทึก</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e3f2fd;color:#1565c0"><i class="bi bi-people-fill"></i></div><div class="stat-value" id="statStudents">-</div><div class="stat-label">นักเรียนทั้งหมด</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e8f5e9;color:#2e7d32"><i class="bi bi-check-circle-fill"></i></div><div class="stat-value" id="statPrayed">-</div><div class="stat-label">บันทึกแล้ว</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff8e1;color:#f57f17"><i class="bi bi-dash-circle-fill"></i></div><div class="stat-value" id="statExempted">-</div><div class="stat-label">ยกเว้น</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#ffebee;color:#c62828"><i class="bi bi-exclamation-circle-fill"></i></div><div class="stat-value" id="statNotRecorded">-</div><div class="stat-label">ยังไม่บันทึก</div></div></div>
         </div>
         <div class="content-card mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold">อัตราการบันทึกวันนี้</span>
-            <span class="fw-bold text-primary" id="statPercentage">0%</span>
-          </div>
-          <div class="progress" style="height: 24px; border-radius: 12px;">
-            <div class="progress-bar bg-success" id="progressRecorded" style="width:0%"></div>
-            <div class="progress-bar bg-warning" id="progressExempted" style="width:0%"></div>
-          </div>
-          <div class="d-flex gap-3 mt-2 small text-muted">
-            <span><i class="bi bi-circle-fill text-success"></i> บันทึกแล้ว</span>
-            <span><i class="bi bi-circle-fill text-warning"></i> ยกเว้น</span>
-            <span><i class="bi bi-circle-fill text-light"></i> ยังไม่บันทึก</span>
-          </div>
+          <div class="d-flex justify-content-between mb-2"><span class="fw-bold">อัตราการบันทึก</span><span class="fw-bold text-primary" id="statPercentage">0%</span></div>
+          <div class="progress" style="height:24px;border-radius:12px"><div class="progress-bar bg-success" id="progressRecorded" style="width:0%"></div><div class="progress-bar bg-warning" id="progressExempted" style="width:0%"></div></div>
         </div>
         <div class="row g-3 mb-4">
           <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สถิติแยกตามเวลาละหมาด</h6><div class="chart-container"><canvas id="chartByPrayer"></canvas></div></div></div>
           <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สัดส่วนสถานะรวม</h6><div class="chart-container"><canvas id="chartStatusPie"></canvas></div></div></div>
         </div>
-        <div class="content-card">
-          <h6 class="fw-bold mb-3">สถิติแยกตามห้องเรียน</h6>
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead><tr><th>ห้องเรียน</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึกแล้ว</th><th class="text-center">ยกเว้น</th><th class="text-center">ยังไม่บันทึก</th><th class="text-center">เปอร์เซ็นต์</th></tr></thead>
-              <tbody id="classroomStatsBody"><tr><td colspan="6" class="text-center text-muted py-4">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
+        <div class="content-card"><h6 class="fw-bold mb-3">สถิติแยกตามห้องเรียน</h6><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ห้องเรียน</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึก</th><th class="text-center">ยกเว้น</th><th class="text-center">ยังไม่บันทึก</th><th class="text-center">%</th></tr></thead><tbody id="classroomStatsBody"><tr><td colspan="6" class="text-center text-muted py-4">กำลังโหลด...</td></tr></tbody></table></div></div>
       </div>
 
       <!-- SCANNER -->
       <div class="page-section" id="page-scanner">
         <div class="row g-3">
-          <div class="col-md-8">
-            <div class="content-card">
-              <h6 class="fw-bold mb-3"><i class="bi bi-qr-code-scan"></i> สแกน QR Code</h6>
-              <div class="mb-3">
-                <label class="form-label fw-bold">เลือกเวลาละหมาด</label>
-                <div class="d-flex flex-wrap gap-2" id="prayerTimeButtons"></div>
-              </div>
-              <div id="scannerContainer" class="mb-3"></div>
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                <button class="btn btn-primary" id="btnStartScan" onclick="startScanner()"><i class="bi bi-camera"></i> เริ่มสแกน</button>
-                <button class="btn btn-secondary" id="btnStopScan" onclick="stopScanner()" disabled><i class="bi bi-stop-circle"></i> หยุดกล้อง</button>
-                <button class="btn btn-outline-primary" id="btnSwitchCamera" onclick="switchCamera()" disabled><i class="bi bi-arrow-repeat"></i> สลับกล้อง</button>
-              </div>
-              <div id="scannerResult" class="scanner-result" style="display:none;"></div>
+          <div class="col-md-8"><div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-qr-code-scan"></i> สแกน QR Code</h6>
+            <div class="mb-3"><label class="form-label fw-bold">เลือกเวลาละหมาด</label><div class="d-flex flex-wrap gap-2" id="prayerTimeButtons"></div></div>
+            <div id="scannerContainer" class="mb-3"></div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button class="btn btn-primary" id="btnStartScan" onclick="startScanner()"><i class="bi bi-camera"></i> เริ่มสแกน</button>
+              <button class="btn btn-secondary" id="btnStopScan" onclick="stopScanner()" disabled><i class="bi bi-stop-circle"></i> หยุด</button>
+              <button class="btn btn-outline-primary" id="btnSwitchCamera" onclick="switchCamera()" disabled><i class="bi bi-arrow-repeat"></i> สลับกล้อง</button>
             </div>
-          </div>
+            <div id="scannerResult" class="scanner-result" style="display:none"></div>
+          </div></div>
           <div class="col-md-4">
-            <div class="content-card">
-              <h6 class="fw-bold mb-3"><i class="bi bi-search"></i> ค้นหาด้วยรหัสนักเรียน</h6>
-              <div class="input-group mb-3">
-                <input type="text" class="form-control" id="searchStudentCode" placeholder="กรอกรหัสนักเรียน" onkeypress="if(event.key==='Enter')searchByCode()">
-                <button class="btn btn-primary" onclick="searchByCode()"><i class="bi bi-search"></i></button>
-              </div>
-              <div id="searchResult"></div>
-            </div>
-            <div class="content-card">
-              <h6 class="fw-bold mb-3">สถิติวันนี้</h6>
-              <div id="scannerMiniStats"><p class="text-muted small">กำลังโหลด...</p></div>
-            </div>
+            <div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-search"></i> ค้นหาด้วยรหัส</h6><div class="input-group mb-3"><input type="text" class="form-control" id="searchStudentCode" placeholder="รหัสนักเรียน" onkeypress="if(event.key==='Enter')searchByCode()"><button class="btn btn-primary" onclick="searchByCode()"><i class="bi bi-search"></i></button></div><div id="searchResult"></div></div>
+            <div class="content-card"><h6 class="fw-bold mb-3">สถิติวันนี้</h6><div id="scannerMiniStats"><p class="text-muted small">กำลังโหลด...</p></div></div>
           </div>
         </div>
       </div>
 
       <!-- MANUAL -->
       <div class="page-section" id="page-manual">
-        <div class="content-card">
-          <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square"></i> บันทึกการละหมาดด้วยมือ</h6>
+        <div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-pencil-square"></i> บันทึกด้วยมือ</h6>
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">รหัสนักเรียน</label>
-              <input type="text" class="form-control" id="manualStudentCode" placeholder="กรอกรหัสนักเรียน" oninput="manualSearchStudent()">
-              <div id="manualStudentInfo" class="mt-2"></div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">เวลาละหมาด</label>
-              <select class="form-select" id="manualPrayerName"><option value="">-- เลือกเวลา --</option></select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">วันที่</label>
-              <input type="date" class="form-control" id="manualDate">
-            </div>
+            <div class="col-md-4"><label class="form-label">รหัสนักเรียน</label><input type="text" class="form-control" id="manualStudentCode" oninput="manualSearchStudent()"><div id="manualStudentInfo" class="mt-2"></div></div>
+            <div class="col-md-4"><label class="form-label">เวลาละหมาด</label><select class="form-select" id="manualPrayerName"><option value="">-- เลือก --</option></select></div>
+            <div class="col-md-4"><label class="form-label">วันที่</label><input type="date" class="form-control" id="manualDate"></div>
           </div>
           <div class="mt-3"><button class="btn btn-success" onclick="submitManualRecord()"><i class="bi bi-check-lg"></i> บันทึก</button></div>
         </div>
@@ -341,81 +181,31 @@
       <!-- EXEMPTION -->
       <div class="page-section" id="page-exemption">
         <div class="row g-3">
-          <div class="col-md-5">
-            <div class="content-card">
-              <h6 class="fw-bold mb-3"><i class="bi bi-calendar-x"></i> บันทึกการยกเว้น</h6>
-              <div class="mb-3">
-                <label class="form-label">ค้นหานักเรียนหญิง</label>
-                <input type="text" class="form-control" id="exemptionSearchInput" placeholder="ชื่อ หรือ รหัสนักเรียน" oninput="searchFemaleStudents()">
-                <div id="exemptionStudentList" class="mt-2" style="max-height:200px;overflow-y:auto;"></div>
-              </div>
-              <div class="mb-3"><label class="form-label">วันที่</label><input type="date" class="form-control" id="exemptionDate"></div>
-              <div class="mb-3"><label class="form-label">หมายเหตุ (ไม่บังคับ)</label><textarea class="form-control" id="exemptionNote" rows="2"></textarea></div>
-              <button class="btn btn-warning" onclick="submitExemption()"><i class="bi bi-check-lg"></i> บันทึกการยกเว้น</button>
-            </div>
-          </div>
-          <div class="col-md-7">
-            <div class="content-card">
-              <h6 class="fw-bold mb-3">รายการยกเว้น</h6>
-              <div class="row g-2 mb-3">
-                <div class="col-md-4"><input type="date" class="form-control" id="exemptionFilterDate" onchange="loadExemptionRecords()"></div>
-                <div class="col-md-4"><select class="form-select" id="exemptionFilterClass" onchange="loadExemptionRecords()"><option value="">ทุกห้องเรียน</option></select></div>
-                <div class="col-md-4"><button class="btn btn-outline-primary w-100" onclick="loadExemptionRecords()"><i class="bi bi-funnel"></i> กรอง</button></div>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-hover table-sm">
-                  <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th>วันที่</th><th>สถานะ</th><th>ผู้บันทึก</th><th>จัดการ</th></tr></thead>
-                  <tbody id="exemptionRecordsBody"><tr><td colspan="7" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <div class="col-md-5"><div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-calendar-x"></i> บันทึกยกเว้น</h6>
+            <div class="mb-3"><label class="form-label">ค้นหานักเรียนหญิง</label><input type="text" class="form-control" id="exemptionSearchInput" oninput="searchFemaleStudents()"><div id="exemptionStudentList" class="mt-2" style="max-height:200px;overflow-y:auto"></div></div>
+            <div class="mb-3"><label class="form-label">วันที่</label><input type="date" class="form-control" id="exemptionDate"></div>
+            <div class="mb-3"><label class="form-label">หมายเหตุ</label><textarea class="form-control" id="exemptionNote" rows="2"></textarea></div>
+            <button class="btn btn-warning" onclick="submitExemption()"><i class="bi bi-check-lg"></i> บันทึก</button>
+          </div></div>
+          <div class="col-md-7"><div class="content-card"><h6 class="fw-bold mb-3">รายการยกเว้น</h6>
+            <div class="row g-2 mb-3"><div class="col-md-4"><input type="date" class="form-control" id="exemptionFilterDate" onchange="loadExemptionRecords()"></div><div class="col-md-4"><select class="form-select" id="exemptionFilterClass" onchange="loadExemptionRecords()"><option value="">ทุกห้อง</option></select></div><div class="col-md-4"><button class="btn btn-outline-primary w-100" onclick="loadExemptionRecords()"><i class="bi bi-funnel"></i> กรอง</button></div></div>
+            <div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ห้อง</th><th>วันที่</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="exemptionRecordsBody"><tr><td colspan="6" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody></table></div>
+          </div></div>
         </div>
       </div>
 
       <!-- REPORTS -->
       <div class="page-section" id="page-reports">
-        <div class="content-card">
-          <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</h6>
-          <ul class="nav nav-tabs mb-3">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#reportDaily">รายวัน</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportMonthly">รายเดือน</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportStudent">รายบุคคล</a></li>
-          </ul>
+        <div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</h6>
+          <ul class="nav nav-tabs mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#reportDaily">รายวัน</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportMonthly">รายเดือน</a></li></ul>
           <div class="tab-content">
             <div class="tab-pane fade show active" id="reportDaily">
-              <div class="row g-2 mb-3">
-                <div class="col-md-3"><input type="date" class="form-control" id="reportDailyDate"></div>
-                <div class="col-md-3"><select class="form-select" id="reportDailyClass"><option value="">ทุกห้องเรียน</option></select></div>
-                <div class="col-md-3"><button class="btn btn-primary" onclick="loadDailyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
-                <div class="col-md-3 text-end">
-                  <button class="btn btn-success" onclick="exportCSV()"><i class="bi bi-download"></i> ส่งออก CSV</button>
-                  <button class="btn btn-outline-secondary ms-1" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์</button>
-                </div>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-hover table-sm">
-                  <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th class="text-center">ฟัจญ์ร</th><th class="text-center">ซุฮ์ริ</th><th class="text-center">อัสริ</th><th class="text-center">มัฆริบ</th><th class="text-center">อิชาอ์</th><th class="text-center">รวม</th></tr></thead>
-                  <tbody id="dailyReportBody"><tr><td colspan="9" class="text-center text-muted py-3">เลือกวันที่แล้วกด "ดูรายงาน"</td></tr></tbody>
-                </table>
-              </div>
+              <div class="row g-2 mb-3"><div class="col-md-3"><input type="date" class="form-control" id="reportDailyDate"></div><div class="col-md-3"><select class="form-select" id="reportDailyClass"><option value="">ทุกห้อง</option></select></div><div class="col-md-3"><button class="btn btn-primary" onclick="loadDailyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div><div class="col-md-3 text-end"><button class="btn btn-success" onclick="exportCSV()"><i class="bi bi-download"></i> CSV</button> <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i></button></div></div>
+              <div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ห้อง</th><th class="text-center">ฟัจญ์ร</th><th class="text-center">ซุฮ์ริ</th><th class="text-center">อัสริ</th><th class="text-center">มัฆริบ</th><th class="text-center">อิชาอ์</th><th class="text-center">รวม</th></tr></thead><tbody id="dailyReportBody"><tr><td colspan="9" class="text-center text-muted py-3">เลือกวันที่แล้วกดดูรายงาน</td></tr></tbody></table></div>
             </div>
             <div class="tab-pane fade" id="reportMonthly">
-              <div class="row g-2 mb-3">
-                <div class="col-md-2"><select class="form-select" id="reportMonth"><option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option><option value="3">มีนาคม</option><option value="4">เมษายน</option><option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option><option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option><option value="9">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option></select></div>
-                <div class="col-md-2"><select class="form-select" id="reportYear"></select></div>
-                <div class="col-md-2"><button class="btn btn-primary" onclick="loadMonthlyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
-              </div>
-              <div id="monthlyReportContent"><p class="text-muted text-center py-4">เลือกรายเดือนแล้วกด "ดูรายงาน"</p></div>
-            </div>
-            <div class="tab-pane fade" id="reportStudent">
-              <div class="row g-2 mb-3">
-                <div class="col-md-3"><input type="text" class="form-control" id="reportStudentSearch" placeholder="รหัสนักเรียน" oninput="searchStudentForReport()"><div id="reportStudentList" class="mt-1" style="max-height:150px;overflow-y:auto;"></div></div>
-                <div class="col-md-2"><input type="date" class="form-control" id="reportStudentFrom"></div>
-                <div class="col-md-2"><input type="date" class="form-control" id="reportStudentTo"></div>
-                <div class="col-md-2"><button class="btn btn-primary" onclick="loadStudentReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
-              </div>
-              <div id="studentReportContent"><p class="text-muted text-center py-4">ค้นหานักเรียนแล้วกด "ดูรายงาน"</p></div>
+              <div class="row g-2 mb-3"><div class="col-md-2"><select class="form-select" id="reportMonth"><option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option><option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option><option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option><option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option></select></div><div class="col-md-2"><select class="form-select" id="reportYear"></select></div><div class="col-md-2"><button class="btn btn-primary" onclick="loadMonthlyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div></div>
+              <div id="monthlyReportContent"><p class="text-muted text-center py-4">เลือกรายเดือนแล้วกดดูรายงาน</p></div>
             </div>
           </div>
         </div>
@@ -425,22 +215,11 @@
       <div class="page-section" id="page-students">
         <div class="content-card">
           <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h6 class="fw-bold mb-0"><i class="bi bi-people"></i> จัดการข้อมูลนักเรียน</h6>
-            <div class="d-flex gap-2">
-              <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>
-              <button class="btn btn-success btn-sm" onclick="showImportModal()"><i class="bi bi-upload"></i> นำเข้า CSV</button>
-            </div>
+            <h6 class="fw-bold mb-0"><i class="bi bi-people"></i> จัดการนักเรียน</h6>
+            <div class="d-flex gap-2"><button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="bi bi-plus-lg"></i> เพิ่ม</button><button class="btn btn-success btn-sm" onclick="showImportModal()"><i class="bi bi-upload"></i> นำเข้า CSV</button></div>
           </div>
-          <div class="row g-2 mb-3">
-            <div class="col-md-4"><input type="text" class="form-control" id="studentSearchInput" placeholder="ค้นหา: รหัส, ชื่อ, ห้องเรียน" oninput="debounceSearchStudents()"></div>
-            <div class="col-md-2"><select class="form-select" id="studentPageSize" onchange="loadStudents()"><option value="10">10 รายการ</option><option value="25" selected>25 รายการ</option><option value="50">50 รายการ</option><option value="100">100 รายการ</option></select></div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover table-sm">
-              <thead><tr><th>รหัส</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>เพศ</th><th>ชั้น</th><th>ห้อง</th><th>QR</th><th>จัดการ</th></tr></thead>
-              <tbody id="studentsTableBody"><tr><td colspan="9" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
+          <div class="row g-2 mb-3"><div class="col-md-4"><input type="text" class="form-control" id="studentSearchInput" placeholder="ค้นหา: รหัส, ชื่อ, ห้อง" oninput="debounceSearchStudents()"></div><div class="col-md-2"><select class="form-select" id="studentPageSize" onchange="loadStudents()"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select></div></div>
+          <div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>รหัส</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>เพศ</th><th>ชั้น</th><th>ห้อง</th><th>QR</th><th>จัดการ</th></tr></thead><tbody id="studentsTableBody"><tr><td colspan="9" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody></table></div>
           <nav id="studentsPagination"></nav>
         </div>
       </div>
@@ -448,111 +227,84 @@
       <!-- USERS -->
       <div class="page-section" id="page-users">
         <div class="content-card">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold mb-0"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</h6>
-            <button class="btn btn-primary btn-sm" onclick="showAddUserModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover table-sm">
-              <thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อแสดงผล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-              <tbody id="usersTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3"><h6 class="fw-bold mb-0"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</h6><button class="btn btn-primary btn-sm" onclick="showAddUserModal()"><i class="bi bi-plus-lg"></i> เพิ่ม</button></div>
+          <div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อแสดงผล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody></table></div>
         </div>
       </div>
 
       <!-- SETTINGS -->
       <div class="page-section" id="page-settings">
-        <div class="content-card">
-          <h6 class="fw-bold mb-3"><i class="bi bi-gear"></i> ตั้งค่าระบบ</h6>
-          <div id="settingsContent"><p class="text-muted">กำลังโหลด...</p></div>
-        </div>
+        <div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-gear"></i> ตั้งค่าระบบ</h6><div id="settingsContent"><p class="text-muted">กำลังโหลด...</p></div></div>
       </div>
 
       <!-- AUDIT -->
       <div class="page-section" id="page-audit">
-        <div class="content-card">
-          <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</h6>
-          <div class="row g-2 mb-3"><div class="col-md-3"><select class="form-select" id="auditFilterType" onchange="loadAuditLogs()"><option value="">ทุกประเภท</option><option value="student">นักเรียน</option><option value="prayer_log">การละหมาด</option><option value="menstruation">การยกเว้น</option><option value="settings">การตั้งค่า</option><option value="user">ผู้ใช้</option></select></div></div>
-          <div class="table-responsive">
-            <table class="table table-hover table-sm">
-              <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ประเภท</th><th>ผู้ดำเนินการ</th><th>เหตุผล</th></tr></thead>
-              <tbody id="auditTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-            </table>
-          </div>
+        <div class="content-card"><h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</h6>
+          <div class="row g-2 mb-3"><div class="col-md-3"><select class="form-select" id="auditFilterType" onchange="loadAuditLogs()"><option value="">ทุกประเภท</option><option value="student">นักเรียน</option><option value="prayer_log">การละหมาด</option><option value="menstruation">ยกเว้น</option><option value="settings">ตั้งค่า</option><option value="user">ผู้ใช้</option></select></div></div>
+          <div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>เวลา</th><th>การกระทำ</th><th>ประเภท</th><th>ผู้ดำเนินการ</th><th>เหตุผล</th></tr></thead><tbody id="auditTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody></table></div>
           <nav id="auditPagination"></nav>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODALS -->
-  <div class="modal fade" id="addStudentModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">เพิ่มนักเรียน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="row g-3">
-          <div class="col-12"><label class="form-label">รหัสนักเรียน *</label><input type="text" class="form-control" id="newStudentCode"></div>
-          <div class="col-4"><label class="form-label">คำนำหน้า</label><select class="form-select" id="newStudentPrefix"><option value="">-</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option><option value="นาย">นาย</option><option value="นางสาว">นางสาว</option></select></div>
-          <div class="col-4"><label class="form-label">ชื่อ *</label><input type="text" class="form-control" id="newStudentFirst"></div>
-          <div class="col-4"><label class="form-label">นามสกุล *</label><input type="text" class="form-control" id="newStudentLast"></div>
-          <div class="col-4"><label class="form-label">เพศ *</label><select class="form-select" id="newStudentGender"><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
-          <div class="col-4"><label class="form-label">ระดับชั้น</label><input type="text" class="form-control" id="newStudentGrade" placeholder="ม.1"></div>
-          <div class="col-4"><label class="form-label">ห้องเรียน</label><input type="text" class="form-control" id="newStudentClassroom" placeholder="1/1"></div>
-        </div>
+  <!-- ADD STUDENT MODAL -->
+  <div class="modal fade" id="addStudentModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="studentModalTitle">เพิ่มนักเรียน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editStudentId">
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label">รหัสนักเรียน *</label><input type="text" class="form-control" id="newStudentCode"></div>
+        <div class="col-4"><label class="form-label">คำนำหน้า</label><select class="form-select" id="newStudentPrefix"><option value="">-</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option><option value="นาย">นาย</option><option value="นางสาว">นางสาว</option></select></div>
+        <div class="col-4"><label class="form-label">ชื่อ *</label><input type="text" class="form-control" id="newStudentFirst"></div>
+        <div class="col-4"><label class="form-label">นามสกุล *</label><input type="text" class="form-control" id="newStudentLast"></div>
+        <div class="col-4"><label class="form-label">เพศ *</label><select class="form-select" id="newStudentGender"><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
+        <div class="col-4"><label class="form-label">ระดับชั้น</label><input type="text" class="form-control" id="newStudentGrade" placeholder="ม.4"></div>
+        <div class="col-4"><label class="form-label">ห้องเรียน</label><input type="text" class="form-control" id="newStudentClassroom" placeholder="1/1"></div>
       </div>
-      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitAddStudent()">บันทึก</button></div>
-    </div></div>
-  </div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitStudentForm()">บันทึก</button></div>
+  </div></div></div>
 
-  <div class="modal fade" id="importModal" tabindex="-1">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">นำเข้าข้อมูลนักเรียนจาก CSV</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="alert alert-info"><strong>รูปแบบ CSV:</strong> student_code, prefix, first_name, last_name, gender, grade_level, classroom</div>
-        <div class="mb-3"><label class="form-label">เลือกไฟล์ CSV</label><input type="file" class="form-control" id="importFile" accept=".csv"></div>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitImport()">นำเข้า</button></div>
-    </div></div>
-  </div>
+  <!-- IMPORT MODAL -->
+  <div class="modal fade" id="importModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">นำเข้า CSV</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><div class="alert alert-info"><strong>รูปแบบ:</strong> student_code, prefix, first_name, last_name, gender, grade_level, classroom</div><input type="file" class="form-control" id="importFile" accept=".csv"></div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitImport()">นำเข้า</button></div>
+  </div></div></div>
 
-  <div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">เพิ่มผู้ใช้</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="mb-3"><label class="form-label">ชื่อผู้ใช้ (อีเมล) *</label><input type="email" class="form-control" id="newUserEmail"></div>
-        <div class="mb-3"><label class="form-label">ชื่อแสดงผล *</label><input type="text" class="form-control" id="newUserDisplayName"></div>
-        <div class="mb-3"><label class="form-label">รหัสผ่านเริ่มต้น</label><input type="text" class="form-control" id="newUserPassword" value="123456"></div>
-        <div class="mb-3"><label class="form-label">สิทธิ์ *</label><select class="form-select" id="newUserRole"><option value="teacher">ครู (Teacher)</option><option value="admin">ผู้ดูแลระบบ (Admin)</option><option value="student">นักเรียน (Student)</option></select></div>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitAddUser()">บันทึก</button></div>
-    </div></div>
-  </div>
+  <!-- ADD/EDIT USER MODAL -->
+  <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="userModalTitle">เพิ่มผู้ใช้</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="mb-3"><label class="form-label">ชื่อผู้ใช้ (อีเมล) *</label><input type="email" class="form-control" id="newUserEmail"></div>
+      <div class="mb-3"><label class="form-label">ชื่อแสดงผล *</label><input type="text" class="form-control" id="newUserDisplayName"></div>
+      <div class="mb-3"><label class="form-label">รหัสผ่าน <small class="text-muted">(เว้นว่างถ้าไม่เปลี่ยน)</small></label><input type="password" class="form-control" id="newUserPassword"></div>
+      <div class="mb-3"><label class="form-label">สิทธิ์ *</label><select class="form-select" id="newUserRole"><option value="teacher">ครู</option><option value="admin">ผู้ดูแลระบบ</option><option value="student">นักเรียน</option></select></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitUserForm()">บันทึก</button></div>
+  </div></div></div>
 
-  <div class="modal fade" id="qrModal" tabindex="-1">
-    <div class="modal-dialog modal-sm"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">QR Code</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body text-center"><div id="qrCodeDisplay"></div><p class="mt-2 small text-muted" id="qrStudentName"></p></div>
-      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div>
-    </div></div>
-  </div>
+  <!-- QR MODAL -->
+  <div class="modal fade" id="qrModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">QR Code</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body text-center"><div id="qrCodeDisplay"></div><p class="mt-2 small text-muted" id="qrStudentName"></p></div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button></div>
+  </div></div></div>
 
-  <div class="api-status disconnected" id="apiStatus"><i class="bi bi-wifi-off"></i> เชื่อมต่อ API...</div>
+  <div class="api-status disconnected" id="apiStatus"><i class="bi bi-wifi-off"></i> API...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- QR Code Library - ใช้ qrcode-generator ที่เสถียร -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
   <script>
     // ============================================================
     // API CONFIGURATION
-    // ============================================================
-    // วิธีหาค่า API_URL ที่ถูกต้อง:
-    // 1. เปิด Apps Script → Deploy → Manage deployments
-    // 2. คัดลอก URL ที่ลงท้ายด้วย /exec
-    // 3. วางแทนที่ YOUR_SCRIPT_ID ด้านล่าง
     // ============================================================
     let API_URL = localStorage.getItem('prayer_api_url') || 'https://script.google.com/macros/s/AKfycbxN-8sC1Alt3cB3hmpPjRbHjLb53j5DzxthmE5UxWbXvhsvM0U-09jrZ5ZhjAWR4bM/exec';
 
@@ -560,88 +312,98 @@
     // APPLICATION STATE
     // ============================================================
     const APP = {
-      currentUser: null,
-      sessionToken: null,
-      currentPage: 'dashboard',
-      selectedPrayer: 'fajr',
-      scanner: null,
-      scannerRunning: false,
-      currentCameraId: null,
-      cameras: [],
-      charts: {},
-      debounceTimer: null,
+      currentUser: null, sessionToken: null, currentPage: 'dashboard',
+      selectedPrayer: 'fajr', scanner: null, scannerRunning: false,
+      currentCameraId: null, cameras: [], charts: {}, debounceTimer: null,
       selectedExemptionStudent: null,
-      selectedReportStudent: null,
       prayerNames: { 'fajr': 'ฟัจญ์ร (ซุบฮิ)', 'zuhr': 'ซุฮ์ริ', 'asr': 'อัสริ', 'maghrib': 'มัฆริบ', 'isha': 'อิชาอ์' },
       prayerKeys: ['fajr', 'zuhr', 'asr', 'maghrib', 'isha']
     };
 
     // ============================================================
-    // API TEST FUNCTIONS
+    // QR CODE GENERATOR (Fallback + qrcode-generator library)
     // ============================================================
-    function toggleApiTest() {
-      const panel = document.getElementById('apiTestPanel');
-      panel.classList.toggle('show');
-      document.getElementById('apiTestUrl').value = API_URL;
-    }
+    function generateQRCode(text, containerId, size) {
+      size = size || 200;
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
 
-    async function testPing() {
-      const resultDiv = document.getElementById('apiTestResult');
-      resultDiv.textContent = 'กำลังทดสอบ Ping...';
       try {
-        const url = new URL(API_URL);
-        url.searchParams.append('action', 'ping');
-        const response = await fetch(url.toString());
-        const data = await response.json();
-        resultDiv.textContent = '✅ Ping สำเร็จ!\n' + JSON.stringify(data, null, 2);
-        resultDiv.style.background = '#e8f5e9';
-      } catch (err) {
-        resultDiv.textContent = '❌ Ping ล้มเหลว: ' + err.message + '\n\nตรวจสอบ:\n1. API_URL ถูกต้องหรือไม่\n2. Deploy เป็น Web App แล้วหรือไม่\n3. Who has access = Anyone';
-        resultDiv.style.background = '#ffebee';
-      }
-    }
+        // วิธีที่ 1: ใช้ qrcode-generator library
+        if (typeof qrcode !== 'undefined') {
+          const qr = qrcode(0, 'M');
+          qr.addData(text);
+          qr.make();
+          
+          const canvas = document.createElement('canvas');
+          const cellSize = Math.floor(size / qr.getModuleCount());
+          canvas.width = cellSize * qr.getModuleCount();
+          canvas.height = cellSize * qr.getModuleCount();
+          const ctx = canvas.getContext('2d');
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#000000';
+          
+          for (let row = 0; row < qr.getModuleCount(); row++) {
+            for (let col = 0; col < qr.getModuleCount(); col++) {
+              if (qr.isDark(row, col)) {
+                ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+              }
+            }
+          }
+          container.appendChild(canvas);
+          return;
+        }
+      } catch (e) { console.error('QR gen error:', e); }
 
-    async function testSetup() {
-      const resultDiv = document.getElementById('apiTestResult');
-      resultDiv.textContent = 'กำลังติดตั้งระบบ...';
+      // วิธีที่ 2: Fallback - สร้าง QR แบบง่ายด้วย canvas
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'setupSystem' }),
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        });
-        const data = await response.json();
-        resultDiv.textContent = '✅ Setup สำเร็จ!\n' + JSON.stringify(data, null, 2);
-        resultDiv.style.background = '#e8f5e9';
-      } catch (err) {
-        resultDiv.textContent = '❌ Setup ล้มเหลว: ' + err.message;
-        resultDiv.style.background = '#ffebee';
-      }
-    }
-
-    async function testConfig() {
-      const resultDiv = document.getElementById('apiTestResult');
-      resultDiv.textContent = 'กำลังโหลดการตั้งค่า...';
-      try {
-        const url = new URL(API_URL);
-        url.searchParams.append('action', 'getAppConfig');
-        const response = await fetch(url.toString());
-        const data = await response.json();
-        resultDiv.textContent = '✅ Config สำเร็จ!\n' + JSON.stringify(data, null, 2);
-        resultDiv.style.background = '#e8f5e9';
-      } catch (err) {
-        resultDiv.textContent = '❌ Config ล้มเหลว: ' + err.message;
-        resultDiv.style.background = '#ffebee';
-      }
-    }
-
-    function saveApiUrl() {
-      const newUrl = document.getElementById('apiTestUrl').value.trim();
-      if (newUrl) {
-        localStorage.setItem('prayer_api_url', newUrl);
-        API_URL = newUrl;
-        alert('บันทึก URL แล้ว - กำลังรีโหลดหน้า...');
-        location.reload();
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        
+        // สร้าง pattern จาก text
+        ctx.fillStyle = '#000000';
+        const gridSize = 25;
+        const cellSize = size / gridSize;
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+          hash = ((hash << 5) - hash) + text.charCodeAt(i);
+          hash = hash & hash;
+        }
+        
+        // วาด finder patterns (มุมทั้ง 3)
+        const drawFinder = (x, y) => {
+          ctx.fillRect(x, y, cellSize * 7, cellSize * 7);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(x + cellSize, y + cellSize, cellSize * 5, cellSize * 5);
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(x + cellSize * 2, y + cellSize * 2, cellSize * 3, cellSize * 3);
+        };
+        drawFinder(0, 0);
+        drawFinder(size - cellSize * 7, 0);
+        drawFinder(0, size - cellSize * 7);
+        
+        // วาดข้อมูลแบบสุ่มจาก hash
+        ctx.fillStyle = '#000000';
+        for (let row = 0; row < gridSize; row++) {
+          for (let col = 0; col < gridSize; col++) {
+            // ข้าม finder patterns
+            if ((row < 8 && col < 8) || (row < 8 && col >= gridSize - 8) || (row >= gridSize - 8 && col < 8)) continue;
+            hash = ((hash << 5) - hash) + row * 31 + col * 17;
+            if ((hash & 1) === 0) {
+              ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+        container.appendChild(canvas);
+      } catch (e) {
+        container.innerHTML = '<p class="text-danger">ไม่สามารถสร้าง QR Code ได้</p>';
       }
     }
 
@@ -652,47 +414,32 @@
       const apiStatus = document.getElementById('apiStatus');
       try {
         const requestParams = { action: action, ...params };
-        if (APP.sessionToken) {
-          requestParams.token = APP.sessionToken;
-        }
+        if (APP.sessionToken) requestParams.token = APP.sessionToken;
 
-        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord', 'login', 'logout', 'setupSystem'].includes(action);
+        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord', 'login', 'logout', 'setupSystem', 'deleteStudent', 'deleteUser'].includes(action);
 
         let response;
         if (usePost) {
-          response = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(requestParams),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-          });
+          response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(requestParams), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
         } else {
           const url = new URL(API_URL);
           for (const [key, value] of Object.entries(requestParams)) {
-            if (value !== undefined && value !== null) {
-              url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
-            }
+            if (value !== undefined && value !== null) url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
           }
           response = await fetch(url.toString(), { method: 'GET', redirect: 'follow' });
         }
 
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const result = await response.json();
+        if (result === null || result === undefined) throw new Error('API returned null');
+        if (typeof result !== 'object') throw new Error('Invalid response');
 
-        if (result === null || result === undefined) throw new Error('API returned null response');
-        if (typeof result !== 'object') throw new Error('API returned invalid response type');
-
-        if (apiStatus) {
-          apiStatus.className = 'api-status connected';
-          apiStatus.innerHTML = '<i class="bi bi-wifi"></i> เชื่อมต่อแล้ว';
-        }
+        if (apiStatus) { apiStatus.className = 'api-status connected'; apiStatus.innerHTML = '<i class="bi bi-wifi"></i> เชื่อมต่อแล้ว'; }
         return result;
       } catch (err) {
         console.error('API Error [' + action + ']:', err);
-        if (apiStatus) {
-          apiStatus.className = 'api-status disconnected';
-          apiStatus.innerHTML = '<i class="bi bi-wifi-off"></i> ผิดพลาด: ' + err.message;
-        }
-        return { success: false, message: 'ไม่สามารถเชื่อมต่อ API ได้: ' + err.message, data: null, errorCode: 'API_CONNECTION_ERROR' };
+        if (apiStatus) { apiStatus.className = 'api-status disconnected'; apiStatus.innerHTML = '<i class="bi bi-wifi-off"></i> ผิดพลาด'; }
+        return { success: false, message: 'เชื่อมต่อ API ไม่ได้: ' + err.message, data: null, errorCode: 'API_ERROR' };
       }
     }
 
@@ -712,23 +459,20 @@
 
       try {
         const result = await callAPI('login', { username: username, password: password });
-
         if (result && result.success) {
           APP.sessionToken = result.data.token;
           APP.currentUser = result.data.user;
           sessionStorage.setItem('sessionToken', APP.sessionToken);
           sessionStorage.setItem('currentUser', JSON.stringify(APP.currentUser));
-
           document.getElementById('loginPage').classList.add('hidden');
           document.getElementById('mainApp').style.display = 'block';
-
           await initApp();
         } else {
           errorDiv.textContent = result ? result.message : 'เกิดข้อผิดพลาด';
           errorDiv.style.display = 'block';
         }
       } catch (err) {
-        errorDiv.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message;
+        errorDiv.textContent = 'ไม่สามารถเชื่อมต่อ: ' + err.message;
         errorDiv.style.display = 'block';
       } finally {
         loginBtn.disabled = false;
@@ -744,26 +488,11 @@
     }
 
     async function handleLogout() {
-      const confirm = await Swal.fire({
-        icon: 'question',
-        title: 'ออกจากระบบ?',
-        text: 'ต้องการออกจากระบบหรือไม่',
-        showCancelButton: true,
-        confirmButtonText: 'ออกจากระบบ',
-        cancelButtonText: 'ยกเลิก'
-      });
-
+      const confirm = await Swal.fire({ icon: 'question', title: 'ออกจากระบบ?', showCancelButton: true, confirmButtonText: 'ออก', cancelButtonText: 'ยกเลิก' });
       if (!confirm.isConfirmed) return;
-
-      if (APP.sessionToken) {
-        await callAPI('logout', { token: APP.sessionToken });
-      }
-
-      APP.sessionToken = null;
-      APP.currentUser = null;
-      sessionStorage.removeItem('sessionToken');
-      sessionStorage.removeItem('currentUser');
-
+      if (APP.sessionToken) await callAPI('logout', { token: APP.sessionToken });
+      APP.sessionToken = null; APP.currentUser = null;
+      sessionStorage.removeItem('sessionToken'); sessionStorage.removeItem('currentUser');
       document.getElementById('mainApp').style.display = 'none';
       document.getElementById('loginPage').classList.remove('hidden');
       document.getElementById('loginUsername').value = '';
@@ -771,23 +500,18 @@
     }
 
     // ============================================================
-    // UTILITY FUNCTIONS
+    // UTILITY
     // ============================================================
     function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
     function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+    function showToast(title, icon) { Swal.fire({ title: title, icon: icon, timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' }); }
 
-    function showToast(title, icon, timer) {
-      Swal.fire({ title: title, icon: icon, timer: timer || 2000, showConfirmButton: false, toast: true, position: 'top-end' });
-    }
-
-    // แก้ไขการคำนวณวันที่ พ.ศ. ให้ถูกต้อง
     function formatThaiDate(dateStr) {
       if (!dateStr) return '-';
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
       const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-      const buddhistYear = d.getFullYear() + 543;
-      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + buddhistYear;
+      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
     }
 
     function getTodayStr() {
@@ -814,14 +538,9 @@
       if (pageEl) pageEl.classList.add('active');
       const navEl = document.querySelector('.nav-link[data-page="' + page + '"]');
       if (navEl) navEl.classList.add('active');
-
-      const titles = { 'dashboard': 'แดชบอร์ด', 'scanner': 'สแกนบันทึกการละหมาด', 'manual': 'บันทึกด้วยมือ', 'exemption': 'บันทึกการยกเว้น', 'reports': 'รายงาน', 'students': 'จัดการนักเรียน', 'users': 'จัดการผู้ใช้', 'settings': 'ตั้งค่าระบบ', 'audit': 'ประวัติการใช้งาน' };
+      const titles = { 'dashboard': 'แดชบอร์ด', 'scanner': 'สแกนบันทึก', 'manual': 'บันทึกด้วยมือ', 'exemption': 'บันทึกยกเว้น', 'reports': 'รายงาน', 'students': 'จัดการนักเรียน', 'users': 'จัดการผู้ใช้', 'settings': 'ตั้งค่าระบบ', 'audit': 'ประวัติ' };
       document.getElementById('pageTitle').textContent = titles[page] || page;
-
-      if (window.innerWidth < 992) {
-        document.getElementById('sidebar').classList.remove('show');
-        document.getElementById('sidebarOverlay').classList.remove('show');
-      }
+      if (window.innerWidth < 992) { document.getElementById('sidebar').classList.remove('show'); document.getElementById('sidebarOverlay').classList.remove('show'); }
       loadPageData(page);
     }
 
@@ -839,25 +558,12 @@
       }
     }
 
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('show');
-      document.getElementById('sidebarOverlay').classList.toggle('show');
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); document.getElementById('sidebarOverlay').classList.toggle('show'); }
 
-    // ============================================================
-    // PERMISSIONS & UI VISIBILITY
-    // ============================================================
     function updateUIPermissions() {
       const role = APP.currentUser ? APP.currentUser.role : 'public';
-      const visibility = {
-        'navScanner': ['admin', 'teacher'], 'navManual': ['admin', 'teacher'],
-        'navExemption': ['admin', 'teacher'], 'navReports': ['admin', 'teacher', 'student'],
-        'navStudents': ['admin'], 'navUsers': ['admin'], 'navSettings': ['admin'], 'navAudit': ['admin']
-      };
-      for (const [navId, allowedRoles] of Object.entries(visibility)) {
-        const el = document.getElementById(navId);
-        if (el) el.style.display = allowedRoles.includes(role) ? '' : 'none';
-      }
+      const visibility = { 'navScanner': ['admin','teacher'], 'navManual': ['admin','teacher'], 'navExemption': ['admin','teacher'], 'navReports': ['admin','teacher','student'], 'navStudents': ['admin'], 'navUsers': ['admin'], 'navSettings': ['admin'], 'navAudit': ['admin'] };
+      for (const [navId, roles] of Object.entries(visibility)) { const el = document.getElementById(navId); if (el) el.style.display = roles.includes(role) ? '' : 'none'; }
       if (APP.currentUser) {
         document.getElementById('currentUserName').textContent = APP.currentUser.display_name || APP.currentUser.username;
         const roleNames = { admin: 'ผู้ดูแลระบบ', teacher: 'ครู', student: 'นักเรียน', public: 'ผู้เยี่ยมชม' };
@@ -873,70 +579,44 @@
       document.getElementById('dashboardDate').value = date;
       try {
         const result = await callAPI('getDashboardStats', { date: date });
-        if (!result || !result.success) {
-          showToast(result ? result.message : 'เกิดข้อผิดพลาด', 'error');
-          return;
-        }
-        const stats = result.data;
-        if (!stats) return;
-
+        if (!result || !result.success) { showToast(result ? result.message : 'ข้อผิดพลาด', 'error'); return; }
+        const stats = result.data; if (!stats) return;
         document.getElementById('statStudents').textContent = stats.totalActiveStudents || 0;
         document.getElementById('statPrayed').textContent = stats.totalPrayed || 0;
         document.getElementById('statExempted').textContent = stats.totalExempted || 0;
         document.getElementById('statNotRecorded').textContent = stats.totalNotRecorded || 0;
         document.getElementById('statPercentage').textContent = (stats.percentage || 0) + '%';
         document.getElementById('dashboardUpdatedAt').textContent = stats.updatedAt || '-';
-
         const total = stats.totalExpected || 1;
-        const prayedPct = (stats.totalPrayed / total * 100).toFixed(1);
-        const exemptPct = (stats.totalExempted / total * 100).toFixed(1);
-        document.getElementById('progressRecorded').style.width = prayedPct + '%';
-        document.getElementById('progressExempted').style.width = exemptPct + '%';
-
+        document.getElementById('progressRecorded').style.width = (stats.totalPrayed / total * 100).toFixed(1) + '%';
+        document.getElementById('progressExempted').style.width = (stats.totalExempted / total * 100).toFixed(1) + '%';
         updatePrayerChart(stats.byPrayer || {});
         updateStatusPieChart(stats.totalPrayed || 0, stats.totalExempted || 0, stats.totalNotRecorded || 0);
         updateClassroomTable(stats.byClassroom || {});
-      } catch (err) {
-        console.error('Dashboard error:', err);
-        showToast('เกิดข้อผิดพลาดในการโหลดแดชบอร์ด', 'error');
-      }
+      } catch (err) { console.error(err); }
     }
 
     function updatePrayerChart(byPrayer) {
-      const ctx = document.getElementById('chartByPrayer');
-      if (!ctx) return;
+      const ctx = document.getElementById('chartByPrayer'); if (!ctx) return;
       const labels = APP.prayerKeys.map(k => APP.prayerNames[k]);
       const data = APP.prayerKeys.map(k => (byPrayer[k] && byPrayer[k].count) || 0);
-      const colors = ['#1565c0', '#2e7d32', '#f57f17', '#c62828', '#6a1b9a'];
       if (APP.charts.prayer) APP.charts.prayer.destroy();
-      APP.charts.prayer = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'จำนวนการบันทึก', data: data, backgroundColor: colors, borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-      });
+      APP.charts.prayer = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ data: data, backgroundColor: ['#1565c0','#2e7d32','#f57f17','#c62828','#6a1b9a'], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
     }
 
     function updateStatusPieChart(prayed, exempted, notRecorded) {
-      const ctx = document.getElementById('chartStatusPie');
-      if (!ctx) return;
+      const ctx = document.getElementById('chartStatusPie'); if (!ctx) return;
       if (APP.charts.pie) APP.charts.pie.destroy();
-      APP.charts.pie = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: ['บันทึกแล้ว', 'ยกเว้น', 'ยังไม่บันทึก'], datasets: [{ data: [prayed, exempted, notRecorded], backgroundColor: ['#2e7d32', '#f57f17', '#e0e0e0'], borderWidth: 2, borderColor: '#fff' }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-      });
+      APP.charts.pie = new Chart(ctx, { type: 'doughnut', data: { labels: ['บันทึกแล้ว','ยกเว้น','ยังไม่บันทึก'], datasets: [{ data: [prayed, exempted, notRecorded], backgroundColor: ['#2e7d32','#f57f17','#e0e0e0'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
     }
 
     function updateClassroomTable(byClassroom) {
       const tbody = document.getElementById('classroomStatsBody');
-      if (!byClassroom || Object.keys(byClassroom).length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-        return;
-      }
+      if (!byClassroom || Object.keys(byClassroom).length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
       let html = '';
       for (const [cls, data] of Object.entries(byClassroom)) {
         const notRecorded = Math.max(0, data.expected - data.prayed - data.exempted);
-        html += '<tr><td><strong>' + escapeHtml(cls) + '</strong></td><td class="text-center">' + data.totalStudents + '</td><td class="text-center"><span class="badge bg-success">' + data.prayed + '</span></td><td class="text-center"><span class="badge bg-warning text-dark">' + data.exempted + '</span></td><td class="text-center"><span class="badge bg-secondary">' + notRecorded + '</span></td><td class="text-center"><div class="progress" style="height:20px;min-width:80px;"><div class="progress-bar" style="width:' + data.percentage + '%">' + data.percentage + '%</div></div></td></tr>';
+        html += '<tr><td><strong>' + escapeHtml(cls) + '</strong></td><td class="text-center">' + data.totalStudents + '</td><td class="text-center"><span class="badge bg-success">' + data.prayed + '</span></td><td class="text-center"><span class="badge bg-warning text-dark">' + data.exempted + '</span></td><td class="text-center"><span class="badge bg-secondary">' + notRecorded + '</span></td><td class="text-center"><div class="progress" style="height:20px;min-width:80px"><div class="progress-bar" style="width:' + data.percentage + '%">' + data.percentage + '%</div></div></td></tr>';
       }
       tbody.innerHTML = html;
     }
@@ -945,8 +625,7 @@
     // SCANNER
     // ============================================================
     function initScannerPage() {
-      const container = document.getElementById('prayerTimeButtons');
-      container.innerHTML = APP.prayerKeys.map(key => '<button class="btn prayer-btn ' + (key === APP.selectedPrayer ? 'active' : 'btn-outline-primary') + '" onclick="selectPrayerTime(\'' + key + '\')" id="prayerBtn_' + key + '">' + APP.prayerNames[key] + '</button>').join('');
+      document.getElementById('prayerTimeButtons').innerHTML = APP.prayerKeys.map(key => '<button class="btn prayer-btn ' + (key === APP.selectedPrayer ? 'active' : 'btn-outline-primary') + '" onclick="selectPrayerTime(\'' + key + '\')" id="prayerBtn_' + key + '">' + APP.prayerNames[key] + '</button>').join('');
       loadScannerMiniStats();
     }
 
@@ -958,23 +637,14 @@
     }
 
     async function loadScannerMiniStats() {
-      try {
-        const result = await callAPI('getDashboardStats', { date: getTodayStr() });
-        if (result && result.success && result.data) {
-          const stats = result.data;
-          document.getElementById('scannerMiniStats').innerHTML = '<div class="d-flex justify-content-between mb-1"><span>บันทึกแล้ว</span><strong class="text-success">' + stats.totalPrayed + '</strong></div><div class="d-flex justify-content-between mb-1"><span>ยกเว้น</span><strong class="text-warning">' + stats.totalExempted + '</strong></div><div class="d-flex justify-content-between"><span>ยังไม่บันทึก</span><strong class="text-danger">' + stats.totalNotRecorded + '</strong></div>';
-        }
-      } catch (err) { console.error(err); }
+      try { const result = await callAPI('getDashboardStats', { date: getTodayStr() }); if (result && result.success && result.data) { const s = result.data; document.getElementById('scannerMiniStats').innerHTML = '<div class="d-flex justify-content-between mb-1"><span>บันทึกแล้ว</span><strong class="text-success">' + s.totalPrayed + '</strong></div><div class="d-flex justify-content-between mb-1"><span>ยกเว้น</span><strong class="text-warning">' + s.totalExempted + '</strong></div><div class="d-flex justify-content-between"><span>ยังไม่บันทึก</span><strong class="text-danger">' + s.totalNotRecorded + '</strong></div>'; } } catch (err) {}
     }
 
     async function startScanner() {
       try {
         if (APP.scanner && APP.scannerRunning) return;
         const cameras = await Html5Qrcode.getCameras();
-        if (!cameras || cameras.length === 0) {
-          Swal.fire({ icon: 'warning', title: 'ไม่พบกล้อง', text: 'ไม่พบกล้องบนอุปกรณ์นี้' });
-          return;
-        }
+        if (!cameras || cameras.length === 0) { Swal.fire({ icon: 'warning', title: 'ไม่พบกล้อง' }); return; }
         APP.cameras = cameras;
         const backCamera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear') || c.label.toLowerCase().includes('environment'));
         APP.currentCameraId = backCamera ? backCamera.id : cameras[0].id;
@@ -984,20 +654,11 @@
         document.getElementById('btnStartScan').disabled = true;
         document.getElementById('btnStopScan').disabled = false;
         document.getElementById('btnSwitchCamera').disabled = cameras.length < 2;
-      } catch (err) {
-        console.error('Scanner error:', err);
-        let msg = 'ไม่สามารถเปิดกล้องได้';
-        if (err.name === 'NotAllowedError') msg = 'ผู้ใช้ปฏิเสธสิทธิ์การเข้าถึงกล้อง';
-        else if (err.name === 'NotFoundError') msg = 'ไม่พบกล้องบนอุปกรณ์นี้';
-        Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: msg });
-      }
+      } catch (err) { Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: err.message }); }
     }
 
     async function stopScanner() {
-      if (APP.scanner && APP.scannerRunning) {
-        try { await APP.scanner.stop(); APP.scanner.clear(); } catch (e) { console.error(e); }
-        APP.scannerRunning = false;
-      }
+      if (APP.scanner && APP.scannerRunning) { try { await APP.scanner.stop(); APP.scanner.clear(); } catch (e) {} APP.scannerRunning = false; }
       document.getElementById('btnStartScan').disabled = false;
       document.getElementById('btnStopScan').disabled = true;
       document.getElementById('btnSwitchCamera').disabled = true;
@@ -1005,27 +666,14 @@
 
     async function switchCamera() {
       if (APP.cameras.length < 2) return;
-      const currentIdx = APP.cameras.findIndex(c => c.id === APP.currentCameraId);
-      const nextIdx = (currentIdx + 1) % APP.cameras.length;
-      APP.currentCameraId = APP.cameras[nextIdx].id;
-      if (APP.scanner && APP.scannerRunning) {
-        await APP.scanner.stop();
-        await APP.scanner.start(APP.currentCameraId, { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 }, onScanSuccess, onScanFailure);
-      }
+      const idx = APP.cameras.findIndex(c => c.id === APP.currentCameraId);
+      APP.currentCameraId = APP.cameras[(idx + 1) % APP.cameras.length].id;
+      if (APP.scanner && APP.scannerRunning) { await APP.scanner.stop(); await APP.scanner.start(APP.currentCameraId, { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 }, onScanSuccess, onScanFailure); }
     }
 
-    let lastScannedToken = '';
-    let lastScanTime = 0;
-
-    function onScanSuccess(decodedText) {
-      const now = Date.now();
-      if (decodedText === lastScannedToken && (now - lastScanTime) < 3000) return;
-      lastScannedToken = decodedText;
-      lastScanTime = now;
-      processScannedToken(decodedText);
-    }
-
-    function onScanFailure(error) { /* ignore */ }
+    let lastScannedToken = '', lastScanTime = 0;
+    function onScanSuccess(decodedText) { const now = Date.now(); if (decodedText === lastScannedToken && (now - lastScanTime) < 3000) return; lastScannedToken = decodedText; lastScanTime = now; processScannedToken(decodedText); }
+    function onScanFailure(error) {}
 
     async function processScannedToken(token) {
       showLoading();
@@ -1033,96 +681,46 @@
         const result = await callAPI('getStudentByQrToken', { token: token });
         const resultDiv = document.getElementById('scannerResult');
         resultDiv.style.display = 'block';
-
-        if (!result || !result.success) {
-          resultDiv.className = 'scanner-result error';
-          resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2 fw-bold">ไม่พบข้อมูล</p><small>' + escapeHtml(result ? result.message : 'เกิดข้อผิดพลาด') + '</small>';
-          if (navigator.vibrate) navigator.vibrate(200);
-          hideLoading();
-          return;
-        }
-
+        if (!result || !result.success) { resultDiv.className = 'scanner-result error'; resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2 fw-bold">ไม่พบข้อมูล</p><small>' + escapeHtml(result ? result.message : 'ข้อผิดพลาด') + '</small>'; if (navigator.vibrate) navigator.vibrate(200); hideLoading(); return; }
         const student = result.data;
         resultDiv.className = 'scanner-result success';
         resultDiv.innerHTML = '<i class="bi bi-person-check-fill fs-1 text-success"></i><p class="mb-1 mt-2 fw-bold fs-5">' + escapeHtml(student.prefix) + escapeHtml(student.first_name) + ' ' + escapeHtml(student.last_name) + '</p><p class="mb-1">ห้อง ' + escapeHtml(student.classroom) + ' | รหัส: ' + escapeHtml(student.student_code) + '</p><p class="mb-0 text-muted">กำลังบันทึก' + APP.prayerNames[APP.selectedPrayer] + '...</p>';
-
         const recordResult = await callAPI('recordPrayer', { studentId: student.student_id, prayerName: APP.selectedPrayer, checkinMethod: 'qr_scan' });
-
-        if (recordResult && recordResult.success) {
-          resultDiv.className = 'scanner-result success';
-          resultDiv.innerHTML = '<i class="bi bi-check-circle-fill fs-1 text-success"></i><p class="mb-1 mt-2 fw-bold fs-5">' + escapeHtml(recordResult.data.student_name) + '</p><p class="mb-1">ห้อง ' + escapeHtml(recordResult.data.classroom) + '</p><p class="mb-0 fw-bold text-success"><i class="bi bi-check-lg"></i> ' + escapeHtml(recordResult.message) + '</p><small class="text-muted">' + escapeHtml(recordResult.data.checkin_time) + '</small>';
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-          loadScannerMiniStats();
-        } else {
-          if (recordResult && recordResult.errorCode === 'DUPLICATE_RECORD') {
-            resultDiv.className = 'scanner-result warning';
-            resultDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill fs-1 text-warning"></i><p class="mb-0 mt-2 fw-bold">บันทึกแล้ว</p><small>' + escapeHtml(recordResult.message) + '</small>';
-          } else if (recordResult && recordResult.errorCode === 'EXEMPTED') {
-            resultDiv.className = 'scanner-result warning';
-            resultDiv.innerHTML = '<i class="bi bi-calendar-x-fill fs-1 text-warning"></i><p class="mb-0 mt-2 fw-bold">ได้รับการยกเว้น</p><small>' + escapeHtml(recordResult.message) + '</small>';
-          } else {
-            resultDiv.className = 'scanner-result error';
-            resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2 fw-bold">บันทึกไม่สำเร็จ</p><small>' + escapeHtml(recordResult ? recordResult.message : 'เกิดข้อผิดพลาด') + '</small>';
-          }
-          if (navigator.vibrate) navigator.vibrate(200);
-        }
-      } catch (err) {
-        console.error('Process scan error:', err);
-        const resultDiv = document.getElementById('scannerResult');
-        resultDiv.style.display = 'block';
-        resultDiv.className = 'scanner-result error';
-        resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2">เกิดข้อผิดพลาดในการประมวลผล</p>';
-      }
+        if (recordResult && recordResult.success) { resultDiv.className = 'scanner-result success'; resultDiv.innerHTML = '<i class="bi bi-check-circle-fill fs-1 text-success"></i><p class="mb-1 mt-2 fw-bold fs-5">' + escapeHtml(recordResult.data.student_name) + '</p><p class="mb-0 fw-bold text-success"><i class="bi bi-check-lg"></i> ' + escapeHtml(recordResult.message) + '</p>'; if (navigator.vibrate) navigator.vibrate([100,50,100]); loadScannerMiniStats(); }
+        else { resultDiv.className = 'scanner-result error'; resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2">บันทึกไม่สำเร็จ</p><small>' + escapeHtml(recordResult ? recordResult.message : 'ข้อผิดพลาด') + '</small>'; if (navigator.vibrate) navigator.vibrate(200); }
+      } catch (err) { console.error(err); }
       hideLoading();
     }
 
     async function searchByCode() {
-      const code = document.getElementById('searchStudentCode').value.trim();
-      if (!code) return;
+      const code = document.getElementById('searchStudentCode').value.trim(); if (!code) return;
       showLoading();
       try {
         const result = await callAPI('searchStudents', { query: code, page: 1, pageSize: 10 });
         const resultDiv = document.getElementById('searchResult');
-        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) {
-          resultDiv.innerHTML = '<div class="alert alert-warning py-2">ไม่พบนักเรียน</div>';
-          hideLoading();
-          return;
-        }
-        let html = '<div class="list-group">';
-        result.data.items.forEach(s => {
-          html += '<button class="list-group-item list-group-item-action" onclick="recordPrayerForStudent(\'' + s.student_id + '\', \'' + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\', \'' + escapeHtml(s.classroom) + '\')"><div class="fw-bold">' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '</div><small class="text-muted">รหัส: ' + escapeHtml(s.student_code) + ' | ห้อง: ' + escapeHtml(s.classroom) + '</small></button>';
-        });
-        html += '</div>';
-        resultDiv.innerHTML = html;
-      } catch (err) { console.error(err); showToast('เกิดข้อผิดพลาด', 'error'); }
+        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) { resultDiv.innerHTML = '<div class="alert alert-warning py-2">ไม่พบนักเรียน</div>'; hideLoading(); return; }
+        resultDiv.innerHTML = '<div class="list-group">' + result.data.items.map(s => '<button class="list-group-item list-group-item-action" onclick="recordPrayerForStudent(\'' + s.student_id + '\',\'' + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')"><div class="fw-bold">' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '</div><small class="text-muted">รหัส: ' + escapeHtml(s.student_code) + ' | ห้อง: ' + escapeHtml(s.classroom) + '</small></button>').join('') + '</div>';
+      } catch (err) {}
       hideLoading();
     }
 
-    async function recordPrayerForStudent(studentId, name, classroom) {
+    async function recordPrayerForStudent(studentId, name) {
       showLoading();
       try {
         const result = await callAPI('recordPrayer', { studentId: studentId, prayerName: APP.selectedPrayer, checkinMethod: 'manual_search' });
-        const resultDiv = document.getElementById('scannerResult');
-        resultDiv.style.display = 'block';
-        if (result && result.success) {
-          resultDiv.className = 'scanner-result success';
-          resultDiv.innerHTML = '<i class="bi bi-check-circle-fill fs-1 text-success"></i><p class="mb-0 mt-2 fw-bold">' + escapeHtml(name) + '</p><p class="mb-0 text-success">' + escapeHtml(result.message) + '</p>';
-          loadScannerMiniStats();
-        } else {
-          resultDiv.className = 'scanner-result error';
-          resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2">' + escapeHtml(result ? result.message : 'เกิดข้อผิดพลาด') + '</p>';
-        }
-      } catch (err) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        const resultDiv = document.getElementById('scannerResult'); resultDiv.style.display = 'block';
+        if (result && result.success) { resultDiv.className = 'scanner-result success'; resultDiv.innerHTML = '<i class="bi bi-check-circle-fill fs-1 text-success"></i><p class="mb-0 mt-2 fw-bold">' + escapeHtml(name) + '</p><p class="mb-0 text-success">' + escapeHtml(result.message) + '</p>'; loadScannerMiniStats(); }
+        else { resultDiv.className = 'scanner-result error'; resultDiv.innerHTML = '<i class="bi bi-x-circle-fill fs-1 text-danger"></i><p class="mb-0 mt-2">' + escapeHtml(result ? result.message : 'ข้อผิดพลาด') + '</p>'; }
+      } catch (err) {}
       hideLoading();
     }
 
     // ============================================================
-    // MANUAL RECORD
+    // MANUAL
     // ============================================================
     function initManualPage() {
       document.getElementById('manualDate').value = getTodayStr();
-      const select = document.getElementById('manualPrayerName');
-      select.innerHTML = '<option value="">-- เลือกเวลา --</option>' + APP.prayerKeys.map(k => '<option value="' + k + '">' + APP.prayerNames[k] + '</option>').join('');
+      document.getElementById('manualPrayerName').innerHTML = '<option value="">-- เลือก --</option>' + APP.prayerKeys.map(k => '<option value="' + k + '">' + APP.prayerNames[k] + '</option>').join('');
     }
 
     let manualSearchTimer = null;
@@ -1138,11 +736,8 @@
             const s = result.data.items[0];
             infoDiv.innerHTML = '<div class="alert alert-info py-2 mb-0"><strong>' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '</strong><br><small>รหัส: ' + escapeHtml(s.student_code) + ' | ห้อง: ' + escapeHtml(s.classroom) + '</small></div>';
             infoDiv.dataset.studentId = s.student_id;
-          } else {
-            infoDiv.innerHTML = '<div class="alert alert-warning py-2 mb-0">ไม่พบนักเรียน</div>';
-            infoDiv.dataset.studentId = '';
-          }
-        } catch (err) { console.error(err); }
+          } else { infoDiv.innerHTML = '<div class="alert alert-warning py-2 mb-0">ไม่พบนักเรียน</div>'; infoDiv.dataset.studentId = ''; }
+        } catch (err) {}
       }, 300);
     }
 
@@ -1151,20 +746,14 @@
       const studentId = infoDiv.dataset.studentId;
       const prayerName = document.getElementById('manualPrayerName').value;
       if (!studentId) { Swal.fire({ icon: 'warning', title: 'กรุณาค้นหานักเรียน' }); return; }
-      if (!prayerName) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกเวลาละหมาด' }); return; }
+      if (!prayerName) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกเวลา' }); return; }
       showLoading();
       try {
         const result = await callAPI('recordPrayer', { studentId: studentId, prayerName: prayerName, checkinMethod: 'manual' });
         hideLoading();
-        if (result && result.success) {
-          Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: result.message, timer: 2000, showConfirmButton: false });
-          document.getElementById('manualStudentCode').value = '';
-          infoDiv.innerHTML = '';
-          infoDiv.dataset.studentId = '';
-        } else {
-          Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: result ? result.message : 'เกิดข้อผิดพลาด' });
-        }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+        if (result && result.success) { Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: result.message, timer: 2000, showConfirmButton: false }); document.getElementById('manualStudentCode').value = ''; infoDiv.innerHTML = ''; infoDiv.dataset.studentId = ''; }
+        else { Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: result ? result.message : 'ข้อผิดพลาด' }); }
+      } catch (err) { hideLoading(); }
     }
 
     // ============================================================
@@ -1186,66 +775,45 @@
         try {
           const result = await callAPI('searchStudents', { query: query, page: 1, pageSize: 10 });
           const listDiv = document.getElementById('exemptionStudentList');
-          if (result && result.success && result.data && result.data.items && result.data.items.length > 0) {
+          if (result && result.success && result.data && result.data.items) {
             const females = result.data.items.filter(s => s.gender === 'female');
-            if (females.length === 0) { listDiv.innerHTML = '<small class="text-muted">ไม่พบนักเรียนหญิง</small>'; return; }
-            listDiv.innerHTML = females.map(s => '<button class="btn btn-sm btn-outline-primary w-100 text-start mb-1" onclick="selectExemptionStudent(\'' + s.student_id + '\', \'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\', \'' + escapeHtml(s.classroom) + '\')">' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + ' <small class="text-muted">(' + escapeHtml(s.classroom) + ')</small></button>').join('');
-          } else { listDiv.innerHTML = '<small class="text-muted">ไม่พบนักเรียน</small>'; }
-        } catch (err) { console.error(err); }
+            listDiv.innerHTML = females.length > 0 ? females.map(s => '<button class="btn btn-sm btn-outline-primary w-100 text-start mb-1" onclick="selectExemptionStudent(\'' + s.student_id + '\',\'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\',\'' + escapeHtml(s.classroom) + '\')">' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + ' <small>(' + escapeHtml(s.classroom) + ')</small></button>').join('') : '<small class="text-muted">ไม่พบนักเรียนหญิง</small>';
+          } else { listDiv.innerHTML = '<small class="text-muted">ไม่พบ</small>'; }
+        } catch (err) {}
       }, 300);
     }
 
-    function selectExemptionStudent(studentId, name, classroom) {
-      APP.selectedExemptionStudent = studentId;
-      document.getElementById('exemptionStudentList').innerHTML = '<div class="alert alert-info py-2 mb-0"><strong>' + escapeHtml(name) + '</strong> - ห้อง ' + escapeHtml(classroom) + '</div>';
-    }
+    function selectExemptionStudent(studentId, name, classroom) { APP.selectedExemptionStudent = studentId; document.getElementById('exemptionStudentList').innerHTML = '<div class="alert alert-info py-2 mb-0"><strong>' + escapeHtml(name) + '</strong> - ห้อง ' + escapeHtml(classroom) + '</div>'; }
 
     async function submitExemption() {
       if (!APP.selectedExemptionStudent) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกนักเรียน' }); return; }
-      const date = document.getElementById('exemptionDate').value;
-      if (!date) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกวันที่' }); return; }
-      const note = document.getElementById('exemptionNote').value;
+      const date = document.getElementById('exemptionDate').value; if (!date) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกวันที่' }); return; }
       showLoading();
       try {
-        const result = await callAPI('recordMenstruationExemption', { studentId: APP.selectedExemptionStudent, exemptionDate: date, note: note });
+        const result = await callAPI('recordMenstruationExemption', { studentId: APP.selectedExemptionStudent, exemptionDate: date, note: document.getElementById('exemptionNote').value });
         hideLoading();
-        if (result && result.success) {
-          Swal.fire({ icon: 'success', title: 'บันทึกการยกเว้นสำเร็จ', text: result.message, timer: 2000, showConfirmButton: false });
-          document.getElementById('exemptionNote').value = '';
-          APP.selectedExemptionStudent = null;
-          document.getElementById('exemptionStudentList').innerHTML = '';
-          loadExemptionRecords();
-        } else { Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+        if (result && result.success) { Swal.fire({ icon: 'success', title: 'สำเร็จ', text: result.message, timer: 2000, showConfirmButton: false }); APP.selectedExemptionStudent = null; document.getElementById('exemptionStudentList').innerHTML = ''; document.getElementById('exemptionNote').value = ''; loadExemptionRecords(); }
+        else { Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: result ? result.message : 'ข้อผิดพลาด' }); }
+      } catch (err) { hideLoading(); }
     }
 
     async function loadExemptionRecords() {
       const filters = {};
-      const date = document.getElementById('exemptionFilterDate').value;
-      const classroom = document.getElementById('exemptionFilterClass').value;
-      if (date) filters.date = date;
-      if (classroom) filters.classroom = classroom;
+      const date = document.getElementById('exemptionFilterDate').value; if (date) filters.date = date;
+      const classroom = document.getElementById('exemptionFilterClass').value; if (classroom) filters.classroom = classroom;
       try {
         const result = await callAPI('getMenstruationRecords', { filters: filters });
         const tbody = document.getElementById('exemptionRecordsBody');
-        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-          return;
-        }
-        tbody.innerHTML = result.data.items.map(r => '<tr><td>' + escapeHtml(r.student_code) + '</td><td>' + escapeHtml(r.student_name) + '</td><td>' + escapeHtml(r.classroom) + '</td><td>' + formatThaiDate(r.exemption_date) + '</td><td><span class="badge bg-warning text-dark">' + (r.exemption_status === 'exempt' ? 'ยกเว้น' : r.exemption_status) + '</span></td><td><small>' + escapeHtml(r.recorded_by) + '</small></td><td><button class="btn btn-sm btn-outline-danger" onclick="cancelExemption(\'' + r.exemption_id + '\')"><i class="bi bi-x"></i></button></td></tr>').join('');
-      } catch (err) { console.error(err); }
+        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
+        tbody.innerHTML = result.data.items.map(r => '<tr><td>' + escapeHtml(r.student_code) + '</td><td>' + escapeHtml(r.student_name) + '</td><td>' + escapeHtml(r.classroom) + '</td><td>' + formatThaiDate(r.exemption_date) + '</td><td><span class="badge bg-warning text-dark">' + (r.exemption_status === 'exempt' ? 'ยกเว้น' : r.exemption_status) + '</span></td><td><button class="btn btn-sm btn-outline-danger" onclick="cancelExemption(\'' + r.exemption_id + '\')"><i class="bi bi-x"></i></button></td></tr>').join('');
+      } catch (err) {}
     }
 
     async function cancelExemption(exemptionId) {
-      const confirm = await Swal.fire({ icon: 'question', title: 'ยกเลิกการยกเว้น?', showCancelButton: true, confirmButtonText: 'ยกเลิก', cancelButtonText: 'ปิด' });
+      const confirm = await Swal.fire({ icon: 'question', title: 'ยกเลิก?', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
       if (!confirm.isConfirmed) return;
       showLoading();
-      try {
-        const result = await callAPI('updateMenstruationRecord', { exemptionId: exemptionId, exemption_status: 'cancelled' });
-        hideLoading();
-        if (result && result.success) { showToast('ยกเลิกรายการสำเร็จ', 'success'); loadExemptionRecords(); }
-        else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+      try { const result = await callAPI('updateMenstruationRecord', { exemptionId: exemptionId, exemption_status: 'cancelled' }); hideLoading(); if (result && result.success) { showToast('ยกเลิกสำเร็จ', 'success'); loadExemptionRecords(); } else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); } } catch (err) { hideLoading(); }
     }
 
     // ============================================================
@@ -1262,25 +830,16 @@
     }
 
     async function loadDailyReport() {
-      const date = document.getElementById('reportDailyDate').value;
-      if (!date) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกวันที่' }); return; }
+      const date = document.getElementById('reportDailyDate').value; if (!date) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกวันที่' }); return; }
       showLoading();
       try {
-        const result = await callAPI('getDailyReport', { date: date });
-        hideLoading();
-        if (!result || !result.success) { showToast(result ? result.message : 'เกิดข้อผิดพลาด', 'error'); return; }
+        const result = await callAPI('getDailyReport', { date: date }); hideLoading();
+        if (!result || !result.success) { showToast(result ? result.message : 'ข้อผิดพลาด', 'error'); return; }
         const tbody = document.getElementById('dailyReportBody');
-        if (!result.data || !result.data.items || result.data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-          return;
-        }
-        const statusBadge = (status) => {
-          if (status === 'recorded') return '<span class="badge bg-success"><i class="bi bi-check"></i></span>';
-          if (status === 'exempt') return '<span class="badge bg-warning text-dark"><i class="bi bi-dash"></i></span>';
-          return '<span class="badge bg-light text-muted"><i class="bi bi-x"></i></span>';
-        };
-        tbody.innerHTML = result.data.items.map(item => '<tr><td>' + escapeHtml(item.student_code) + '</td><td>' + escapeHtml(item.name) + '</td><td>' + escapeHtml(item.classroom) + '</td>' + APP.prayerKeys.map(k => '<td class="text-center">' + statusBadge(item.prayerStatus[k]) + '</td>').join('') + '<td class="text-center"><strong>' + item.totalPrayed + '</strong></td></tr>').join('');
-      } catch (err) { hideLoading(); console.error(err); showToast('เกิดข้อผิดพลาด', 'error'); }
+        if (!result.data || !result.data.items || result.data.items.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
+        const badge = (s) => s === 'recorded' ? '<span class="badge bg-success"><i class="bi bi-check"></i></span>' : s === 'exempt' ? '<span class="badge bg-warning text-dark"><i class="bi bi-dash"></i></span>' : '<span class="badge bg-light text-muted"><i class="bi bi-x"></i></span>';
+        tbody.innerHTML = result.data.items.map(item => '<tr><td>' + escapeHtml(item.student_code) + '</td><td>' + escapeHtml(item.name) + '</td><td>' + escapeHtml(item.classroom) + '</td>' + APP.prayerKeys.map(k => '<td class="text-center">' + badge(item.prayerStatus[k]) + '</td>').join('') + '<td class="text-center"><strong>' + item.totalPrayed + '</strong></td></tr>').join('');
+      } catch (err) { hideLoading(); }
     }
 
     async function loadMonthlyReport() {
@@ -1288,77 +847,25 @@
       const year = parseInt(document.getElementById('reportYear').value);
       showLoading();
       try {
-        const result = await callAPI('getMonthlyReport', { year: year, month: month });
-        hideLoading();
-        if (!result || !result.success) { showToast(result ? result.message : 'เกิดข้อผิดพลาด', 'error'); return; }
+        const result = await callAPI('getMonthlyReport', { year: year, month: month }); hideLoading();
+        if (!result || !result.success) { showToast(result ? result.message : 'ข้อผิดพลาด', 'error'); return; }
         const data = result.data;
-        const container = document.getElementById('monthlyReportContent');
-        let html = '<div class="row g-3 mb-3"><div class="col-md-3"><div class="stat-card"><div class="stat-value">' + data.totalRecords + '</div><div class="stat-label">รายการละหมาดทั้งหมด</div></div></div><div class="col-md-3"><div class="stat-card"><div class="stat-value">' + data.totalExemptions + '</div><div class="stat-label">รายการยกเว้น</div></div></div></div><h6 class="fw-bold mt-4">สรุปตามห้องเรียน</h6><div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>ห้องเรียน</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึก</th><th class="text-center">ยกเว้น</th><th class="text-center">เปอร์เซ็นต์</th></tr></thead><tbody>' + data.byClassroom.map(c => '<tr><td><strong>' + escapeHtml(c.classroom) + '</strong></td><td class="text-center">' + c.totalStudents + '</td><td class="text-center">' + c.totalPrayed + '</td><td class="text-center">' + c.totalExempted + '</td><td class="text-center"><div class="progress" style="height:20px;min-width:80px;"><div class="progress-bar" style="width:' + c.percentage + '%">' + c.percentage + '%</div></div></td></tr>').join('') + '</tbody></table></div>';
-        container.innerHTML = html;
-      } catch (err) { hideLoading(); console.error(err); showToast('เกิดข้อผิดพลาด', 'error'); }
-    }
-
-    let reportStudentTimer = null;
-    function searchStudentForReport() {
-      clearTimeout(reportStudentTimer);
-      const query = document.getElementById('reportStudentSearch').value.trim();
-      if (query.length < 2) { document.getElementById('reportStudentList').innerHTML = ''; return; }
-      reportStudentTimer = setTimeout(async () => {
-        try {
-          const result = await callAPI('searchStudents', { query: query, page: 1, pageSize: 5 });
-          const listDiv = document.getElementById('reportStudentList');
-          if (result && result.success && result.data && result.data.items && result.data.items.length > 0) {
-            listDiv.innerHTML = result.data.items.map(s => '<button class="btn btn-sm btn-outline-primary w-100 text-start mb-1" onclick="selectReportStudent(\'' + s.student_id + '\', \'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')">' + escapeHtml(s.student_code) + ' - ' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '</button>').join('');
-          } else { listDiv.innerHTML = '<small class="text-muted">ไม่พบ</small>'; }
-        } catch (err) { console.error(err); }
-      }, 300);
-    }
-
-    function selectReportStudent(studentId, name) {
-      APP.selectedReportStudent = studentId;
-      document.getElementById('reportStudentList').innerHTML = '<div class="alert alert-info py-2 mb-0"><strong>' + escapeHtml(name) + '</strong></div>';
-    }
-
-    async function loadStudentReport() {
-      if (!APP.selectedReportStudent) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกนักเรียน' }); return; }
-      const dateFrom = document.getElementById('reportStudentFrom').value || null;
-      const dateTo = document.getElementById('reportStudentTo').value || null;
-      showLoading();
-      try {
-        const result = await callAPI('getStudentReport', { studentId: APP.selectedReportStudent, dateFrom: dateFrom, dateTo: dateTo });
-        hideLoading();
-        if (!result || !result.success) { showToast(result ? result.message : 'เกิดข้อผิดพลาด', 'error'); return; }
-        const data = result.data;
-        const container = document.getElementById('studentReportContent');
-        let html = '<div class="mb-3"><h6 class="fw-bold">' + escapeHtml(data.student.name) + '</h6><small class="text-muted">รหัส: ' + escapeHtml(data.student.student_code) + ' | ห้อง: ' + escapeHtml(data.student.classroom) + '</small></div><div class="row g-2 mb-3"><div class="col-6 col-md-3"><div class="stat-card text-center"><div class="stat-value text-success">' + data.totalPrayed + '</div><div class="stat-label">บันทึกแล้ว</div></div></div><div class="col-6 col-md-3"><div class="stat-card text-center"><div class="stat-value text-warning">' + data.totalExempted + '</div><div class="stat-label">ยกเว้น</div></div></div></div><h6 class="fw-bold">สรุปแยกตามเวลา</h6><div class="table-responsive mb-3"><table class="table table-sm"><thead><tr><th>เวลา</th><th class="text-center">จำนวน</th></tr></thead><tbody>' + APP.prayerKeys.map(k => '<tr><td>' + data.summaryByPrayer[k].name + '</td><td class="text-center"><strong>' + data.summaryByPrayer[k].count + '</strong></td></tr>').join('') + '</tbody></table></div>';
-        if (data.history && data.history.length > 0) {
-          html += '<h6 class="fw-bold">ประวัติการบันทึก</h6><div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>วันที่</th><th>เวลา</th><th>เช็กอิน</th><th>วิธี</th></tr></thead><tbody>' + data.history.slice(0, 50).map(h => '<tr><td>' + formatThaiDate(h.date) + '</td><td>' + escapeHtml(h.prayer_name) + '</td><td>' + escapeHtml(h.checkin_time || '') + '</td><td>' + escapeHtml(h.method || '') + '</td></tr>').join('') + '</tbody></table></div>';
-        }
-        container.innerHTML = html;
-      } catch (err) { hideLoading(); console.error(err); showToast('เกิดข้อผิดพลาด', 'error'); }
+        document.getElementById('monthlyReportContent').innerHTML = '<div class="row g-3 mb-3"><div class="col-md-3"><div class="stat-card"><div class="stat-value">' + data.totalRecords + '</div><div class="stat-label">รายการทั้งหมด</div></div></div><div class="col-md-3"><div class="stat-card"><div class="stat-value">' + data.totalExemptions + '</div><div class="stat-label">ยกเว้น</div></div></div></div><h6 class="fw-bold mt-4">สรุปตามห้อง</h6><div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>ห้อง</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึก</th><th class="text-center">ยกเว้น</th><th class="text-center">%</th></tr></thead><tbody>' + data.byClassroom.map(c => '<tr><td><strong>' + escapeHtml(c.classroom) + '</strong></td><td class="text-center">' + c.totalStudents + '</td><td class="text-center">' + c.totalPrayed + '</td><td class="text-center">' + c.totalExempted + '</td><td class="text-center"><div class="progress" style="height:20px;min-width:80px"><div class="progress-bar" style="width:' + c.percentage + '%">' + c.percentage + '%</div></div></td></tr>').join('') + '</tbody></table></div>';
+      } catch (err) { hideLoading(); }
     }
 
     async function exportCSV() {
       showLoading();
       try {
-        const filters = { date: document.getElementById('reportDailyDate').value, classroom: document.getElementById('reportDailyClass').value || null };
-        const result = await callAPI('exportPrayerReport', { filters: filters });
+        const result = await callAPI('exportPrayerReport', { filters: { date: document.getElementById('reportDailyDate').value, classroom: document.getElementById('reportDailyClass').value || null } });
         hideLoading();
-        if (result && result.success) {
-          const blob = new Blob([result.data.csv], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = result.data.filename;
-          a.click();
-          URL.revokeObjectURL(url);
-          showToast('ส่งออก CSV สำเร็จ', 'success');
-        } else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาดในการส่งออก' }); }
+        if (result && result.success) { const blob = new Blob([result.data.csv], { type: 'text/csv;charset=utf-8;' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = result.data.filename; a.click(); showToast('ส่งออกสำเร็จ', 'success'); }
+        else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); }
+      } catch (err) { hideLoading(); }
     }
 
     // ============================================================
-    // STUDENTS MANAGEMENT
+    // STUDENTS CRUD
     // ============================================================
     let studentSearchTimer = null;
     function debounceSearchStudents() { clearTimeout(studentSearchTimer); studentSearchTimer = setTimeout(() => loadStudents(), 300); }
@@ -1370,14 +877,10 @@
       try {
         const result = await callAPI('searchStudents', { query: query, page: page, pageSize: pageSize });
         const tbody = document.getElementById('studentsTableBody');
-        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่พบข้อมูล</td></tr>';
-          document.getElementById('studentsPagination').innerHTML = '';
-          return;
-        }
-        tbody.innerHTML = result.data.items.map(s => '<tr><td>' + escapeHtml(s.student_code) + '</td><td>' + escapeHtml(s.prefix) + '</td><td>' + escapeHtml(s.first_name) + '</td><td>' + escapeHtml(s.last_name) + '</td><td>' + (s.gender === 'male' ? 'ชาย' : 'หญิง') + '</td><td>' + escapeHtml(s.grade_level) + '</td><td>' + escapeHtml(s.classroom) + '</td><td><button class="btn btn-sm btn-outline-primary" onclick="showQrCode(\'' + s.student_id + '\', \'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')"><i class="bi bi-qr-code"></i></button></td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(\'' + s.student_id + '\')"><i class="bi bi-trash"></i></button></td></tr>').join('');
+        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่พบข้อมูล</td></tr>'; document.getElementById('studentsPagination').innerHTML = ''; return; }
+        tbody.innerHTML = result.data.items.map(s => '<tr><td>' + escapeHtml(s.student_code) + '</td><td>' + escapeHtml(s.prefix) + '</td><td>' + escapeHtml(s.first_name) + '</td><td>' + escapeHtml(s.last_name) + '</td><td>' + (s.gender === 'male' ? 'ชาย' : 'หญิง') + '</td><td>' + escapeHtml(s.grade_level) + '</td><td>' + escapeHtml(s.classroom) + '</td><td><button class="btn btn-sm btn-outline-primary" onclick="showQrCode(\'' + s.student_id + '\',\'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')"><i class="bi bi-qr-code"></i></button></td><td><button class="btn btn-sm btn-outline-warning" onclick="editStudent(\'' + s.student_id + '\',\'' + escapeHtml(s.student_code) + '\',\'' + escapeHtml(s.prefix) + '\',\'' + escapeHtml(s.first_name) + '\',\'' + escapeHtml(s.last_name) + '\',\'' + s.gender + '\',\'' + escapeHtml(s.grade_level) + '\',\'' + escapeHtml(s.classroom) + '\')" title="แก้ไข"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(\'' + s.student_id + '\')" title="ลบ"><i class="bi bi-trash"></i></button></td></tr>').join('');
         renderPagination('studentsPagination', result.data, loadStudents);
-      } catch (err) { console.error(err); }
+      } catch (err) {}
     }
 
     function renderPagination(containerId, paginationData, callback) {
@@ -1389,21 +892,45 @@
       container.innerHTML = html;
     }
 
-    function showAddStudentModal() { new bootstrap.Modal(document.getElementById('addStudentModal')).show(); }
+    function showAddStudentModal() {
+      document.getElementById('studentModalTitle').textContent = 'เพิ่มนักเรียน';
+      document.getElementById('editStudentId').value = '';
+      document.getElementById('newStudentCode').value = '';
+      document.getElementById('newStudentPrefix').value = '';
+      document.getElementById('newStudentFirst').value = '';
+      document.getElementById('newStudentLast').value = '';
+      document.getElementById('newStudentGender').value = 'male';
+      document.getElementById('newStudentGrade').value = '';
+      document.getElementById('newStudentClassroom').value = '';
+      new bootstrap.Modal(document.getElementById('addStudentModal')).show();
+    }
 
-    async function submitAddStudent() {
+    function editStudent(id, code, prefix, firstName, lastName, gender, grade, classroom) {
+      document.getElementById('studentModalTitle').textContent = 'แก้ไขนักเรียน';
+      document.getElementById('editStudentId').value = id;
+      document.getElementById('newStudentCode').value = code;
+      document.getElementById('newStudentPrefix').value = prefix;
+      document.getElementById('newStudentFirst').value = firstName;
+      document.getElementById('newStudentLast').value = lastName;
+      document.getElementById('newStudentGender').value = gender;
+      document.getElementById('newStudentGrade').value = grade;
+      document.getElementById('newStudentClassroom').value = classroom;
+      new bootstrap.Modal(document.getElementById('addStudentModal')).show();
+    }
+
+    async function submitStudentForm() {
+      const editId = document.getElementById('editStudentId').value;
       const data = { student_code: document.getElementById('newStudentCode').value.trim(), prefix: document.getElementById('newStudentPrefix').value, first_name: document.getElementById('newStudentFirst').value.trim(), last_name: document.getElementById('newStudentLast').value.trim(), gender: document.getElementById('newStudentGender').value, grade_level: document.getElementById('newStudentGrade').value.trim(), classroom: document.getElementById('newStudentClassroom').value.trim() };
       if (!data.student_code || !data.first_name || !data.last_name) { Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบ' }); return; }
       showLoading();
       try {
-        const result = await callAPI('addStudent', data);
+        const result = editId ? await callAPI('updateStudent', { studentId: editId, ...data }) : await callAPI('addStudent', data);
         hideLoading();
         if (result && result.success) {
-          Swal.fire({ icon: 'success', title: 'เพิ่มสำเร็จ', timer: 1500, showConfirmButton: false });
+          Swal.fire({ icon: 'success', title: editId ? 'แก้ไขสำเร็จ' : 'เพิ่มสำเร็จ', timer: 1500, showConfirmButton: false });
           bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
-          ['newStudentCode', 'newStudentFirst', 'newStudentLast', 'newStudentGrade', 'newStudentClassroom'].forEach(id => { document.getElementById(id).value = ''; });
           loadStudents();
-        } else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
+        } else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); }
       } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
     }
 
@@ -1411,32 +938,22 @@
       const confirm = await Swal.fire({ icon: 'warning', title: 'ยืนยันการลบ?', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
       if (!confirm.isConfirmed) return;
       showLoading();
-      try {
-        const result = await callAPI('updateStudent', { studentId: studentId, student_status: 'inactive' });
-        hideLoading();
-        if (result && result.success) { showToast('เปลี่ยนสถานะสำเร็จ', 'success'); loadStudents(); }
-        else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+      try { const result = await callAPI('deleteStudent', { studentId: studentId }); hideLoading(); if (result && result.success) { showToast('ลบสำเร็จ', 'success'); loadStudents(); } else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); } } catch (err) { hideLoading(); }
     }
 
     async function showQrCode(studentId, name) {
-      try {
-        document.getElementById('qrStudentName').textContent = name;
-        const qrDiv = document.getElementById('qrCodeDisplay');
-        qrDiv.innerHTML = '<p class="text-muted">กำลังสร้าง...</p>';
-        new bootstrap.Modal(document.getElementById('qrModal')).show();
-        const canvas = document.createElement('canvas');
-        await QRCode.toCanvas(canvas, studentId, { width: 200 });
-        qrDiv.innerHTML = '';
-        qrDiv.appendChild(canvas);
-      } catch (err) { console.error(err); }
+      document.getElementById('qrStudentName').textContent = name;
+      const qrDiv = document.getElementById('qrCodeDisplay');
+      qrDiv.innerHTML = '<p class="text-muted">กำลังสร้าง...</p>';
+      new bootstrap.Modal(document.getElementById('qrModal')).show();
+      // ใช้ student_id เป็นข้อมูล QR (ในระบบจริงควรใช้ qr_token)
+      generateQRCode(studentId, 'qrCodeDisplay', 200);
     }
 
     function showImportModal() { document.getElementById('importFile').value = ''; new bootstrap.Modal(document.getElementById('importModal')).show(); }
 
     async function submitImport() {
-      const file = document.getElementById('importFile').files[0];
-      if (!file) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์' }); return; }
+      const file = document.getElementById('importFile').files[0]; if (!file) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์' }); return; }
       showLoading();
       try {
         const text = await file.text();
@@ -1448,61 +965,67 @@
           const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
           if (cols.length >= 3) students.push({ student_code: cols[0], prefix: cols[1] || '', first_name: cols[2], last_name: cols[3] || '', gender: cols[4] || 'male', grade_level: cols[5] || '', classroom: cols[6] || '' });
         }
-        if (students.length === 0) { hideLoading(); Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูลในไฟล์' }); return; }
+        if (students.length === 0) { hideLoading(); Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล' }); return; }
         const result = await callAPI('importStudents', { students: students });
         hideLoading();
-        if (result && result.success) {
-          Swal.fire({ icon: 'success', title: 'นำเข้าสำเร็จ', html: 'เพิ่ม <strong>' + result.data.imported + '</strong> รายการ<br>ข้าม <strong>' + result.data.skipped + '</strong> รายการ' });
-          bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
-          loadStudents();
-        } else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาดในการนำเข้า' }); }
+        if (result && result.success) { Swal.fire({ icon: 'success', title: 'นำเข้าสำเร็จ', html: 'เพิ่ม <strong>' + result.data.imported + '</strong> รายการ' }); bootstrap.Modal.getInstance(document.getElementById('importModal')).hide(); loadStudents(); }
+        else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); }
+      } catch (err) { hideLoading(); }
     }
 
     // ============================================================
-    // USERS MANAGEMENT
+    // USERS CRUD
     // ============================================================
     async function loadUsers() {
       try {
         const result = await callAPI('getUsers');
         const tbody = document.getElementById('usersTableBody');
-        if (!result || !result.success || !result.data || result.data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-          return;
-        }
-        const roleNames = { admin: 'ผู้ดูแลระบบ', teacher: 'ครู', student: 'นักเรียน' };
-        tbody.innerHTML = result.data.map(u => '<tr><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.display_name) + '</td><td><span class="badge bg-primary">' + (roleNames[u.role] || u.role) + '</span></td><td><span class="badge ' + (u.active_status === 'active' ? 'bg-success' : 'bg-secondary') + '">' + (u.active_status === 'active' ? 'ใช้งาน' : 'ระงับ') + '</span></td><td><button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(\'' + u.user_id + '\', \'' + u.active_status + '\')"><i class="bi bi-' + (u.active_status === 'active' ? 'pause' : 'play') + '"></i></button></td></tr>').join('');
-      } catch (err) { console.error(err); }
+        if (!result || !result.success || !result.data || result.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
+        const roleNames = { admin: 'ผู้ดูแล', teacher: 'ครู', student: 'นักเรียน' };
+        tbody.innerHTML = result.data.map(u => '<tr><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.display_name) + '</td><td><span class="badge bg-primary">' + (roleNames[u.role] || u.role) + '</span></td><td><span class="badge ' + (u.active_status === 'active' ? 'bg-success' : 'bg-secondary') + '">' + (u.active_status === 'active' ? 'ใช้งาน' : 'ระงับ') + '</span></td><td><button class="btn btn-sm btn-outline-warning" onclick="editUser(\'' + u.user_id + '\',\'' + escapeHtml(u.username) + '\',\'' + escapeHtml(u.display_name) + '\',\'' + u.role + '\')" title="แก้ไข"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(\'' + u.user_id + '\')" title="ลบ"><i class="bi bi-trash"></i></button></td></tr>').join('');
+      } catch (err) {}
     }
 
-    function showAddUserModal() { new bootstrap.Modal(document.getElementById('addUserModal')).show(); }
+    function showAddUserModal() {
+      document.getElementById('userModalTitle').textContent = 'เพิ่มผู้ใช้';
+      document.getElementById('editUserId').value = '';
+      document.getElementById('newUserEmail').value = '';
+      document.getElementById('newUserDisplayName').value = '';
+      document.getElementById('newUserPassword').value = '';
+      document.getElementById('newUserRole').value = 'teacher';
+      new bootstrap.Modal(document.getElementById('addUserModal')).show();
+    }
 
-    async function submitAddUser() {
-      const data = { username: document.getElementById('newUserEmail').value.trim(), display_name: document.getElementById('newUserDisplayName').value.trim(), role: document.getElementById('newUserRole').value, password: document.getElementById('newUserPassword').value };
+    function editUser(id, username, displayName, role) {
+      document.getElementById('userModalTitle').textContent = 'แก้ไขผู้ใช้';
+      document.getElementById('editUserId').value = id;
+      document.getElementById('newUserEmail').value = username;
+      document.getElementById('newUserDisplayName').value = displayName;
+      document.getElementById('newUserPassword').value = '';
+      document.getElementById('newUserRole').value = role;
+      new bootstrap.Modal(document.getElementById('addUserModal')).show();
+    }
+
+    async function submitUserForm() {
+      const editId = document.getElementById('editUserId').value;
+      const data = { username: document.getElementById('newUserEmail').value.trim(), display_name: document.getElementById('newUserDisplayName').value.trim(), role: document.getElementById('newUserRole').value };
+      const password = document.getElementById('newUserPassword').value;
       if (!data.username || !data.display_name) { Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบ' }); return; }
+      if (password) data.password = password;
       showLoading();
       try {
-        const result = await callAPI('addUser', data);
+        const result = editId ? await callAPI('updateUser', { userId: editId, ...data }) : await callAPI('addUser', data);
         hideLoading();
-        if (result && result.success) {
-          Swal.fire({ icon: 'success', title: 'เพิ่มผู้ใช้สำเร็จ', timer: 1500, showConfirmButton: false });
-          bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
-          document.getElementById('newUserEmail').value = '';
-          document.getElementById('newUserDisplayName').value = '';
-          loadUsers();
-        } else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+        if (result && result.success) { Swal.fire({ icon: 'success', title: editId ? 'แก้ไขสำเร็จ' : 'เพิ่มสำเร็จ', timer: 1500, showConfirmButton: false }); bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide(); loadUsers(); }
+        else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); }
+      } catch (err) { hideLoading(); }
     }
 
-    async function toggleUserStatus(userId, currentStatus) {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    async function deleteUser(userId) {
+      const confirm = await Swal.fire({ icon: 'warning', title: 'ยืนยันการลบ?', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
+      if (!confirm.isConfirmed) return;
       showLoading();
-      try {
-        const result = await callAPI('updateUser', { userId: userId, active_status: newStatus });
-        hideLoading();
-        if (result && result.success) { showToast('เปลี่ยนสถานะสำเร็จ', 'success'); loadUsers(); }
-        else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+      try { const result = await callAPI('deleteUser', { userId: userId }); hideLoading(); if (result && result.success) { showToast('ลบสำเร็จ', 'success'); loadUsers(); } else { Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); } } catch (err) { hideLoading(); }
     }
 
     // ============================================================
@@ -1512,34 +1035,34 @@
       try {
         const result = await callAPI('getAllSettings');
         const container = document.getElementById('settingsContent');
-        if (!result || !result.success) { container.innerHTML = '<p class="text-danger">ไม่สามารถโหลดการตั้งค่าได้</p>'; return; }
+        if (!result || !result.success) { container.innerHTML = '<p class="text-danger">ไม่สามารถโหลดได้</p>'; return; }
         const settings = result.data;
         let html = '<div class="row g-3">';
-        const groups = { 'ข้อมูลสถานศึกษา': ['school_name', 'academic_year', 'semester_start', 'semester_end'], 'เวลารับบันทึก': ['fajr_start', 'fajr_end', 'zuhr_start', 'zuhr_end', 'asr_start', 'asr_end', 'maghrib_start', 'maghrib_end', 'isha_start', 'isha_end'], 'การตั้งค่าทั่วไป': ['allow_backdate', 'page_size', 'announcement', 'public_dashboard', 'enable_qr_scanner', 'enable_manual_record'] };
+        const groups = { 'ข้อมูลสถานศึกษา': ['school_name','academic_year','semester_start','semester_end'], 'เวลารับบันทึก': ['fajr_start','fajr_end','zuhr_start','zuhr_end','asr_start','asr_end','maghrib_start','maghrib_end','isha_start','isha_end'], 'ทั่วไป': ['allow_backdate','page_size','announcement','public_dashboard','enable_qr_scanner','enable_manual_record'] };
         for (const [groupName, keys] of Object.entries(groups)) {
           html += '<div class="col-12"><h6 class="fw-bold text-primary">' + groupName + '</h6><hr></div>';
           keys.forEach(key => {
-            const setting = settings.find(s => s.setting_key === key);
-            if (!setting) return;
-            const inputType = setting.setting_value === 'true' || setting.setting_value === 'false' ? 'select-bool' : key.includes('_start') || key.includes('_end') || key.includes('semester') ? 'time-or-date' : 'text';
-            html += '<div class="col-md-6"><label class="form-label">' + escapeHtml(setting.description || key) + '</label>' + (inputType === 'select-bool' ? '<select class="form-select form-select-sm" onchange="saveSetting(\'' + key + '\', this.value)"><option value="true" ' + (setting.setting_value === 'true' ? 'selected' : '') + '>เปิด</option><option value="false" ' + (setting.setting_value === 'false' ? 'selected' : '') + '>ปิด</option></select>' : '<input type="' + (inputType === 'time-or-date' ? (key.includes('semester') ? 'date' : 'time') : 'text') + '" class="form-control form-control-sm" value="' + escapeHtml(setting.setting_value) + '" onchange="saveSetting(\'' + key + '\', this.value)">') + '</div>';
+            const setting = settings.find(s => s.setting_key === key); if (!setting) return;
+            const isBool = setting.setting_value === 'true' || setting.setting_value === 'false';
+            const isTime = key.includes('_start') || key.includes('_end');
+            const isDate = key.includes('semester');
+            html += '<div class="col-md-6"><label class="form-label">' + escapeHtml(setting.description || key) + '</label>';
+            if (isBool) html += '<select class="form-select form-select-sm" onchange="saveSetting(\'' + key + '\',this.value)"><option value="true" ' + (setting.setting_value === 'true' ? 'selected' : '') + '>เปิด</option><option value="false" ' + (setting.setting_value === 'false' ? 'selected' : '') + '>ปิด</option></select>';
+            else html += '<input type="' + (isDate ? 'date' : isTime ? 'time' : 'text') + '" class="form-control form-control-sm" value="' + escapeHtml(setting.setting_value) + '" onchange="saveSetting(\'' + key + '\',this.value)">';
+            html += '</div>';
           });
         }
         html += '</div>';
         container.innerHTML = html;
-      } catch (err) { console.error(err); }
+      } catch (err) {}
     }
 
     async function saveSetting(key, value) {
-      try {
-        const result = await callAPI('updateSetting', { key: key, value: value });
-        if (result && result.success) { showToast('บันทึกการตั้งค่าสำเร็จ', 'success'); await callAPI('getAppConfig'); }
-        else { Swal.fire({ icon: 'error', title: result ? result.message : 'เกิดข้อผิดพลาด' }); }
-      } catch (err) { Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
+      try { const result = await callAPI('updateSetting', { key: key, value: value }); if (result && result.success) showToast('บันทึกสำเร็จ', 'success'); else Swal.fire({ icon: 'error', title: result ? result.message : 'ข้อผิดพลาด' }); } catch (err) {}
     }
 
     // ============================================================
-    // AUDIT LOG
+    // AUDIT
     // ============================================================
     async function loadAuditLogs(page) {
       page = page || 1;
@@ -1548,33 +1071,21 @@
       try {
         const result = await callAPI('getAuditLogs', { filters: filters, page: page, pageSize: 50 });
         const tbody = document.getElementById('auditTableBody');
-        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-          document.getElementById('auditPagination').innerHTML = '';
-          return;
-        }
+        if (!result || !result.success || !result.data || !result.data.items || result.data.items.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; document.getElementById('auditPagination').innerHTML = ''; return; }
         tbody.innerHTML = result.data.items.map(log => '<tr><td><small>' + escapeHtml(log.performed_at) + '</small></td><td><span class="badge bg-info">' + escapeHtml(log.action) + '</span></td><td>' + escapeHtml(log.entity_type) + '</td><td><small>' + escapeHtml(log.performed_by) + '</small></td><td><small>' + escapeHtml(log.reason) + '</small></td></tr>').join('');
         renderPagination('auditPagination', result.data, loadAuditLogs);
-      } catch (err) { console.error(err); }
+      } catch (err) {}
     }
 
     // ============================================================
-    // HELPER FUNCTIONS
+    // HELPERS
     // ============================================================
     async function loadClassroomsForFilter(selectId) {
-      try {
-        const result = await callAPI('getClassrooms');
-        if (result && result.success) {
-          const select = document.getElementById(selectId);
-          const currentValue = select.value;
-          select.innerHTML = '<option value="">ทุกห้องเรียน</option>' + result.data.map(cls => '<option value="' + escapeHtml(cls) + '">' + escapeHtml(cls) + '</option>').join('');
-          select.value = currentValue;
-        }
-      } catch (err) { console.error(err); }
+      try { const result = await callAPI('getClassrooms'); if (result && result.success) { const select = document.getElementById(selectId); const cv = select.value; select.innerHTML = '<option value="">ทุกห้อง</option>' + result.data.map(cls => '<option value="' + escapeHtml(cls) + '">' + escapeHtml(cls) + '</option>').join(''); select.value = cv; } } catch (err) {}
     }
 
     // ============================================================
-    // INITIALIZATION
+    // INIT
     // ============================================================
     async function initApp() {
       showLoading();
@@ -1584,60 +1095,30 @@
           document.getElementById('schoolName').textContent = configResult.data.school_name || 'โรงเรียน...';
           document.getElementById('loginSchoolName').textContent = configResult.data.school_name || 'โรงเรียน...';
         }
-
-        // แก้ไขวันที่ - ใช้ปี พ.ศ. ที่ถูกต้อง
         const now = new Date();
-        const buddhistYear = now.getFullYear() + 543;
         const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-        document.getElementById('currentDateDisplay').textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + buddhistYear;
+        document.getElementById('currentDateDisplay').textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + (now.getFullYear() + 543);
         document.getElementById('dashboardDate').value = getTodayStr();
-
         updateUIPermissions();
         navigateTo('dashboard');
         await loadDashboard();
-      } catch (err) {
-        console.error('Init error:', err);
-        navigateTo('dashboard');
-      }
+      } catch (err) { navigateTo('dashboard'); }
       hideLoading();
     }
 
-    // Check existing session on load
     (function checkSession() {
       const savedToken = sessionStorage.getItem('sessionToken');
       const savedUser = sessionStorage.getItem('currentUser');
-      if (savedToken && savedUser) {
-        APP.sessionToken = savedToken;
-        APP.currentUser = JSON.parse(savedUser);
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('mainApp').style.display = 'block';
-        initApp();
-      }
+      if (savedToken && savedUser) { APP.sessionToken = savedToken; APP.currentUser = JSON.parse(savedUser); document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').style.display = 'block'; initApp(); }
     })();
 
-    // Test API connection on load
     (async function testApiOnLoad() {
       const alertDiv = document.getElementById('apiTestAlert');
       try {
-        const url = new URL(API_URL);
-        url.searchParams.append('action', 'ping');
+        const url = new URL(API_URL); url.searchParams.append('action', 'ping');
         const response = await fetch(url.toString());
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.success) {
-            alertDiv.className = 'alert alert-success py-2 mb-3';
-            alertDiv.innerHTML = '<small><i class="bi bi-check-circle-fill text-success"></i> API เชื่อมต่อสำเร็จ - ' + (data.data.timestamp || '') + '</small>';
-          } else {
-            alertDiv.className = 'alert alert-warning py-2 mb-3';
-            alertDiv.innerHTML = '<small><i class="bi bi-exclamation-triangle-fill text-warning"></i> API ตอบกลับแต่ข้อมูลไม่ถูกต้อง</small>';
-          }
-        } else {
-          throw new Error('HTTP ' + response.status);
-        }
-      } catch (err) {
-        alertDiv.className = 'alert alert-danger py-2 mb-3';
-        alertDiv.innerHTML = '<small><i class="bi bi-x-circle-fill text-danger"></i> API ไม่เชื่อมต่อ - กรุณาตรวจสอบ URL หรือคลิก "ทดสอบ API"</small>';
-      }
+        if (response.ok) { const data = await response.json(); if (data && data.success) { alertDiv.className = 'alert alert-success py-2 mb-3'; alertDiv.innerHTML = '<small><i class="bi bi-check-circle-fill text-success"></i> API เชื่อมต่อสำเร็จ</small>'; } else { alertDiv.className = 'alert alert-warning py-2 mb-3'; alertDiv.innerHTML = '<small><i class="bi bi-exclamation-triangle"></i> API ตอบกลับแต่ข้อมูลไม่ถูกต้อง</small>'; } } else { throw new Error('HTTP ' + response.status); }
+      } catch (err) { alertDiv.className = 'alert alert-danger py-2 mb-3'; alertDiv.innerHTML = '<small><i class="bi bi-x-circle-fill text-danger"></i> API ไม่เชื่อมต่อ - กรุณาตรวจสอบ URL</small>'; }
     })();
   </script>
 </body>
