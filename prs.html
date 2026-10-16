@@ -17,7 +17,6 @@
     * { box-sizing: border-box; }
     body { font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; }
 
-    /* Login Page */
     #loginPage {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
@@ -101,9 +100,23 @@
     .api-status { position: fixed; bottom: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; z-index: 9999; }
     .api-status.connected { background: #e8f5e9; color: #2e7d32; }
     .api-status.disconnected { background: #ffebee; color: #c62828; }
+    .api-status.testing { background: #fff8e1; color: #f57f17; }
 
     .logout-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
     .logout-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* API Test Panel */
+    .api-test-panel {
+      position: fixed; top: 10px; right: 10px; z-index: 9998;
+      background: white; border-radius: 8px; padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px;
+      display: none;
+    }
+    .api-test-panel.show { display: block; }
+    .api-test-panel h6 { margin: 0 0 8px 0; font-size: 0.85rem; }
+    .api-test-panel .form-control { font-size: 0.8rem; }
+    .api-test-panel .btn { font-size: 0.8rem; padding: 4px 8px; }
+    .api-test-result { font-size: 0.75rem; max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 8px; border-radius: 4px; margin-top: 8px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -112,6 +125,12 @@
     <div class="login-card">
       <h3><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h3>
       <p class="subtitle" id="loginSchoolName">โรงเรียน...</p>
+
+      <!-- API Connection Test -->
+      <div class="alert alert-info py-2 mb-3" id="apiTestAlert">
+        <small><i class="bi bi-info-circle"></i> กำลังทดสอบการเชื่อมต่อ API...</small>
+      </div>
+
       <form onsubmit="handleLogin(event)">
         <div class="mb-3">
           <label class="form-label fw-bold">ชื่อผู้ใช้</label>
@@ -139,7 +158,28 @@
           Teacher: teacher@school.com / teacher123
         </small>
       </div>
+      <div class="mt-3 text-center">
+        <button class="btn btn-sm btn-outline-info" onclick="toggleApiTest()">
+          <i class="bi bi-wrench"></i> ทดสอบ API
+        </button>
+      </div>
     </div>
+  </div>
+
+  <!-- API TEST PANEL -->
+  <div class="api-test-panel" id="apiTestPanel">
+    <h6><i class="bi bi-wrench"></i> ทดสอบการเชื่อมต่อ API</h6>
+    <div class="mb-2">
+      <label class="form-label" style="font-size:0.75rem;">API URL:</label>
+      <input type="text" class="form-control" id="apiTestUrl" style="font-size:0.75rem;">
+    </div>
+    <div class="d-flex gap-1 mb-2">
+      <button class="btn btn-primary btn-sm" onclick="testPing()">Ping</button>
+      <button class="btn btn-success btn-sm" onclick="testSetup()">Setup</button>
+      <button class="btn btn-info btn-sm" onclick="testConfig()">Config</button>
+    </div>
+    <div class="api-test-result" id="apiTestResult">กดปุ่มเพื่อทดสอบ...</div>
+    <button class="btn btn-sm btn-secondary w-100 mt-2" onclick="saveApiUrl()">บันทึก URL และรีโหลด</button>
   </div>
 
   <!-- LOADING -->
@@ -150,7 +190,7 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-  <!-- MAIN APP (hidden until login) -->
+  <!-- MAIN APP -->
   <div id="mainApp" style="display:none;">
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -507,9 +547,14 @@
 
   <script>
     // ============================================================
-    // API CONFIGURATION - แก้ไข URL นี้ให้เป็น Apps Script Web App URL ของคุณ
+    // API CONFIGURATION
     // ============================================================
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxN-8sC1Alt3cB3hmpPjRbHjLb53j5DzxthmE5UxWbXvhsvM0U-09jrZ5ZhjAWR4bM/exec';
+    // วิธีหาค่า API_URL ที่ถูกต้อง:
+    // 1. เปิด Apps Script → Deploy → Manage deployments
+    // 2. คัดลอก URL ที่ลงท้ายด้วย /exec
+    // 3. วางแทนที่ YOUR_SCRIPT_ID ด้านล่าง
+    // ============================================================
+    let API_URL = localStorage.getItem('prayer_api_url') || 'https://script.google.com/macros/s/AKfycbxN-8sC1Alt3cB3hmpPjRbHjLb53j5DzxthmE5UxWbXvhsvM0U-09jrZ5ZhjAWR4bM/exec';
 
     // ============================================================
     // APPLICATION STATE
@@ -532,18 +577,86 @@
     };
 
     // ============================================================
+    // API TEST FUNCTIONS
+    // ============================================================
+    function toggleApiTest() {
+      const panel = document.getElementById('apiTestPanel');
+      panel.classList.toggle('show');
+      document.getElementById('apiTestUrl').value = API_URL;
+    }
+
+    async function testPing() {
+      const resultDiv = document.getElementById('apiTestResult');
+      resultDiv.textContent = 'กำลังทดสอบ Ping...';
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.append('action', 'ping');
+        const response = await fetch(url.toString());
+        const data = await response.json();
+        resultDiv.textContent = '✅ Ping สำเร็จ!\n' + JSON.stringify(data, null, 2);
+        resultDiv.style.background = '#e8f5e9';
+      } catch (err) {
+        resultDiv.textContent = '❌ Ping ล้มเหลว: ' + err.message + '\n\nตรวจสอบ:\n1. API_URL ถูกต้องหรือไม่\n2. Deploy เป็น Web App แล้วหรือไม่\n3. Who has access = Anyone';
+        resultDiv.style.background = '#ffebee';
+      }
+    }
+
+    async function testSetup() {
+      const resultDiv = document.getElementById('apiTestResult');
+      resultDiv.textContent = 'กำลังติดตั้งระบบ...';
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'setupSystem' }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await response.json();
+        resultDiv.textContent = '✅ Setup สำเร็จ!\n' + JSON.stringify(data, null, 2);
+        resultDiv.style.background = '#e8f5e9';
+      } catch (err) {
+        resultDiv.textContent = '❌ Setup ล้มเหลว: ' + err.message;
+        resultDiv.style.background = '#ffebee';
+      }
+    }
+
+    async function testConfig() {
+      const resultDiv = document.getElementById('apiTestResult');
+      resultDiv.textContent = 'กำลังโหลดการตั้งค่า...';
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.append('action', 'getAppConfig');
+        const response = await fetch(url.toString());
+        const data = await response.json();
+        resultDiv.textContent = '✅ Config สำเร็จ!\n' + JSON.stringify(data, null, 2);
+        resultDiv.style.background = '#e8f5e9';
+      } catch (err) {
+        resultDiv.textContent = '❌ Config ล้มเหลว: ' + err.message;
+        resultDiv.style.background = '#ffebee';
+      }
+    }
+
+    function saveApiUrl() {
+      const newUrl = document.getElementById('apiTestUrl').value.trim();
+      if (newUrl) {
+        localStorage.setItem('prayer_api_url', newUrl);
+        API_URL = newUrl;
+        alert('บันทึก URL แล้ว - กำลังรีโหลดหน้า...');
+        location.reload();
+      }
+    }
+
+    // ============================================================
     // API CLIENT
     // ============================================================
     async function callAPI(action, params = {}) {
       const apiStatus = document.getElementById('apiStatus');
       try {
-        // เพิ่ม token และ action เข้าไปใน params
         const requestParams = { action: action, ...params };
         if (APP.sessionToken) {
           requestParams.token = APP.sessionToken;
         }
 
-        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord', 'login', 'logout'].includes(action);
+        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord', 'login', 'logout', 'setupSystem'].includes(action);
 
         let response;
         if (usePost) {
@@ -615,7 +728,7 @@
           errorDiv.style.display = 'block';
         }
       } catch (err) {
-        errorDiv.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+        errorDiv.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message;
         errorDiv.style.display = 'block';
       } finally {
         loginBtn.disabled = false;
@@ -667,7 +780,7 @@
       Swal.fire({ title: title, icon: icon, timer: timer || 2000, showConfirmButton: false, toast: true, position: 'top-end' });
     }
 
-    // แก้ไขการคำนวณวันที่ พ.ศ.
+    // แก้ไขการคำนวณวันที่ พ.ศ. ให้ถูกต้อง
     function formatThaiDate(dateStr) {
       if (!dateStr) return '-';
       const d = new Date(dateStr);
@@ -1499,6 +1612,31 @@
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainApp').style.display = 'block';
         initApp();
+      }
+    })();
+
+    // Test API connection on load
+    (async function testApiOnLoad() {
+      const alertDiv = document.getElementById('apiTestAlert');
+      try {
+        const url = new URL(API_URL);
+        url.searchParams.append('action', 'ping');
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.success) {
+            alertDiv.className = 'alert alert-success py-2 mb-3';
+            alertDiv.innerHTML = '<small><i class="bi bi-check-circle-fill text-success"></i> API เชื่อมต่อสำเร็จ - ' + (data.data.timestamp || '') + '</small>';
+          } else {
+            alertDiv.className = 'alert alert-warning py-2 mb-3';
+            alertDiv.innerHTML = '<small><i class="bi bi-exclamation-triangle-fill text-warning"></i> API ตอบกลับแต่ข้อมูลไม่ถูกต้อง</small>';
+          }
+        } else {
+          throw new Error('HTTP ' + response.status);
+        }
+      } catch (err) {
+        alertDiv.className = 'alert alert-danger py-2 mb-3';
+        alertDiv.innerHTML = '<small><i class="bi bi-x-circle-fill text-danger"></i> API ไม่เชื่อมต่อ - กรุณาตรวจสอบ URL หรือคลิก "ทดสอบ API"</small>';
       }
     })();
   </script>
