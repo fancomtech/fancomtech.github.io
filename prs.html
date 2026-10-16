@@ -17,6 +17,29 @@
     * { box-sizing: border-box; }
     body { font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; }
 
+    /* Login Page */
+    #loginPage {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 10000;
+    }
+    #loginPage.hidden { display: none; }
+    .login-card {
+      background: white; border-radius: 16px; padding: 40px;
+      width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-card h3 { color: var(--primary); text-align: center; margin-bottom: 8px; }
+    .login-card .subtitle { text-align: center; color: var(--text-light); margin-bottom: 30px; font-size: 0.9rem; }
+    .login-card .form-control { padding: 12px 16px; border-radius: 10px; border: 2px solid #e0e0e0; }
+    .login-card .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+    .login-card .btn-login {
+      background: var(--primary); color: white; border: none; padding: 12px;
+      border-radius: 10px; font-size: 1rem; font-weight: 600; width: 100%;
+    }
+    .login-card .btn-login:hover { background: var(--primary-light); }
+    .login-error { color: var(--danger); text-align: center; margin-top: 12px; font-size: 0.9rem; display: none; }
+
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.85); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
     #loadingOverlay.active { display: flex; }
     .spinner-grow-lg { width: 3rem; height: 3rem; }
@@ -75,303 +98,350 @@
     .user-info .user-name { font-weight: 600; font-size: 0.9rem; }
     .user-info .user-role { font-size: 0.75rem; opacity: 0.7; }
 
-    /* API Status Indicator */
     .api-status { position: fixed; bottom: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; z-index: 9999; }
     .api-status.connected { background: #e8f5e9; color: #2e7d32; }
     .api-status.disconnected { background: #ffebee; color: #c62828; }
+
+    .logout-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+    .logout-btn:hover { background: rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
+  <!-- LOGIN PAGE -->
+  <div id="loginPage">
+    <div class="login-card">
+      <h3><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h3>
+      <p class="subtitle" id="loginSchoolName">โรงเรียน...</p>
+      <form onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <label class="form-label fw-bold">ชื่อผู้ใช้</label>
+          <input type="text" class="form-control" id="loginUsername" placeholder="กรอกชื่อผู้ใช้" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">รหัสผ่าน</label>
+          <input type="password" class="form-control" id="loginPassword" placeholder="กรอกรหัสผ่าน" required>
+        </div>
+        <button type="submit" class="btn btn-login" id="loginBtn">
+          <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+        </button>
+        <div class="login-error" id="loginError"></div>
+      </form>
+      <div class="mt-4 pt-3 border-top">
+        <small class="text-muted d-block text-center">เข้าสู่ระบบในฐานะผู้เยี่ยมชม</small>
+        <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="continueAsGuest()">
+          <i class="bi bi-person"></i> เข้าชมแดชบอร์ดสาธารณะ
+        </button>
+      </div>
+      <div class="mt-3">
+        <small class="text-muted d-block text-center">
+          <strong>ผู้ใช้ทดสอบ:</strong><br>
+          Admin: admin@school.com / admin123<br>
+          Teacher: teacher@school.com / teacher123
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
   <div id="loadingOverlay">
     <div class="spinner-grow text-primary spinner-grow-lg" role="status"><span class="visually-hidden">กำลังโหลด...</span></div>
     <p class="mt-3 text-muted">กำลังประมวลผล...</p>
   </div>
+
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <h5><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h5>
-      <small id="schoolName">โรงเรียน...</small>
-    </div>
-    <div class="sidebar-nav">
-      <a href="#" class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="bi bi-speedometer2"></i> แดชบอร์ด</a>
-      <a href="#" class="nav-link" data-page="scanner" onclick="navigateTo('scanner')" id="navScanner"><i class="bi bi-qr-code-scan"></i> สแกนบันทึก</a>
-      <a href="#" class="nav-link" data-page="manual" onclick="navigateTo('manual')" id="navManual"><i class="bi bi-pencil-square"></i> บันทึกด้วยมือ</a>
-      <a href="#" class="nav-link" data-page="exemption" onclick="navigateTo('exemption')" id="navExemption"><i class="bi bi-calendar-x"></i> บันทึกยกเว้น</a>
-      <a href="#" class="nav-link" data-page="reports" onclick="navigateTo('reports')" id="navReports"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</a>
-      <a href="#" class="nav-link" data-page="students" onclick="navigateTo('students')" id="navStudents"><i class="bi bi-people"></i> จัดการนักเรียน</a>
-      <a href="#" class="nav-link" data-page="users" onclick="navigateTo('users')" id="navUsers"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</a>
-      <a href="#" class="nav-link" data-page="settings" onclick="navigateTo('settings')" id="navSettings"><i class="bi bi-gear"></i> ตั้งค่าระบบ</a>
-      <a href="#" class="nav-link" data-page="audit" onclick="navigateTo('audit')" id="navAudit"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</a>
-    </div>
-    <div class="user-info" id="userInfo">
-      <div class="user-name" id="currentUserName">-</div>
-      <div class="user-role" id="currentUserRole">-</div>
-    </div>
-  </nav>
-
-  <div class="main-content">
-    <div class="top-bar">
-      <div class="d-flex align-items-center gap-3">
-        <button class="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-        <h4 id="pageTitle">แดชบอร์ด</h4>
+  <!-- MAIN APP (hidden until login) -->
+  <div id="mainApp" style="display:none;">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h5><i class="bi bi-moon-stars-fill"></i> ระบบบันทึกการละหมาด</h5>
+        <small id="schoolName">โรงเรียน...</small>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <span class="text-muted small" id="currentDateDisplay"></span>
+      <div class="sidebar-nav">
+        <a href="#" class="nav-link active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="bi bi-speedometer2"></i> แดชบอร์ด</a>
+        <a href="#" class="nav-link" data-page="scanner" onclick="navigateTo('scanner')" id="navScanner"><i class="bi bi-qr-code-scan"></i> สแกนบันทึก</a>
+        <a href="#" class="nav-link" data-page="manual" onclick="navigateTo('manual')" id="navManual"><i class="bi bi-pencil-square"></i> บันทึกด้วยมือ</a>
+        <a href="#" class="nav-link" data-page="exemption" onclick="navigateTo('exemption')" id="navExemption"><i class="bi bi-calendar-x"></i> บันทึกยกเว้น</a>
+        <a href="#" class="nav-link" data-page="reports" onclick="navigateTo('reports')" id="navReports"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</a>
+        <a href="#" class="nav-link" data-page="students" onclick="navigateTo('students')" id="navStudents"><i class="bi bi-people"></i> จัดการนักเรียน</a>
+        <a href="#" class="nav-link" data-page="users" onclick="navigateTo('users')" id="navUsers"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</a>
+        <a href="#" class="nav-link" data-page="settings" onclick="navigateTo('settings')" id="navSettings"><i class="bi bi-gear"></i> ตั้งค่าระบบ</a>
+        <a href="#" class="nav-link" data-page="audit" onclick="navigateTo('audit')" id="navAudit"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</a>
       </div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div class="page-section active" id="page-dashboard">
-      <div class="content-card">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <label class="form-label fw-bold">เลือกวันที่</label>
-            <input type="date" class="form-control" id="dashboardDate" onchange="loadDashboard()">
+      <div class="user-info" id="userInfo">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="user-name" id="currentUserName">-</div>
+            <div class="user-role" id="currentUserRole">-</div>
           </div>
-          <div class="col-md-6 text-md-end mt-2 mt-md-0">
-            <small class="text-muted">อัปเดตล่าสุด: <span id="dashboardUpdatedAt">-</span></small>
-          </div>
+          <button class="logout-btn" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i></button>
         </div>
       </div>
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e3f2fd;color:#1565c0;"><i class="bi bi-people-fill"></i></div><div class="stat-value" id="statStudents">-</div><div class="stat-label">นักเรียนทั้งหมด</div></div></div>
-        <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-check-circle-fill"></i></div><div class="stat-value" id="statPrayed">-</div><div class="stat-label">บันทึกแล้ว</div></div></div>
-        <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff8e1;color:#f57f17;"><i class="bi bi-dash-circle-fill"></i></div><div class="stat-value" id="statExempted">-</div><div class="stat-label">ได้รับการยกเว้น</div></div></div>
-        <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#ffebee;color:#c62828;"><i class="bi bi-exclamation-circle-fill"></i></div><div class="stat-value" id="statNotRecorded">-</div><div class="stat-label">ยังไม่บันทึก</div></div></div>
-      </div>
-      <div class="content-card mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="fw-bold">อัตราการบันทึกวันนี้</span>
-          <span class="fw-bold text-primary" id="statPercentage">0%</span>
-        </div>
-        <div class="progress" style="height: 24px; border-radius: 12px;">
-          <div class="progress-bar bg-success" id="progressRecorded" style="width:0%"></div>
-          <div class="progress-bar bg-warning" id="progressExempted" style="width:0%"></div>
-        </div>
-        <div class="d-flex gap-3 mt-2 small text-muted">
-          <span><i class="bi bi-circle-fill text-success"></i> บันทึกแล้ว</span>
-          <span><i class="bi bi-circle-fill text-warning"></i> ยกเว้น</span>
-          <span><i class="bi bi-circle-fill text-light"></i> ยังไม่บันทึก</span>
-        </div>
-      </div>
-      <div class="row g-3 mb-4">
-        <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สถิติแยกตามเวลาละหมาด</h6><div class="chart-container"><canvas id="chartByPrayer"></canvas></div></div></div>
-        <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สัดส่วนสถานะรวม</h6><div class="chart-container"><canvas id="chartStatusPie"></canvas></div></div></div>
-      </div>
-      <div class="content-card">
-        <h6 class="fw-bold mb-3">สถิติแยกตามห้องเรียน</h6>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead><tr><th>ห้องเรียน</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึกแล้ว</th><th class="text-center">ยกเว้น</th><th class="text-center">ยังไม่บันทึก</th><th class="text-center">เปอร์เซ็นต์</th></tr></thead>
-            <tbody id="classroomStatsBody"><tr><td colspan="6" class="text-center text-muted py-4">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    </nav>
 
-    <!-- SCANNER -->
-    <div class="page-section" id="page-scanner">
-      <div class="row g-3">
-        <div class="col-md-8">
-          <div class="content-card">
-            <h6 class="fw-bold mb-3"><i class="bi bi-qr-code-scan"></i> สแกน QR Code</h6>
-            <div class="mb-3">
-              <label class="form-label fw-bold">เลือกเวลาละหมาด</label>
-              <div class="d-flex flex-wrap gap-2" id="prayerTimeButtons"></div>
+    <div class="main-content">
+      <div class="top-bar">
+        <div class="d-flex align-items-center gap-3">
+          <button class="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+          <h4 id="pageTitle">แดชบอร์ด</h4>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-muted small" id="currentDateDisplay"></span>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="page-section active" id="page-dashboard">
+        <div class="content-card">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">เลือกวันที่</label>
+              <input type="date" class="form-control" id="dashboardDate" onchange="loadDashboard()">
             </div>
-            <div id="scannerContainer" class="mb-3"></div>
-            <div class="d-flex flex-wrap gap-2 mb-3">
-              <button class="btn btn-primary" id="btnStartScan" onclick="startScanner()"><i class="bi bi-camera"></i> เริ่มสแกน</button>
-              <button class="btn btn-secondary" id="btnStopScan" onclick="stopScanner()" disabled><i class="bi bi-stop-circle"></i> หยุดกล้อง</button>
-              <button class="btn btn-outline-primary" id="btnSwitchCamera" onclick="switchCamera()" disabled><i class="bi bi-arrow-repeat"></i> สลับกล้อง</button>
+            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+              <small class="text-muted">อัปเดตล่าสุด: <span id="dashboardUpdatedAt">-</span></small>
             </div>
-            <div id="scannerResult" class="scanner-result" style="display:none;"></div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="content-card">
-            <h6 class="fw-bold mb-3"><i class="bi bi-search"></i> ค้นหาด้วยรหัสนักเรียน</h6>
-            <div class="input-group mb-3">
-              <input type="text" class="form-control" id="searchStudentCode" placeholder="กรอกรหัสนักเรียน" onkeypress="if(event.key==='Enter')searchByCode()">
-              <button class="btn btn-primary" onclick="searchByCode()"><i class="bi bi-search"></i></button>
-            </div>
-            <div id="searchResult"></div>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e3f2fd;color:#1565c0;"><i class="bi bi-people-fill"></i></div><div class="stat-value" id="statStudents">-</div><div class="stat-label">นักเรียนทั้งหมด</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-check-circle-fill"></i></div><div class="stat-value" id="statPrayed">-</div><div class="stat-label">บันทึกแล้ว</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#fff8e1;color:#f57f17;"><i class="bi bi-dash-circle-fill"></i></div><div class="stat-value" id="statExempted">-</div><div class="stat-label">ได้รับการยกเว้น</div></div></div>
+          <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:#ffebee;color:#c62828;"><i class="bi bi-exclamation-circle-fill"></i></div><div class="stat-value" id="statNotRecorded">-</div><div class="stat-label">ยังไม่บันทึก</div></div></div>
+        </div>
+        <div class="content-card mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold">อัตราการบันทึกวันนี้</span>
+            <span class="fw-bold text-primary" id="statPercentage">0%</span>
           </div>
-          <div class="content-card">
-            <h6 class="fw-bold mb-3">สถิติวันนี้</h6>
-            <div id="scannerMiniStats"><p class="text-muted small">กำลังโหลด...</p></div>
+          <div class="progress" style="height: 24px; border-radius: 12px;">
+            <div class="progress-bar bg-success" id="progressRecorded" style="width:0%"></div>
+            <div class="progress-bar bg-warning" id="progressExempted" style="width:0%"></div>
+          </div>
+          <div class="d-flex gap-3 mt-2 small text-muted">
+            <span><i class="bi bi-circle-fill text-success"></i> บันทึกแล้ว</span>
+            <span><i class="bi bi-circle-fill text-warning"></i> ยกเว้น</span>
+            <span><i class="bi bi-circle-fill text-light"></i> ยังไม่บันทึก</span>
+          </div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สถิติแยกตามเวลาละหมาด</h6><div class="chart-container"><canvas id="chartByPrayer"></canvas></div></div></div>
+          <div class="col-md-6"><div class="content-card"><h6 class="fw-bold mb-3">สัดส่วนสถานะรวม</h6><div class="chart-container"><canvas id="chartStatusPie"></canvas></div></div></div>
+        </div>
+        <div class="content-card">
+          <h6 class="fw-bold mb-3">สถิติแยกตามห้องเรียน</h6>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>ห้องเรียน</th><th class="text-center">นักเรียน</th><th class="text-center">บันทึกแล้ว</th><th class="text-center">ยกเว้น</th><th class="text-center">ยังไม่บันทึก</th><th class="text-center">เปอร์เซ็นต์</th></tr></thead>
+              <tbody id="classroomStatsBody"><tr><td colspan="6" class="text-center text-muted py-4">กำลังโหลด...</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- MANUAL -->
-    <div class="page-section" id="page-manual">
-      <div class="content-card manual-record-form">
-        <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square"></i> บันทึกการละหมาดด้วยมือ</h6>
+      <!-- SCANNER -->
+      <div class="page-section" id="page-scanner">
         <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">รหัสนักเรียน</label>
-            <input type="text" class="form-control" id="manualStudentCode" placeholder="กรอกรหัสนักเรียน" oninput="manualSearchStudent()">
-            <div id="manualStudentInfo" class="mt-2"></div>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">เวลาละหมาด</label>
-            <select class="form-select" id="manualPrayerName"><option value="">-- เลือกเวลา --</option></select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">วันที่</label>
-            <input type="date" class="form-control" id="manualDate">
-          </div>
-        </div>
-        <div class="mt-3"><button class="btn btn-success" onclick="submitManualRecord()"><i class="bi bi-check-lg"></i> บันทึก</button></div>
-      </div>
-    </div>
-
-    <!-- EXEMPTION -->
-    <div class="page-section" id="page-exemption">
-      <div class="row g-3">
-        <div class="col-md-5">
-          <div class="content-card">
-            <h6 class="fw-bold mb-3"><i class="bi bi-calendar-x"></i> บันทึกการยกเว้น</h6>
-            <div class="mb-3">
-              <label class="form-label">ค้นหานักเรียนหญิง</label>
-              <input type="text" class="form-control" id="exemptionSearchInput" placeholder="ชื่อ หรือ รหัสนักเรียน" oninput="searchFemaleStudents()">
-              <div id="exemptionStudentList" class="mt-2" style="max-height:200px;overflow-y:auto;"></div>
+          <div class="col-md-8">
+            <div class="content-card">
+              <h6 class="fw-bold mb-3"><i class="bi bi-qr-code-scan"></i> สแกน QR Code</h6>
+              <div class="mb-3">
+                <label class="form-label fw-bold">เลือกเวลาละหมาด</label>
+                <div class="d-flex flex-wrap gap-2" id="prayerTimeButtons"></div>
+              </div>
+              <div id="scannerContainer" class="mb-3"></div>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-primary" id="btnStartScan" onclick="startScanner()"><i class="bi bi-camera"></i> เริ่มสแกน</button>
+                <button class="btn btn-secondary" id="btnStopScan" onclick="stopScanner()" disabled><i class="bi bi-stop-circle"></i> หยุดกล้อง</button>
+                <button class="btn btn-outline-primary" id="btnSwitchCamera" onclick="switchCamera()" disabled><i class="bi bi-arrow-repeat"></i> สลับกล้อง</button>
+              </div>
+              <div id="scannerResult" class="scanner-result" style="display:none;"></div>
             </div>
-            <div class="mb-3"><label class="form-label">วันที่</label><input type="date" class="form-control" id="exemptionDate"></div>
-            <div class="mb-3"><label class="form-label">หมายเหตุ (ไม่บังคับ)</label><textarea class="form-control" id="exemptionNote" rows="2"></textarea></div>
-            <button class="btn btn-warning" onclick="submitExemption()"><i class="bi bi-check-lg"></i> บันทึกการยกเว้น</button>
           </div>
-        </div>
-        <div class="col-md-7">
-          <div class="content-card">
-            <h6 class="fw-bold mb-3">รายการยกเว้น</h6>
-            <div class="row g-2 mb-3">
-              <div class="col-md-4"><input type="date" class="form-control" id="exemptionFilterDate" onchange="loadExemptionRecords()"></div>
-              <div class="col-md-4"><select class="form-select" id="exemptionFilterClass" onchange="loadExemptionRecords()"><option value="">ทุกห้องเรียน</option></select></div>
-              <div class="col-md-4"><button class="btn btn-outline-primary w-100" onclick="loadExemptionRecords()"><i class="bi bi-funnel"></i> กรอง</button></div>
+          <div class="col-md-4">
+            <div class="content-card">
+              <h6 class="fw-bold mb-3"><i class="bi bi-search"></i> ค้นหาด้วยรหัสนักเรียน</h6>
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="searchStudentCode" placeholder="กรอกรหัสนักเรียน" onkeypress="if(event.key==='Enter')searchByCode()">
+                <button class="btn btn-primary" onclick="searchByCode()"><i class="bi bi-search"></i></button>
+              </div>
+              <div id="searchResult"></div>
             </div>
-            <div class="table-responsive">
-              <table class="table table-hover table-sm">
-                <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th>วันที่</th><th>สถานะ</th><th>ผู้บันทึก</th><th>จัดการ</th></tr></thead>
-                <tbody id="exemptionRecordsBody"><tr><td colspan="7" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-              </table>
+            <div class="content-card">
+              <h6 class="fw-bold mb-3">สถิติวันนี้</h6>
+              <div id="scannerMiniStats"><p class="text-muted small">กำลังโหลด...</p></div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- REPORTS -->
-    <div class="page-section" id="page-reports">
-      <div class="content-card">
-        <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</h6>
-        <ul class="nav nav-tabs mb-3" id="reportTabs">
-          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#reportDaily">รายวัน</a></li>
-          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportMonthly">รายเดือน</a></li>
-          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportStudent">รายบุคคล</a></li>
-        </ul>
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="reportDaily">
-            <div class="row g-2 mb-3">
-              <div class="col-md-3"><input type="date" class="form-control" id="reportDailyDate"></div>
-              <div class="col-md-3"><select class="form-select" id="reportDailyClass"><option value="">ทุกห้องเรียน</option></select></div>
-              <div class="col-md-3"><button class="btn btn-primary" onclick="loadDailyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
-              <div class="col-md-3 text-end">
-                <button class="btn btn-success" onclick="exportCSV()"><i class="bi bi-download"></i> ส่งออก CSV</button>
-                <button class="btn btn-outline-secondary ms-1" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์</button>
+      <!-- MANUAL -->
+      <div class="page-section" id="page-manual">
+        <div class="content-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square"></i> บันทึกการละหมาดด้วยมือ</h6>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">รหัสนักเรียน</label>
+              <input type="text" class="form-control" id="manualStudentCode" placeholder="กรอกรหัสนักเรียน" oninput="manualSearchStudent()">
+              <div id="manualStudentInfo" class="mt-2"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">เวลาละหมาด</label>
+              <select class="form-select" id="manualPrayerName"><option value="">-- เลือกเวลา --</option></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">วันที่</label>
+              <input type="date" class="form-control" id="manualDate">
+            </div>
+          </div>
+          <div class="mt-3"><button class="btn btn-success" onclick="submitManualRecord()"><i class="bi bi-check-lg"></i> บันทึก</button></div>
+        </div>
+      </div>
+
+      <!-- EXEMPTION -->
+      <div class="page-section" id="page-exemption">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <div class="content-card">
+              <h6 class="fw-bold mb-3"><i class="bi bi-calendar-x"></i> บันทึกการยกเว้น</h6>
+              <div class="mb-3">
+                <label class="form-label">ค้นหานักเรียนหญิง</label>
+                <input type="text" class="form-control" id="exemptionSearchInput" placeholder="ชื่อ หรือ รหัสนักเรียน" oninput="searchFemaleStudents()">
+                <div id="exemptionStudentList" class="mt-2" style="max-height:200px;overflow-y:auto;"></div>
+              </div>
+              <div class="mb-3"><label class="form-label">วันที่</label><input type="date" class="form-control" id="exemptionDate"></div>
+              <div class="mb-3"><label class="form-label">หมายเหตุ (ไม่บังคับ)</label><textarea class="form-control" id="exemptionNote" rows="2"></textarea></div>
+              <button class="btn btn-warning" onclick="submitExemption()"><i class="bi bi-check-lg"></i> บันทึกการยกเว้น</button>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="content-card">
+              <h6 class="fw-bold mb-3">รายการยกเว้น</h6>
+              <div class="row g-2 mb-3">
+                <div class="col-md-4"><input type="date" class="form-control" id="exemptionFilterDate" onchange="loadExemptionRecords()"></div>
+                <div class="col-md-4"><select class="form-select" id="exemptionFilterClass" onchange="loadExemptionRecords()"><option value="">ทุกห้องเรียน</option></select></div>
+                <div class="col-md-4"><button class="btn btn-outline-primary w-100" onclick="loadExemptionRecords()"><i class="bi bi-funnel"></i> กรอง</button></div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                  <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th>วันที่</th><th>สถานะ</th><th>ผู้บันทึก</th><th>จัดการ</th></tr></thead>
+                  <tbody id="exemptionRecordsBody"><tr><td colspan="7" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+                </table>
               </div>
             </div>
-            <div class="table-responsive">
-              <table class="table table-hover table-sm" id="dailyReportTable">
-                <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th class="text-center">ฟัจญ์ร</th><th class="text-center">ซุฮ์ริ</th><th class="text-center">อัสริ</th><th class="text-center">มัฆริบ</th><th class="text-center">อิชาอ์</th><th class="text-center">รวม</th></tr></thead>
-                <tbody id="dailyReportBody"><tr><td colspan="9" class="text-center text-muted py-3">เลือกวันที่แล้วกด "ดูรายงาน"</td></tr></tbody>
-              </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="page-section" id="page-reports">
+        <div class="content-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</h6>
+          <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#reportDaily">รายวัน</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportMonthly">รายเดือน</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reportStudent">รายบุคคล</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="reportDaily">
+              <div class="row g-2 mb-3">
+                <div class="col-md-3"><input type="date" class="form-control" id="reportDailyDate"></div>
+                <div class="col-md-3"><select class="form-select" id="reportDailyClass"><option value="">ทุกห้องเรียน</option></select></div>
+                <div class="col-md-3"><button class="btn btn-primary" onclick="loadDailyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
+                <div class="col-md-3 text-end">
+                  <button class="btn btn-success" onclick="exportCSV()"><i class="bi bi-download"></i> ส่งออก CSV</button>
+                  <button class="btn btn-outline-secondary ms-1" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                  <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ห้อง</th><th class="text-center">ฟัจญ์ร</th><th class="text-center">ซุฮ์ริ</th><th class="text-center">อัสริ</th><th class="text-center">มัฆริบ</th><th class="text-center">อิชาอ์</th><th class="text-center">รวม</th></tr></thead>
+                  <tbody id="dailyReportBody"><tr><td colspan="9" class="text-center text-muted py-3">เลือกวันที่แล้วกด "ดูรายงาน"</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="reportMonthly">
+              <div class="row g-2 mb-3">
+                <div class="col-md-2"><select class="form-select" id="reportMonth"><option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option><option value="3">มีนาคม</option><option value="4">เมษายน</option><option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option><option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option><option value="9">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option></select></div>
+                <div class="col-md-2"><select class="form-select" id="reportYear"></select></div>
+                <div class="col-md-2"><button class="btn btn-primary" onclick="loadMonthlyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
+              </div>
+              <div id="monthlyReportContent"><p class="text-muted text-center py-4">เลือกรายเดือนแล้วกด "ดูรายงาน"</p></div>
+            </div>
+            <div class="tab-pane fade" id="reportStudent">
+              <div class="row g-2 mb-3">
+                <div class="col-md-3"><input type="text" class="form-control" id="reportStudentSearch" placeholder="รหัสนักเรียน" oninput="searchStudentForReport()"><div id="reportStudentList" class="mt-1" style="max-height:150px;overflow-y:auto;"></div></div>
+                <div class="col-md-2"><input type="date" class="form-control" id="reportStudentFrom"></div>
+                <div class="col-md-2"><input type="date" class="form-control" id="reportStudentTo"></div>
+                <div class="col-md-2"><button class="btn btn-primary" onclick="loadStudentReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
+              </div>
+              <div id="studentReportContent"><p class="text-muted text-center py-4">ค้นหานักเรียนแล้วกด "ดูรายงาน"</p></div>
             </div>
           </div>
-          <div class="tab-pane fade" id="reportMonthly">
-            <div class="row g-2 mb-3">
-              <div class="col-md-2"><select class="form-select" id="reportMonth"><option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option><option value="3">มีนาคม</option><option value="4">เมษายน</option><option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option><option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option><option value="9">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option></select></div>
-              <div class="col-md-2"><select class="form-select" id="reportYear"></select></div>
-              <div class="col-md-2"><button class="btn btn-primary" onclick="loadMonthlyReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="page-section" id="page-students">
+        <div class="content-card">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h6 class="fw-bold mb-0"><i class="bi bi-people"></i> จัดการข้อมูลนักเรียน</h6>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>
+              <button class="btn btn-success btn-sm" onclick="showImportModal()"><i class="bi bi-upload"></i> นำเข้า CSV</button>
             </div>
-            <div id="monthlyReportContent"><p class="text-muted text-center py-4">เลือกรายเดือนแล้วกด "ดูรายงาน"</p></div>
           </div>
-          <div class="tab-pane fade" id="reportStudent">
-            <div class="row g-2 mb-3">
-              <div class="col-md-3"><input type="text" class="form-control" id="reportStudentSearch" placeholder="รหัสนักเรียน" oninput="searchStudentForReport()"><div id="reportStudentList" class="mt-1" style="max-height:150px;overflow-y:auto;"></div></div>
-              <div class="col-md-2"><input type="date" class="form-control" id="reportStudentFrom" placeholder="จากวันที่"></div>
-              <div class="col-md-2"><input type="date" class="form-control" id="reportStudentTo" placeholder="ถึงวันที่"></div>
-              <div class="col-md-2"><button class="btn btn-primary" onclick="loadStudentReport()"><i class="bi bi-search"></i> ดูรายงาน</button></div>
-            </div>
-            <div id="studentReportContent"><p class="text-muted text-center py-4">ค้นหานักเรียนแล้วกด "ดูรายงาน"</p></div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-4"><input type="text" class="form-control" id="studentSearchInput" placeholder="ค้นหา: รหัส, ชื่อ, ห้องเรียน" oninput="debounceSearchStudents()"></div>
+            <div class="col-md-2"><select class="form-select" id="studentPageSize" onchange="loadStudents()"><option value="10">10 รายการ</option><option value="25" selected>25 รายการ</option><option value="50">50 รายการ</option><option value="100">100 รายการ</option></select></div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead><tr><th>รหัส</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>เพศ</th><th>ชั้น</th><th>ห้อง</th><th>QR</th><th>จัดการ</th></tr></thead>
+              <tbody id="studentsTableBody"><tr><td colspan="9" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+          <nav id="studentsPagination"></nav>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page-section" id="page-users">
+        <div class="content-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</h6>
+            <button class="btn btn-primary btn-sm" onclick="showAddUserModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อแสดงผล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <tbody id="usersTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- STUDENTS -->
-    <div class="page-section" id="page-students">
-      <div class="content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <h6 class="fw-bold mb-0"><i class="bi bi-people"></i> จัดการข้อมูลนักเรียน</h6>
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="bi bi-plus-lg"></i> เพิ่มนักเรียน</button>
-            <button class="btn btn-success btn-sm" onclick="showImportModal()"><i class="bi bi-upload"></i> นำเข้า CSV</button>
+      <!-- SETTINGS -->
+      <div class="page-section" id="page-settings">
+        <div class="content-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-gear"></i> ตั้งค่าระบบ</h6>
+          <div id="settingsContent"><p class="text-muted">กำลังโหลด...</p></div>
+        </div>
+      </div>
+
+      <!-- AUDIT -->
+      <div class="page-section" id="page-audit">
+        <div class="content-card">
+          <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</h6>
+          <div class="row g-2 mb-3"><div class="col-md-3"><select class="form-select" id="auditFilterType" onchange="loadAuditLogs()"><option value="">ทุกประเภท</option><option value="student">นักเรียน</option><option value="prayer_log">การละหมาด</option><option value="menstruation">การยกเว้น</option><option value="settings">การตั้งค่า</option><option value="user">ผู้ใช้</option></select></div></div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ประเภท</th><th>ผู้ดำเนินการ</th><th>เหตุผล</th></tr></thead>
+              <tbody id="auditTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+            </table>
           </div>
+          <nav id="auditPagination"></nav>
         </div>
-        <div class="row g-2 mb-3">
-          <div class="col-md-4"><input type="text" class="form-control" id="studentSearchInput" placeholder="ค้นหา: รหัส, ชื่อ, ห้องเรียน" oninput="debounceSearchStudents()"></div>
-          <div class="col-md-2"><select class="form-select" id="studentPageSize" onchange="loadStudents()"><option value="10">10 รายการ</option><option value="25" selected>25 รายการ</option><option value="50">50 รายการ</option><option value="100">100 รายการ</option></select></div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover table-sm">
-            <thead><tr><th>รหัส</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>เพศ</th><th>ชั้น</th><th>ห้อง</th><th>QR</th><th>จัดการ</th></tr></thead>
-            <tbody id="studentsTableBody"><tr><td colspan="9" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-        <nav id="studentsPagination"></nav>
-      </div>
-    </div>
-
-    <!-- USERS -->
-    <div class="page-section" id="page-users">
-      <div class="content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0"><i class="bi bi-person-gear"></i> จัดการผู้ใช้</h6>
-          <button class="btn btn-primary btn-sm" onclick="showAddUserModal()"><i class="bi bi-plus-lg"></i> เพิ่มผู้ใช้</button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover table-sm">
-            <thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อแสดงผล</th><th>สิทธิ์</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-            <tbody id="usersTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- SETTINGS -->
-    <div class="page-section" id="page-settings">
-      <div class="content-card">
-        <h6 class="fw-bold mb-3"><i class="bi bi-gear"></i> ตั้งค่าระบบ</h6>
-        <div id="settingsContent"><p class="text-muted">กำลังโหลด...</p></div>
-      </div>
-    </div>
-
-    <!-- AUDIT -->
-    <div class="page-section" id="page-audit">
-      <div class="content-card">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> ประวัติการใช้งาน</h6>
-        <div class="row g-2 mb-3"><div class="col-md-3"><select class="form-select" id="auditFilterType" onchange="loadAuditLogs()"><option value="">ทุกประเภท</option><option value="student">นักเรียน</option><option value="prayer_log">การละหมาด</option><option value="menstruation">การยกเว้น</option><option value="settings">การตั้งค่า</option><option value="user">ผู้ใช้</option></select></div></div>
-        <div class="table-responsive">
-          <table class="table table-hover table-sm">
-            <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ประเภท</th><th>ผู้ดำเนินการ</th><th>เหตุผล</th></tr></thead>
-            <tbody id="auditTableBody"><tr><td colspan="5" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
-          </table>
-        </div>
-        <nav id="auditPagination"></nav>
       </div>
     </div>
   </div>
@@ -382,10 +452,10 @@
       <div class="modal-header"><h5 class="modal-title">เพิ่มนักเรียน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <div class="row g-3">
-          <div class="col-12"><label class="form-label">รหัสนักเรียน *</label><input type="text" class="form-control" id="newStudentCode" required></div>
+          <div class="col-12"><label class="form-label">รหัสนักเรียน *</label><input type="text" class="form-control" id="newStudentCode"></div>
           <div class="col-4"><label class="form-label">คำนำหน้า</label><select class="form-select" id="newStudentPrefix"><option value="">-</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option><option value="นาย">นาย</option><option value="นางสาว">นางสาว</option></select></div>
-          <div class="col-4"><label class="form-label">ชื่อ *</label><input type="text" class="form-control" id="newStudentFirst" required></div>
-          <div class="col-4"><label class="form-label">นามสกุล *</label><input type="text" class="form-control" id="newStudentLast" required></div>
+          <div class="col-4"><label class="form-label">ชื่อ *</label><input type="text" class="form-control" id="newStudentFirst"></div>
+          <div class="col-4"><label class="form-label">นามสกุล *</label><input type="text" class="form-control" id="newStudentLast"></div>
           <div class="col-4"><label class="form-label">เพศ *</label><select class="form-select" id="newStudentGender"><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
           <div class="col-4"><label class="form-label">ระดับชั้น</label><input type="text" class="form-control" id="newStudentGrade" placeholder="ม.1"></div>
           <div class="col-4"><label class="form-label">ห้องเรียน</label><input type="text" class="form-control" id="newStudentClassroom" placeholder="1/1"></div>
@@ -399,9 +469,8 @@
     <div class="modal-dialog modal-lg"><div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">นำเข้าข้อมูลนักเรียนจาก CSV</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
-        <div class="alert alert-info"><strong>รูปแบบ CSV:</strong> student_code, prefix, first_name, last_name, gender, grade_level, classroom<br><small>บรรทัดแรกเป็น header ไม่ต้องใส่</small></div>
+        <div class="alert alert-info"><strong>รูปแบบ CSV:</strong> student_code, prefix, first_name, last_name, gender, grade_level, classroom</div>
         <div class="mb-3"><label class="form-label">เลือกไฟล์ CSV</label><input type="file" class="form-control" id="importFile" accept=".csv"></div>
-        <div id="importPreview"></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitImport()">นำเข้า</button></div>
     </div></div>
@@ -411,8 +480,9 @@
     <div class="modal-dialog"><div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">เพิ่มผู้ใช้</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
-        <div class="mb-3"><label class="form-label">อีเมล (Username) *</label><input type="email" class="form-control" id="newUserEmail" required></div>
-        <div class="mb-3"><label class="form-label">ชื่อแสดงผล *</label><input type="text" class="form-control" id="newUserDisplayName" required></div>
+        <div class="mb-3"><label class="form-label">ชื่อผู้ใช้ (อีเมล) *</label><input type="email" class="form-control" id="newUserEmail"></div>
+        <div class="mb-3"><label class="form-label">ชื่อแสดงผล *</label><input type="text" class="form-control" id="newUserDisplayName"></div>
+        <div class="mb-3"><label class="form-label">รหัสผ่านเริ่มต้น</label><input type="text" class="form-control" id="newUserPassword" value="123456"></div>
         <div class="mb-3"><label class="form-label">สิทธิ์ *</label><select class="form-select" id="newUserRole"><option value="teacher">ครู (Teacher)</option><option value="admin">ผู้ดูแลระบบ (Admin)</option><option value="student">นักเรียน (Student)</option></select></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary" onclick="submitAddUser()">บันทึก</button></div>
@@ -427,7 +497,6 @@
     </div></div>
   </div>
 
-  <!-- API Status -->
   <div class="api-status disconnected" id="apiStatus"><i class="bi bi-wifi-off"></i> เชื่อมต่อ API...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -447,6 +516,7 @@
     // ============================================================
     const APP = {
       currentUser: null,
+      sessionToken: null,
       currentPage: 'dashboard',
       selectedPrayer: 'fajr',
       scanner: null,
@@ -462,25 +532,29 @@
     };
 
     // ============================================================
-    // API CLIENT - ใช้ fetch() แทน google.script.run
+    // API CLIENT
     // ============================================================
     async function callAPI(action, params = {}) {
       const apiStatus = document.getElementById('apiStatus');
       try {
-        // ใช้ GET สำหรับข้อมูลขนาดเล็ก, POST สำหรับข้อมูลใหญ่
-        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord'].includes(action);
+        // เพิ่ม token และ action เข้าไปใน params
+        const requestParams = { action: action, ...params };
+        if (APP.sessionToken) {
+          requestParams.token = APP.sessionToken;
+        }
+
+        const usePost = ['importStudents', 'addStudent', 'recordPrayer', 'recordMenstruationExemption', 'updateSetting', 'addUser', 'updateUser', 'updateStudent', 'updateMenstruationRecord', 'login', 'logout'].includes(action);
 
         let response;
         if (usePost) {
           response = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action, ...params }),
+            body: JSON.stringify(requestParams),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
           });
         } else {
           const url = new URL(API_URL);
-          url.searchParams.append('action', action);
-          for (const [key, value] of Object.entries(params)) {
+          for (const [key, value] of Object.entries(requestParams)) {
             if (value !== undefined && value !== null) {
               url.searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
             }
@@ -491,15 +565,9 @@
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const result = await response.json();
 
-        // ตรวจสอบว่า result มีโครงสร้างที่ถูกต้อง
-        if (result === null || result === undefined) {
-          throw new Error('API returned null response');
-        }
-        if (typeof result !== 'object') {
-          throw new Error('API returned invalid response type');
-        }
+        if (result === null || result === undefined) throw new Error('API returned null response');
+        if (typeof result !== 'object') throw new Error('API returned invalid response type');
 
-        // ตั้งค่าสถานะ API
         if (apiStatus) {
           apiStatus.className = 'api-status connected';
           apiStatus.innerHTML = '<i class="bi bi-wifi"></i> เชื่อมต่อแล้ว';
@@ -516,6 +584,80 @@
     }
 
     // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+    async function handleLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errorDiv = document.getElementById('loginError');
+      const loginBtn = document.getElementById('loginBtn');
+
+      errorDiv.style.display = 'none';
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังเข้าสู่ระบบ...';
+
+      try {
+        const result = await callAPI('login', { username: username, password: password });
+
+        if (result && result.success) {
+          APP.sessionToken = result.data.token;
+          APP.currentUser = result.data.user;
+          sessionStorage.setItem('sessionToken', APP.sessionToken);
+          sessionStorage.setItem('currentUser', JSON.stringify(APP.currentUser));
+
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('mainApp').style.display = 'block';
+
+          await initApp();
+        } else {
+          errorDiv.textContent = result ? result.message : 'เกิดข้อผิดพลาด';
+          errorDiv.style.display = 'block';
+        }
+      } catch (err) {
+        errorDiv.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+        errorDiv.style.display = 'block';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ';
+      }
+    }
+
+    function continueAsGuest() {
+      APP.currentUser = { user_id: 'public', username: 'public', display_name: 'ผู้เยี่ยมชม', role: 'public' };
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('mainApp').style.display = 'block';
+      initApp();
+    }
+
+    async function handleLogout() {
+      const confirm = await Swal.fire({
+        icon: 'question',
+        title: 'ออกจากระบบ?',
+        text: 'ต้องการออกจากระบบหรือไม่',
+        showCancelButton: true,
+        confirmButtonText: 'ออกจากระบบ',
+        cancelButtonText: 'ยกเลิก'
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      if (APP.sessionToken) {
+        await callAPI('logout', { token: APP.sessionToken });
+      }
+
+      APP.sessionToken = null;
+      APP.currentUser = null;
+      sessionStorage.removeItem('sessionToken');
+      sessionStorage.removeItem('currentUser');
+
+      document.getElementById('mainApp').style.display = 'none';
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+    }
+
+    // ============================================================
     // UTILITY FUNCTIONS
     // ============================================================
     function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
@@ -525,12 +667,14 @@
       Swal.fire({ title: title, icon: icon, timer: timer || 2000, showConfirmButton: false, toast: true, position: 'top-end' });
     }
 
+    // แก้ไขการคำนวณวันที่ พ.ศ.
     function formatThaiDate(dateStr) {
       if (!dateStr) return '-';
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
       const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+      const buddhistYear = d.getFullYear() + 543;
+      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + buddhistYear;
     }
 
     function getTodayStr() {
@@ -715,7 +859,7 @@
         if (APP.scanner && APP.scannerRunning) return;
         const cameras = await Html5Qrcode.getCameras();
         if (!cameras || cameras.length === 0) {
-          Swal.fire({ icon: 'warning', title: 'ไม่พบกล้อง', text: 'ไม่พบกล้องบนอุปกรณ์นี้ กรุณาตรวจสอบการเชื่อมต่อกล้อง' });
+          Swal.fire({ icon: 'warning', title: 'ไม่พบกล้อง', text: 'ไม่พบกล้องบนอุปกรณ์นี้' });
           return;
         }
         APP.cameras = cameras;
@@ -730,7 +874,7 @@
       } catch (err) {
         console.error('Scanner error:', err);
         let msg = 'ไม่สามารถเปิดกล้องได้';
-        if (err.name === 'NotAllowedError') msg = 'ผู้ใช้ปฏิเสธสิทธิ์การเข้าถึงกล้อง กรุณาอนุญาตในตั้งค่าเบราว์เซอร์';
+        if (err.name === 'NotAllowedError') msg = 'ผู้ใช้ปฏิเสธสิทธิ์การเข้าถึงกล้อง';
         else if (err.name === 'NotFoundError') msg = 'ไม่พบกล้องบนอุปกรณ์นี้';
         Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: msg });
       }
@@ -893,7 +1037,7 @@
       const infoDiv = document.getElementById('manualStudentInfo');
       const studentId = infoDiv.dataset.studentId;
       const prayerName = document.getElementById('manualPrayerName').value;
-      if (!studentId) { Swal.fire({ icon: 'warning', title: 'กรุณาค้นหานักเรียน', text: 'กรุณากรอกรหัสและเลือกนักเรียน' }); return; }
+      if (!studentId) { Swal.fire({ icon: 'warning', title: 'กรุณาค้นหานักเรียน' }); return; }
       if (!prayerName) { Swal.fire({ icon: 'warning', title: 'กรุณาเลือกเวลาละหมาด' }); return; }
       showLoading();
       try {
@@ -907,7 +1051,7 @@
         } else {
           Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: result ? result.message : 'เกิดข้อผิดพลาด' });
         }
-      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'เกิดข้อผิดพลาดในการบันทึก' }); }
+      } catch (err) { hideLoading(); Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด' }); }
     }
 
     // ============================================================
@@ -975,12 +1119,12 @@
           tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
           return;
         }
-        tbody.innerHTML = result.data.items.map(r => '<tr><td>' + escapeHtml(r.student_code) + '</td><td>' + escapeHtml(r.student_name) + '</td><td>' + escapeHtml(r.classroom) + '</td><td>' + formatThaiDate(r.exemption_date) + '</td><td><span class="badge bg-warning text-dark">' + (r.exemption_status === 'exempt' ? 'ยกเว้น' : r.exemption_status) + '</span></td><td><small>' + escapeHtml(r.recorded_by) + '</small></td><td><button class="btn btn-sm btn-outline-danger" onclick="cancelExemption(\'' + r.exemption_id + '\')" title="ยกเลิก"><i class="bi bi-x"></i></button></td></tr>').join('');
+        tbody.innerHTML = result.data.items.map(r => '<tr><td>' + escapeHtml(r.student_code) + '</td><td>' + escapeHtml(r.student_name) + '</td><td>' + escapeHtml(r.classroom) + '</td><td>' + formatThaiDate(r.exemption_date) + '</td><td><span class="badge bg-warning text-dark">' + (r.exemption_status === 'exempt' ? 'ยกเว้น' : r.exemption_status) + '</span></td><td><small>' + escapeHtml(r.recorded_by) + '</small></td><td><button class="btn btn-sm btn-outline-danger" onclick="cancelExemption(\'' + r.exemption_id + '\')"><i class="bi bi-x"></i></button></td></tr>').join('');
       } catch (err) { console.error(err); }
     }
 
     async function cancelExemption(exemptionId) {
-      const confirm = await Swal.fire({ icon: 'question', title: 'ยกเลิกการยกเว้น?', text: 'ต้องการยกเลิกรายการนี้หรือไม่', showCancelButton: true, confirmButtonText: 'ยกเลิก', cancelButtonText: 'ปิด' });
+      const confirm = await Swal.fire({ icon: 'question', title: 'ยกเลิกการยกเว้น?', showCancelButton: true, confirmButtonText: 'ยกเลิก', cancelButtonText: 'ปิด' });
       if (!confirm.isConfirmed) return;
       showLoading();
       try {
@@ -1018,9 +1162,9 @@
           return;
         }
         const statusBadge = (status) => {
-          if (status === 'recorded') return '<span class="badge bg-success" title="บันทึกแล้ว"><i class="bi bi-check"></i></span>';
-          if (status === 'exempt') return '<span class="badge bg-warning text-dark" title="ยกเว้น"><i class="bi bi-dash"></i></span>';
-          return '<span class="badge bg-light text-muted" title="ยังไม่บันทึก"><i class="bi bi-x"></i></span>';
+          if (status === 'recorded') return '<span class="badge bg-success"><i class="bi bi-check"></i></span>';
+          if (status === 'exempt') return '<span class="badge bg-warning text-dark"><i class="bi bi-dash"></i></span>';
+          return '<span class="badge bg-light text-muted"><i class="bi bi-x"></i></span>';
         };
         tbody.innerHTML = result.data.items.map(item => '<tr><td>' + escapeHtml(item.student_code) + '</td><td>' + escapeHtml(item.name) + '</td><td>' + escapeHtml(item.classroom) + '</td>' + APP.prayerKeys.map(k => '<td class="text-center">' + statusBadge(item.prayerStatus[k]) + '</td>').join('') + '<td class="text-center"><strong>' + item.totalPrayed + '</strong></td></tr>').join('');
       } catch (err) { hideLoading(); console.error(err); showToast('เกิดข้อผิดพลาด', 'error'); }
@@ -1118,7 +1262,7 @@
           document.getElementById('studentsPagination').innerHTML = '';
           return;
         }
-        tbody.innerHTML = result.data.items.map(s => '<tr><td>' + escapeHtml(s.student_code) + '</td><td>' + escapeHtml(s.prefix) + '</td><td>' + escapeHtml(s.first_name) + '</td><td>' + escapeHtml(s.last_name) + '</td><td>' + (s.gender === 'male' ? 'ชาย' : 'หญิง') + '</td><td>' + escapeHtml(s.grade_level) + '</td><td>' + escapeHtml(s.classroom) + '</td><td><button class="btn btn-sm btn-outline-primary" onclick="showQrCode(\'' + s.student_id + '\', \'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')" title="ดู QR"><i class="bi bi-qr-code"></i></button></td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(\'' + s.student_id + '\')" title="ลบ"><i class="bi bi-trash"></i></button></td></tr>').join('');
+        tbody.innerHTML = result.data.items.map(s => '<tr><td>' + escapeHtml(s.student_code) + '</td><td>' + escapeHtml(s.prefix) + '</td><td>' + escapeHtml(s.first_name) + '</td><td>' + escapeHtml(s.last_name) + '</td><td>' + (s.gender === 'male' ? 'ชาย' : 'หญิง') + '</td><td>' + escapeHtml(s.grade_level) + '</td><td>' + escapeHtml(s.classroom) + '</td><td><button class="btn btn-sm btn-outline-primary" onclick="showQrCode(\'' + s.student_id + '\', \'' + escapeHtml(s.prefix) + escapeHtml(s.first_name) + ' ' + escapeHtml(s.last_name) + '\')"><i class="bi bi-qr-code"></i></button></td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(\'' + s.student_id + '\')"><i class="bi bi-trash"></i></button></td></tr>').join('');
         renderPagination('studentsPagination', result.data, loadStudents);
       } catch (err) { console.error(err); }
     }
@@ -1151,7 +1295,7 @@
     }
 
     async function deleteStudent(studentId) {
-      const confirm = await Swal.fire({ icon: 'warning', title: 'ยืนยันการลบ?', text: 'ต้องการเปลี่ยนสถานะนักเรียนเป็นไม่ใช้งาน', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
+      const confirm = await Swal.fire({ icon: 'warning', title: 'ยืนยันการลบ?', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
       if (!confirm.isConfirmed) return;
       showLoading();
       try {
@@ -1175,7 +1319,7 @@
       } catch (err) { console.error(err); }
     }
 
-    function showImportModal() { document.getElementById('importPreview').innerHTML = ''; document.getElementById('importFile').value = ''; new bootstrap.Modal(document.getElementById('importModal')).show(); }
+    function showImportModal() { document.getElementById('importFile').value = ''; new bootstrap.Modal(document.getElementById('importModal')).show(); }
 
     async function submitImport() {
       const file = document.getElementById('importFile').files[0];
@@ -1214,14 +1358,14 @@
           return;
         }
         const roleNames = { admin: 'ผู้ดูแลระบบ', teacher: 'ครู', student: 'นักเรียน' };
-        tbody.innerHTML = result.data.map(u => '<tr><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.display_name) + '</td><td><span class="badge bg-primary">' + (roleNames[u.role] || u.role) + '</span></td><td><span class="badge ' + (u.active_status === 'active' ? 'bg-success' : 'bg-secondary') + '">' + (u.active_status === 'active' ? 'ใช้งาน' : 'ระงับ') + '</span></td><td><button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(\'' + u.user_id + '\', \'' + u.active_status + '\')" title="เปลี่ยนสถานะ"><i class="bi bi-' + (u.active_status === 'active' ? 'pause' : 'play') + '"></i></button></td></tr>').join('');
+        tbody.innerHTML = result.data.map(u => '<tr><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.display_name) + '</td><td><span class="badge bg-primary">' + (roleNames[u.role] || u.role) + '</span></td><td><span class="badge ' + (u.active_status === 'active' ? 'bg-success' : 'bg-secondary') + '">' + (u.active_status === 'active' ? 'ใช้งาน' : 'ระงับ') + '</span></td><td><button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(\'' + u.user_id + '\', \'' + u.active_status + '\')"><i class="bi bi-' + (u.active_status === 'active' ? 'pause' : 'play') + '"></i></button></td></tr>').join('');
       } catch (err) { console.error(err); }
     }
 
     function showAddUserModal() { new bootstrap.Modal(document.getElementById('addUserModal')).show(); }
 
     async function submitAddUser() {
-      const data = { username: document.getElementById('newUserEmail').value.trim(), display_name: document.getElementById('newUserDisplayName').value.trim(), role: document.getElementById('newUserRole').value };
+      const data = { username: document.getElementById('newUserEmail').value.trim(), display_name: document.getElementById('newUserDisplayName').value.trim(), role: document.getElementById('newUserRole').value, password: document.getElementById('newUserPassword').value };
       if (!data.username || !data.display_name) { Swal.fire({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบ' }); return; }
       showLoading();
       try {
@@ -1322,17 +1466,19 @@
     async function initApp() {
       showLoading();
       try {
-        const userResult = await callAPI('getCurrentUser');
-        if (userResult && userResult.success) APP.currentUser = userResult.data;
-
         const configResult = await callAPI('getAppConfig');
         if (configResult && configResult.success && configResult.data) {
           document.getElementById('schoolName').textContent = configResult.data.school_name || 'โรงเรียน...';
+          document.getElementById('loginSchoolName').textContent = configResult.data.school_name || 'โรงเรียน...';
         }
 
+        // แก้ไขวันที่ - ใช้ปี พ.ศ. ที่ถูกต้อง
         const now = new Date();
-        document.getElementById('currentDateDisplay').textContent = formatThaiDate(now.toISOString());
+        const buddhistYear = now.getFullYear() + 543;
+        const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        document.getElementById('currentDateDisplay').textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + buddhistYear;
         document.getElementById('dashboardDate').value = getTodayStr();
+
         updateUIPermissions();
         navigateTo('dashboard');
         await loadDashboard();
@@ -1343,8 +1489,18 @@
       hideLoading();
     }
 
-    document.addEventListener('DOMContentLoaded', initApp);
-    window.addEventListener('beforeunload', () => { if (APP.scanner && APP.scannerRunning) APP.scanner.stop().catch(() => {}); });
+    // Check existing session on load
+    (function checkSession() {
+      const savedToken = sessionStorage.getItem('sessionToken');
+      const savedUser = sessionStorage.getItem('currentUser');
+      if (savedToken && savedUser) {
+        APP.sessionToken = savedToken;
+        APP.currentUser = JSON.parse(savedUser);
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainApp').style.display = 'block';
+        initApp();
+      }
+    })();
   </script>
 </body>
 </html>
