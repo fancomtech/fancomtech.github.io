@@ -3,225 +3,279 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบสแกนละหมาดอัจฉริยะ</title>
+  <title>ระบบสแกนละหมาด Pro</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Prompt', sans-serif; background: linear-gradient(135deg, #0f766e, #047857, #10b981); min-height: 100vh; color: #1f2937; }
-    .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 1rem; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); }
-    .btn { transition: all 0.2s ease; border-radius: 0.75rem; font-weight: 500; }
-    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .modal-overlay { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; z-index: 1000; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { animation: slideIn 0.3s ease; }
-    @keyframes slideIn { from { transform: translateY(-20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-    .student-photo { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 4px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease; }
-    .scanner-box { border: 3px dashed #10b981; border-radius: 1rem; overflow: hidden; background: #000; }
+    body { font-family: 'Prompt', sans-serif; background: linear-gradient(135deg, #064e3b, #10b981); min-height: 100vh; color: #1f2937; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
+    .tab-btn { transition: all 0.3s; border-bottom: 3px solid transparent; }
+    .tab-btn.active { border-bottom-color: #10b981; color: #064e3b; font-weight: 600; }
+    .tab-btn:hover { background: rgba(16, 185, 129, 0.1); }
     .spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .offline-badge { position: fixed; bottom: 20px; right: 20px; background: #f59e0b; color: white; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: none; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; z-index: 50; }
-    .offline-badge.show { display: flex; animation: bounceIn 0.5s; }
-    @keyframes bounceIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-    input, select { transition: border-color 0.2s, box-shadow 0.2s; }
-    input:focus, select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
-    /* ✅ แก้ไข: ซ่อน scrollbar ใน modal แต่ยัง scroll ได้ */
-    .modal-overlay::-webkit-scrollbar { width: 6px; }
-    .modal-overlay::-webkit-scrollbar-thumb { background: #10b981; border-radius: 3px; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* RFID Input ซ่อนแต่รับค่าได้ */
+    #rfidInput { position: absolute; opacity: 0; pointer-events: none; }
   </style>
 </head>
-<body class="flex items-center justify-center p-4">
-  
-  <!-- Offline Sync Badge -->
-  <div id="offlineBadge" class="offline-badge" onclick="syncOfflineQueue()">
-    <i class="fas fa-wifi-slash"></i>
-    <span id="offlineCount">0</span> รายการรอซิงค์ (คลิกเพื่อซิงค์)
-  </div>
-
-  <div id="mainCard" class="glass w-full max-w-lg p-6 relative">
+<body class="p-4">
+  <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-emerald-700"><i class="fas fa-mosque mr-2"></i>สแกนละหมาด</h2>
-      <div id="connectionStatus" class="text-xs text-gray-500 flex items-center gap-1">
-        <i class="fas fa-circle text-yellow-500 animate-pulse"></i> เชื่อมต่อ...
+    <div class="glass-card p-4 mb-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-mosque text-3xl text-green-600"></i>
+        <div>
+          <h1 class="text-xl font-bold text-green-800">ระบบสแกนละหมาด Pro</h1>
+          <p id="connectionStatus" class="text-xs text-gray-500"><i class="fas fa-circle text-yellow-500"></i> กำลังเชื่อมต่อ...</p>
+        </div>
       </div>
+      <button onclick="toggleFullscreen()" class="text-gray-500 hover:text-green-600"><i class="fas fa-expand"></i></button>
     </div>
 
-    <!-- Student Display Area (Shows on Scan) -->
-    <div id="studentDisplay" class="hidden flex-col items-center mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-      <img id="scanPhoto" src="" alt="Student" class="student-photo mb-3">
-      <h3 id="scanName" class="text-xl font-bold text-gray-800"></h3>
-      <p id="scanDetails" class="text-sm text-gray-600"></p>
-      <span id="scanStatus" class="mt-2 px-3 py-1 rounded-full text-sm font-semibold"></span>
-    </div>
-
-    <!-- Scanner -->
-    <div id="reader" class="scanner-box w-full mb-4 aspect-video"></div>
-
-    <!-- RFID / Manual Input -->
-    <div class="mb-4 relative">
-      <input type="text" id="manualCode" placeholder="📡 สแกน RFID หรือกรอกรหัสแล้วกด Enter..." 
-             class="w-full p-3 pr-12 border border-gray-300 rounded-lg text-lg font-mono tracking-wider" autocomplete="off">
-      <button onclick="submitManualCode()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700">
-        <i class="fas fa-arrow-right"></i>
+    <!-- Navigation Tabs -->
+    <div class="glass-card p-2 mb-4 flex overflow-x-auto gap-2">
+      <button onclick="switchTab('scan')" id="tab-scan" class="tab-btn active flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+        <i class="fas fa-qrcode"></i> <span class="hidden sm:inline">สแกน</span>
+      </button>
+      <button onclick="switchTab('students')" id="tab-students" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+        <i class="fas fa-users"></i> <span class="hidden sm:inline">จัดการนักเรียน</span>
+      </button>
+      <button onclick="switchTab('stats')" id="tab-stats" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+        <i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">สถิติ</span>
+      </button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+        <i class="fas fa-cog"></i> <span class="hidden sm:inline">ตั้งค่า</span>
       </button>
     </div>
 
-    <!-- Controls -->
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <select id="prayerSelect" class="p-3 border border-gray-300 rounded-lg bg-white">
-        <option value="auto"> กะ: อัตโนมัติ</option>
-        <option value="Subhi">Subhi</option>
-        <option value="Dhur">Dhur</option>
-        <option value="Asri">Asri</option>
-        <option value="Maqrhib">Maqrhib</option>
-        <option value="Isha">Isha</option>
-      </select>
-      <select id="modeSelect" class="p-3 border border-gray-300 rounded-lg bg-white">
-        <option value="realtime">⚡ บันทึกทันที</option>
-        <option value="batch">📦 บันทึกเป็นชุด</option>
-      </select>
+    <!-- TAB 1: SCAN -->
+    <div id="view-scan" class="view-section fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Left: Scanner & Input -->
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-green-800"><i class="fas fa-camera mr-2"></i>สแกน QR / RFID</h3>
+            <select id="prayerSelect" class="text-sm border rounded px-2 py-1 bg-green-50 border-green-200">
+              <option value="auto">🕒 อัตโนมัติ</option>
+              <option value="Subhi">Subhi</option>
+              <option value="Dhur">Dhur</option>
+              <option value="Asri">Asri</option>
+              <option value="Maqrhib">Maqrhib</option>
+              <option value="Isha">Isha</option>
+            </select>
+          </div>
+          <div id="reader" class="w-full rounded-lg overflow-hidden border-2 border-green-200 mb-3"></div>
+          
+          <div class="relative">
+            <input type="text" id="manualCode" placeholder="แตะที่นี่แล้วใช้เครื่องอ่าน RFID หรือพิมพ์รหัส..." 
+                   class="w-full p-3 pl-10 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault(); submitManualCode();}">
+            <i class="fas fa-barcode absolute left-3 top-4 text-gray-400"></i>
+            <button onclick="submitManualCode()" class="absolute right-2 top-2 bg-green-600 text-white px-4 py-1.5 rounded-md hover:bg-green-700 transition">
+              <i class="fas fa-check"></i>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2 text-center">💡 รองรับเครื่องอ่าน RFID (โหมด Keyboard Wedge) โดยไม่ต้องติดตั้งไดรเวอร์</p>
+        </div>
+
+        <!-- Right: Result & Batch -->
+        <div class="glass-card p-4 flex flex-col">
+          <h3 class="font-bold text-green-800 mb-3"><i class="fas fa-user-check mr-2"></i>ผลลัพธ์ล่าสุด</h3>
+          <div id="scanResult" class="flex-1 flex items-center justify-center text-gray-400 text-center p-4 border-2 border-dashed border-gray-200 rounded-lg">
+            <div>
+              <i class="fas fa-fingerprint text-4xl mb-2 text-gray-300"></i>
+              <p>รอการสแกน...</p>
+            </div>
+          </div>
+          
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700">โหมดบันทึก:</span>
+              <select id="modeSelect" class="text-sm border rounded px-2 py-1">
+                <option value="realtime">ทันที (Real-time)</option>
+                <option value="batch">เป็นชุด (Batch)</option>
+              </select>
+            </div>
+            <button id="btnProcessBatch" onclick="processBatch()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+              <i class="fas fa-sync"></i> ประมวลผลคิวทั้งหมด
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex gap-3">
-      <button onclick="promptAuth('admin')" class="btn flex-1 bg-gray-700 text-white py-3">
-        <i class="fas fa-cog mr-2"></i>จัดการระบบ
-      </button>
-      <button onclick="promptAuth('export')" class="btn flex-1 bg-emerald-600 text-white py-3">
-        <i class="fas fa-file-csv mr-2"></i>ส่งออก CSV
-      </button>
-    </div>
-
-    <footer class="text-center text-xs text-emerald-800 mt-6 pt-4 border-t border-emerald-200">
-      © 2025 ระบบสแกนละหมาด | <span class="font-bold">FANTECH</span>
-    </footer>
-  </div>
-
-  <!-- Admin Modal -->
-  <div id="adminModal" class="modal-overlay fixed inset-0 flex items-center justify-center hidden p-4">
-    <div class="modal-content glass w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-      <div class="flex justify-between items-center mb-4 border-b pb-2">
-        <h3 class="text-xl font-bold text-emerald-700"><i class="fas fa-cogs mr-2"></i>แผงควบคุมผู้ดูแลระบบ</h3>
-        <button onclick="closeModal('adminModal')" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
-      </div>
-      
-      <!-- Tabs -->
-      <div class="flex gap-2 mb-4 border-b">
-        <button onclick="switchTab('students')" id="tab-students" class="px-4 py-2 border-b-2 border-emerald-600 text-emerald-700 font-semibold">จัดการนักเรียน</button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="px-4 py-2 text-gray-500 hover:text-emerald-700">ตั้งค่าระบบ</button>
-      </div>
-
-      <!-- Students Tab -->
-      <div id="content-students" class="space-y-4">
-        <div class="flex gap-2">
-          <input type="text" id="searchStudent" placeholder="ค้นหารหัสหรือชื่อ..." class="flex-1 p-2 border rounded-lg" onkeyup="renderStudentTable()">
-          <button onclick="openStudentForm()" class="btn bg-emerald-600 text-white px-4 py-2"><i class="fas fa-plus"></i> เพิ่ม</button>
-          <button onclick="clearCache()" class="btn bg-amber-500 text-white px-4 py-2" title="ล้างแคช"><i class="fas fa-broom"></i></button>
+    <!-- TAB 2: STUDENTS CRUD -->
+    <div id="view-students" class="view-section hidden fade-in">
+      <div class="glass-card p-4">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+          <h3 class="font-bold text-green-800 text-lg"><i class="fas fa-users-cog mr-2"></i>จัดการฐานข้อมูลนักเรียน</h3>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <input type="text" id="searchStudent" placeholder="ค้นหารหัส หรือ ชื่อ..." class="flex-1 sm:w-64 p-2 border rounded-lg text-sm" onkeyup="renderStudentTable()">
+            <button onclick="openStudentModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">
+              <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-100 text-gray-700">
-              <tr><th class="p-2 text-left">รหัส</th><th class="p-2 text-left">ชื่อ</th><th class="p-2 text-left">ชั้น</th><th class="p-2 text-center">จัดการ</th></tr>
+          <table class="w-full text-sm text-left">
+            <thead class="bg-green-50 text-green-800">
+              <tr>
+                <th class="p-3 rounded-tl-lg">รหัส</th>
+                <th class="p-3">รูป</th>
+                <th class="p-3">ชื่อ-นามสกุล</th>
+                <th class="p-3">เพศ</th>
+                <th class="p-3">ระดับชั้น</th>
+                <th class="p-3 rounded-tr-lg text-center">จัดการ</th>
+              </tr>
             </thead>
-            <tbody id="studentTableBody" class="divide-y"></tbody>
+            <tbody id="studentTableBody" class="divide-y divide-gray-100">
+              <tr><td colspan="6" class="p-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- Settings Tab -->
-      <div id="content-settings" class="space-y-4 hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">ชื่อผู้ใช้ Admin</label>
-            <input type="text" id="cfg_user" class="w-full p-2 border rounded-lg">
+    <!-- TAB 3: STATISTICS -->
+    <div id="view-stats" class="view-section hidden fade-in">
+      <div class="glass-card p-4 mb-4">
+        <div class="flex flex-col sm:flex-row gap-3 items-end">
+          <div class="flex-1">
+            <label class="text-xs text-gray-600">วันที่เริ่ม</label>
+            <input type="date" id="statStartDate" class="w-full p-2 border rounded-lg text-sm">
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">รหัสผ่าน Admin</label>
-            <input type="text" id="cfg_pass" class="w-full p-2 border rounded-lg">
+          <div class="flex-1">
+            <label class="text-xs text-gray-600">วันที่สิ้นสุด</label>
+            <input type="date" id="statEndDate" class="w-full p-2 border rounded-lg text-sm">
           </div>
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium mb-1">LINE Notify Token (เว้นว่างหากไม่ต้องการแจ้งเตือน)</label>
-            <input type="text" id="cfg_line" class="w-full p-2 border rounded-lg font-mono text-sm">
-          </div>
-        </div>
-        <button onclick="saveConfig()" class="btn bg-emerald-600 text-white w-full py-3 mt-2"><i class="fas fa-save mr-2"></i>บันทึกการตั้งค่า</button>
-        
-        <div class="mt-6 pt-4 border-t">
-          <button onclick="processBatch()" id="btnProcessBatch" class="btn bg-blue-600 text-white w-full py-3">
-            <i class="fas fa-sync mr-2"></i>ประมวลผลข้อมูลค้างในชุด (Batch)
+          <button onclick="loadStatistics()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition h-10">
+            <i class="fas fa-search mr-1"></i> ดูสถิติ
           </button>
         </div>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="glass-card p-4 text-center">
+          <p class="text-gray-500 text-sm">จำนวนครั้งสแกนทั้งหมด</p>
+          <p id="statTotal" class="text-3xl font-bold text-green-600">0</p>
+        </div>
+        <div class="glass-card p-4 text-center">
+          <p class="text-gray-500 text-sm">จำนวนนักเรียนที่ไม่ซ้ำ</p>
+          <p id="statUnique" class="text-3xl font-bold text-blue-600">0</p>
+        </div>
+        <div class="glass-card p-4 text-center cursor-pointer hover:bg-green-50 transition" onclick="promptAuth('export')">
+          <p class="text-gray-500 text-sm">ส่งออกข้อมูล</p>
+          <p class="text-xl font-bold text-purple-600"><i class="fas fa-file-csv mr-1"></i> CSV</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="glass-card p-4">
+          <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายห้อง/ระดับชั้น</h4>
+          <canvas id="chartClass"></canvas>
+        </div>
+        <div class="glass-card p-4">
+          <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายกะละหมาด</h4>
+          <canvas id="chartPrayer"></canvas>
+        </div>
+      </div>
     </div>
+
+    <!-- TAB 4: SETTINGS -->
+    <div id="view-settings" class="view-section hidden fade-in">
+      <div class="glass-card p-4 max-w-md mx-auto">
+        <h3 class="font-bold text-green-800 mb-4 text-center"><i class="fas fa-cogs mr-2"></i>ตั้งค่าระบบ</h3>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">LINE Notify Token</label>
+            <input type="password" id="settingLineToken" class="w-full p-2 border rounded-lg text-sm" placeholder="ใส่ Token เพื่อเปิดการแจ้งเตือน">
+            <button onclick="saveSetting('LINE_TOKEN')" class="mt-2 w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition text-sm">บันทึก Token</button>
+          </div>
+          
+          <hr class="border-gray-200">
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">ล้าง Cache ข้อมูลนักเรียน</label>
+            <p class="text-xs text-gray-500 mb-2">ใช้เมื่อมีการเพิ่ม/แก้ไข นักเรียนแล้วต้องการให้อัปเดตทันที</p>
+            <button onclick="clearCache()" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition text-sm">
+              <i class="fas fa-broom mr-1"></i> ล้าง Cache
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Student Form Modal -->
-  <div id="studentFormModal" class="modal-overlay fixed inset-0 flex items-center justify-center hidden p-4 z-[1100]">
-    <div class="modal-content glass w-full max-w-md p-6">
-      <h3 class="text-lg font-bold text-emerald-700 mb-4" id="formTitle">เพิ่มนักเรียน</h3>
-      <input type="hidden" id="stu_id_old">
+  <!-- MODALS -->
+  <!-- Student Modal -->
+  <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-md p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4" id="studentModalTitle">เพิ่มนักเรียน</h3>
+      <input type="hidden" id="editStudentId">
       <div class="space-y-3">
-        <input type="text" id="stu_id" placeholder="รหัสนิ้วมือ/RFID" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="stu_name" placeholder="ชื่อ-นามสกุล" class="w-full p-2 border rounded-lg" required>
-        <div class="grid grid-cols-2 gap-3">
-          <select id="stu_gender" class="p-2 border rounded-lg"><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select>
-          <input type="text" id="stu_class" placeholder="ชั้นเรียน (เช่น ม.1/1)" class="w-full p-2 border rounded-lg">
+        <div>
+          <label class="text-sm text-gray-600">รหัส RFID/นิ้วมือ *</label>
+          <input type="text" id="stuId" class="w-full p-2 border rounded-lg" required>
         </div>
-        <input type="text" id="stu_photo" placeholder="URL รูปถ่าย (เว้นว่างได้)" class="w-full p-2 border rounded-lg text-sm">
+        <div>
+          <label class="text-sm text-gray-600">ชื่อ-นามสกุล *</label>
+          <input type="text" id="stuName" class="w-full p-2 border rounded-lg" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-gray-600">เพศ</label>
+            <select id="stuGender" class="w-full p-2 border rounded-lg">
+              <option value="ชาย">ชาย</option>
+              <option value="หญิง">หญิง</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600">ระดับชั้น/ห้อง *</label>
+            <input type="text" id="stuClass" class="w-full p-2 border rounded-lg" placeholder="เช่น ม.1/1" required>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600">URL รูปถ่าย (ถ้ามี)</label>
+          <input type="text" id="stuPhoto" class="w-full p-2 border rounded-lg text-sm" placeholder="https://... หรือ เว้นว่างไว้">
+        </div>
       </div>
       <div class="flex gap-3 mt-6">
-        <button onclick="closeModal('studentFormModal')" class="btn flex-1 bg-gray-300 text-gray-700 py-2">ยกเลิก</button>
-        <button onclick="saveStudent()" class="btn flex-1 bg-emerald-600 text-white py-2">บันทึก</button>
+        <button onclick="closeStudentModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+        <button onclick="saveStudentData()" id="btnSaveStudent" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">บันทึก</button>
       </div>
     </div>
   </div>
 
   <!-- Auth Modal -->
-  <div id="authModal" class="modal-overlay fixed inset-0 flex items-center justify-center hidden p-4">
-    <div class="modal-content glass w-full max-w-sm p-6 text-center">
-      <i class="fas fa-lock text-4xl text-emerald-600 mb-4"></i>
-      <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันตัวตนผู้ดูแล</h3>
-      <input type="text" id="auth_user" placeholder="ชื่อผู้ใช้" class="w-full p-3 border rounded-lg mb-3">
-      <input type="password" id="auth_pass" placeholder="รหัสผ่าน" class="w-full p-3 border rounded-lg mb-4" onkeydown="if(event.key==='Enter')submitAuth()">
-      <button id="btnAuth" onclick="submitAuth()" class="btn bg-emerald-600 text-white w-full py-3">เข้าสู่ระบบ</button>
-      <button onclick="closeModal('authModal')" class="mt-3 text-gray-500 text-sm hover:underline">ยกเลิก</button>
+  <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-sm p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4 text-center"><i class="fas fa-lock mr-2"></i>ยืนยันตัวตน</h3>
+      <div class="space-y-3">
+        <input type="text" id="authUser" class="w-full p-2 border rounded-lg" placeholder="ชื่อผู้ใช้">
+        <input type="password" id="authPass" class="w-full p-2 border rounded-lg" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')submitAuth()">
+        <button onclick="submitAuth()" id="btnAuth" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">เข้าสู่ระบบ</button>
+      </div>
     </div>
   </div>
 
   <!-- Export Modal -->
-  <div id="exportModal" class="modal-overlay fixed inset-0 flex items-center justify-center hidden p-4">
-    <div class="modal-content glass w-full max-w-sm p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-emerald-700"><i class="fas fa-file-csv mr-2"></i>ส่งออก CSV</h3>
-        <button onclick="closeModal('exportModal')" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
-      </div>
+  <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-sm p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4">ส่งออก CSV</h3>
       <div class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">วันที่เริ่ม</label>
-          <input type="date" id="startDate" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
-          <input type="date" id="endDate" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">เลือกกะ (กด Ctrl/Cmd เพื่อเลือกหลายค่า)</label>
-          <select id="exportPrayerSelect" multiple class="w-full p-2 border rounded-lg" size="5">
-            <option value="Subhi">Subhi</option>
-            <option value="Dhur">Dhur</option>
-            <option value="Asri">Asri</option>
-            <option value="Maqrhib">Maqrhib</option>
-            <option value="Isha">Isha</option>
-          </select>
-        </div>
+        <input type="date" id="expStart" class="w-full p-2 border rounded-lg">
+        <input type="date" id="expEnd" class="w-full p-2 border rounded-lg">
+        <button onclick="exportCSV()" id="btnExport" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">ดาวน์โหลด</button>
+        <button onclick="document.getElementById('exportModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg">ปิด</button>
       </div>
-      <button id="btnExport" onclick="exportCSVWithFilters()" class="btn bg-emerald-600 text-white w-full py-3 mt-4">
-        <i class="fas fa-download mr-2"></i>ดาวน์โหลด CSV
-      </button>
     </div>
   </div>
 
@@ -229,192 +283,194 @@
     // ==========================================
     // ⚙️ CONFIGURATION
     // ==========================================
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1ZPAtwwLCck-1p5Cw4OiF-0wmgRvBxpbsXkInoWG1rQJPs8kgymTajR8h8rF2rw/exec"; // ⚠️ เปลี่ยนตรงนี้
-    const successSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqO5b8YmhgHUPGY2WvqXw47QNlPusbIPp_RRX3XtbVBRyr4jTDbECXg2rRgw6Z-wM/exec"; // ⚠️ เปลี่ยนตรงนี้
     
-    let currentAuthAction = null;
-    let studentsData = [];
-    let isProcessing = false;
-
     // ==========================================
-    //  API & OFFLINE QUEUE
+    // 🌐 API HELPER
     // ==========================================
     async function callGAS(action, payload = {}) {
-      const dataToSend = { action, ...payload };
       try {
-        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(dataToSend), redirect: "follow" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const result = await response.json();
-        updateConnectionStatus(true);
-        return result;
+        const response = await fetch(GAS_API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action, ...payload }),
+          redirect: "follow"
+        });
+        return await response.json();
       } catch (error) {
-        updateConnectionStatus(false);
         console.error("API Error:", error);
-        return { success: false, message: "ออฟไลน์: " + error.message, offline: true };
+        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
       }
     }
 
-    function saveToOfflineQueue(action, payload) {
-      let queue = JSON.parse(localStorage.getItem('prayerOfflineQueue') || '[]');
-      queue.push({ action, payload, timestamp: Date.now() });
-      localStorage.setItem('prayerOfflineQueue', JSON.stringify(queue));
-      updateOfflineBadge();
-    }
-
-    async function syncOfflineQueue() {
-      let queue = JSON.parse(localStorage.getItem('prayerOfflineQueue') || '[]');
-      if (queue.length === 0) return;
-
-      Swal.fire({ title: 'กำลังซิงค์ข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      let successCount = 0;
-
-      for (let i = 0; i < queue.length; i++) {
-        const item = queue[i];
-        const res = await callGAS(item.action, item.payload);
-        if (res.success) successCount++;
+    // ==========================================
+    // 🎨 UI & TABS
+    // ==========================================
+    function switchTab(tabName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      
+      if (tabName === 'students') loadStudents();
+      if (tabName === 'stats') {
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('statStartDate').value = today;
+        document.getElementById('statEndDate').value = today;
+        loadStatistics();
       }
-
-      localStorage.setItem('prayerOfflineQueue', JSON.stringify([]));
-      updateOfflineBadge();
-      Swal.fire('✅ สำเร็จ', `ซิงค์ข้อมูล ${successCount} รายการเรียบร้อย`, 'success');
     }
 
-    function updateOfflineBadge() {
-      const queue = JSON.parse(localStorage.getItem('prayerOfflineQueue') || '[]');
-      const badge = document.getElementById('offlineBadge');
-      document.getElementById('offlineCount').textContent = queue.length;
-      badge.classList.toggle('show', queue.length > 0);
-    }
-
-    function updateConnectionStatus(connected) {
-      const el = document.getElementById('connectionStatus');
-      el.innerHTML = connected 
-        ? '<i class="fas fa-circle text-emerald-500"></i> ออนไลน์' 
-        : '<i class="fas fa-circle text-red-500 animate-pulse"></i> ออฟไลน์';
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
     }
 
     // ==========================================
-    //  SCAN LOGIC
+    // 📷 SCANNER & RFID
     // ==========================================
-    async function handleScan(decodedText) {
+    let isProcessing = false;
+    let lastScanTime = 0;
+    const scanCooldown = 1500;
+    const successSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+
+    function handleScan(decodedText) {
       if (isProcessing) return;
+      const now = Date.now();
+      if (now - lastScanTime < scanCooldown) return;
+      lastScanTime = now;
       isProcessing = true;
 
       const prayer = document.getElementById('prayerSelect').value === 'auto' ? detectPrayer() : document.getElementById('prayerSelect').value;
       const mode = document.getElementById('modeSelect').value;
-      const action = mode === 'batch' ? 'stageScan' : 'logScan';
-      const payload = { studentId: decodedText, prayer };
-
-      showStudentDisplay(decodedText, "กำลังตรวจสอบ...", "bg-yellow-100 text-yellow-800", "https://ui-avatars.com/api/?name=Loading&background=ccc");
-
-      const res = await callGAS(action, payload);
-
-      if (res.offline) {
-        saveToOfflineQueue(action, payload);
-        showStudentDisplay(decodedText, "บันทึกในเครื่อง (รอซิงค์)", "bg-amber-100 text-amber-800", "https://ui-avatars.com/api/?name=Offline&background=f59e0b");
-        playSound();
-      } else if (res.success) {
-        showStudentDisplay(res.id, `${res.name} (${res.class})`, "bg-emerald-100 text-emerald-800", res.photo);
-        playSound();
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
-      } else {
-        showStudentDisplay(decodedText, res.message || "ไม่พบข้อมูล", "bg-red-100 text-red-800", "https://ui-avatars.com/api/?name=Error&background=ef4444");
-        Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: res.message, timer: 1500, showConfirmButton: false });
-      }
-
-      isProcessing = false;
-      document.getElementById('manualCode').value = '';
-      setTimeout(() => document.getElementById('manualCode').focus(), 100);
-    }
-
-    function showStudentDisplay(id, details, statusClass, photoUrl) {
-      const display = document.getElementById('studentDisplay');
-      display.classList.remove('hidden');
-      display.classList.add('flex');
-      document.getElementById('scanPhoto').src = photoUrl;
-      document.getElementById('scanName').textContent = id;
-      document.getElementById('scanDetails').textContent = details;
-      const statusEl = document.getElementById('scanStatus');
-      statusEl.className = `mt-2 px-3 py-1 rounded-full text-sm font-semibold ${statusClass}`;
-      statusEl.textContent = statusClass.includes('emerald') ? '✅ สำเร็จ' : (statusClass.includes('amber') ? '⏳ รอซิงค์' : '❌ ผิดพลาด');
       
-      setTimeout(() => { display.classList.add('hidden'); display.classList.remove('flex'); }, 4000);
+      showScanLoading(decodedText, prayer);
+
+      const action = mode === 'batch' ? 'stageScan' : 'logScan';
+      callGAS(action, { studentId: decodedText, prayer }).then(res => {
+        isProcessing = false;
+        if (res.success) {
+          successSound.play().catch(e => {}); // เล่นเสียง
+          showScanResult(res, true);
+        } else {
+          showScanResult(res, false);
+        }
+      });
     }
 
-    function playSound() { try { successSound.play(); } catch(e) {} }
+    function showScanLoading(id, prayer) {
+      document.getElementById('scanResult').innerHTML = `
+        <div class="text-center"><div class="spinner mb-2"></div><p class="text-gray-600">กำลังบันทึก: ${id}</p></div>
+      `;
+    }
+
+    function showScanResult(res, isSuccess) {
+      const div = document.getElementById('scanResult');
+      if (isSuccess) {
+        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in";
+        div.innerHTML = `
+          <div class="text-center">
+            <img src="${res.photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
+            <h4 class="font-bold text-green-800 text-lg">${res.name}</h4>
+            <p class="text-sm text-gray-600">${res.class} | ${res.gender}</p>
+            <span class="inline-block mt-2 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+              ✅ ${res.prayer} สำเร็จ
+            </span>
+          </div>
+        `;
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${res.name} (${res.class})`, timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
+      } else {
+        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-red-400 bg-red-50 rounded-lg fade-in";
+        div.innerHTML = `
+          <div class="text-center">
+            <i class="fas fa-times-circle text-4xl text-red-500 mb-2"></i>
+            <h4 class="font-bold text-red-800">ไม่สำเร็จ</h4>
+            <p class="text-sm text-gray-600">${res.message || res.status}</p>
+            <p class="text-xs text-gray-400 mt-1">รหัส: ${res.id}</p>
+          </div>
+        `;
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message, timer: 1500, showConfirmButton: false });
+      }
+    }
 
     function detectPrayer() {
       const now = new Date();
-      const hhmm = parseInt(`${now.getHours()}${now.getMinutes().toString().padStart(2, '0')}`);
-      const times = [{n:"Subhi",e:630}, {n:"Dhur",e:1430}, {n:"Asri",e:1730}, {n:"Maqrhib",e:1900}, {n:"Isha",e:2359}];
-      return times.find(t => hhmm <= t.e)?.n || "Isha";
+      const h = now.getHours(), m = now.getMinutes();
+      const time = h * 100 + m;
+      if (time < 630) return "Subhi";
+      if (time < 1430) return "Dhur";
+      if (time < 1730) return "Asri";
+      if (time < 1900) return "Maqrhib";
+      return "Isha";
     }
 
     function submitManualCode() {
       const code = document.getElementById('manualCode').value.trim();
-      if (code) handleScan(code);
-    }
-
-    // ==========================================
-    // 🛠️ ADMIN & CRUD
-    // ==========================================
-    function promptAuth(action) {
-      currentAuthAction = action;
-      document.getElementById('authModal').classList.remove('hidden');
-      document.getElementById('auth_user').value = '';
-      document.getElementById('auth_pass').value = '';
-      setTimeout(() => document.getElementById('auth_user').focus(), 100);
-    }
-
-    async function submitAuth() {
-      const user = document.getElementById('auth_user').value;
-      const pass = document.getElementById('auth_pass').value;
-      const btn = document.getElementById('btnAuth');
-      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
-
-      const res = await callGAS('login', { credentials: { username: user, password: pass } });
-      btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ';
-
-      if (res.success) {
-        closeModal('authModal');
-        if (currentAuthAction === 'admin') openAdminPanel();
-        else if (currentAuthAction === 'export') openExportModal();
-      } else {
-        Swal.fire('❌ ผิดพลาด', res.message, 'error');
+      if (code) {
+        handleScan(code);
+        document.getElementById('manualCode').value = '';
+        document.getElementById('manualCode').focus(); // กลับไปโฟกัสเพื่อรับค่า RFID ถัดไป
       }
     }
 
-    async function openAdminPanel() {
-      document.getElementById('adminModal').classList.remove('hidden');
-      await loadStudents();
-      loadConfig();
-    }
+    // Init Scanner
+    window.addEventListener('DOMContentLoaded', () => {
+      callGAS('checkStatus').then(res => {
+        const statusEl = document.getElementById('connectionStatus');
+        if(res.success) {
+          statusEl.innerHTML = '<i class="fas fa-circle text-green-500"></i> เชื่อมต่อเซิร์ฟเวอร์สำเร็จ';
+        } else {
+          statusEl.innerHTML = '<i class="fas fa-circle text-red-500"></i> เชื่อมต่อล้มเหลว';
+        }
+      });
 
-    function switchTab(tab) {
-      document.getElementById('content-students').classList.toggle('hidden', tab !== 'students');
-      document.getElementById('content-settings').classList.toggle('hidden', tab !== 'settings');
-      document.getElementById('tab-students').className = tab === 'students' ? 'px-4 py-2 border-b-2 border-emerald-600 text-emerald-700 font-semibold' : 'px-4 py-2 text-gray-500';
-      document.getElementById('tab-settings').className = tab === 'settings' ? 'px-4 py-2 border-b-2 border-emerald-600 text-emerald-700 font-semibold' : 'px-4 py-2 text-gray-500';
-    }
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, handleScan, () => {}).catch(err => {
+        console.log("QR Scanner not started (maybe no camera):", err);
+      });
+      
+      // โฟกัสที่ input RFID ตลอดเวลาถ้าอยู่หน้าสแกน
+      document.getElementById('manualCode').focus();
+      document.addEventListener('click', (e) => {
+        if (document.getElementById('view-scan').classList.contains('hidden') === false && !e.target.closest('button') && !e.target.closest('select')) {
+          document.getElementById('manualCode').focus();
+        }
+      });
+    });
+
+    // ==========================================
+    // 👨‍🎓 STUDENT CRUD
+    // ==========================================
+    let allStudents = [];
 
     async function loadStudents() {
+      const tbody = document.getElementById('studentTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
       const res = await callGAS('getStudents');
       if (res.success) {
-        studentsData = res.data;
+        allStudents = res.data;
         renderStudentTable();
       }
     }
 
     function renderStudentTable() {
       const search = document.getElementById('searchStudent').value.toLowerCase();
-      const filtered = studentsData.filter(s => s.id.toLowerCase().includes(search) || s.name.toLowerCase().includes(search));
+      const filtered = allStudents.filter(s => s.id.toLowerCase().includes(search) || s.name.toLowerCase().includes(search));
       const tbody = document.getElementById('studentTableBody');
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+        return;
+      }
+
       tbody.innerHTML = filtered.map(s => `
-        <tr class="hover:bg-gray-50">
-          <td class="p-2 font-mono">${s.id}</td>
-          <td class="p-2">${s.name}</td>
-          <td class="p-2">${s.class}</td>
-          <td class="p-2 text-center">
+        <tr class="hover:bg-gray-50 transition">
+          <td class="p-3 font-mono text-sm">${s.id}</td>
+          <td class="p-3"><img src="${s.photo}" class="w-10 h-10 rounded-full object-cover border"></td>
+          <td class="p-3 font-medium">${s.name}</td>
+          <td class="p-3 text-sm">${s.gender}</td>
+          <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+          <td class="p-3 text-center">
             <button onclick="editStudent('${s.id}')" class="text-blue-600 hover:text-blue-800 mx-1"><i class="fas fa-edit"></i></button>
             <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 mx-1"><i class="fas fa-trash"></i></button>
           </td>
@@ -422,213 +478,204 @@
       `).join('');
     }
 
-    function editStudent(id) { openStudentForm(id); }
-
-    function openStudentForm(id = null) {
-      document.getElementById('studentFormModal').classList.remove('hidden');
+    function openStudentModal(id = null) {
+      document.getElementById('studentModal').classList.remove('hidden');
+      document.getElementById('studentModal').classList.add('flex');
       if (id) {
-        const s = studentsData.find(x => x.id === id);
-        document.getElementById('formTitle').textContent = 'แก้ไขนักเรียน';
-        document.getElementById('stu_id_old').value = s.id;
-        document.getElementById('stu_id').value = s.id;
-        document.getElementById('stu_name').value = s.name;
-        document.getElementById('stu_gender').value = s.gender;
-        document.getElementById('stu_class').value = s.class;
-        document.getElementById('stu_photo').value = s.photo || '';
-        document.getElementById('stu_id').disabled = true;
+        const s = allStudents.find(x => x.id === id);
+        document.getElementById('studentModalTitle').innerText = 'แก้ไขข้อมูลนักเรียน';
+        document.getElementById('editStudentId').value = s.id;
+        document.getElementById('stuId').value = s.id;
+        document.getElementById('stuId').disabled = true;
+        document.getElementById('stuName').value = s.name;
+        document.getElementById('stuGender').value = s.gender;
+        document.getElementById('stuClass').value = s.class;
+        document.getElementById('stuPhoto').value = s.photo.includes('ui-avatars') ? '' : s.photo;
       } else {
-        document.getElementById('formTitle').textContent = 'เพิ่มนักเรียน';
-        document.getElementById('stu_id_old').value = '';
-        document.getElementById('stu_id').value = ''; document.getElementById('stu_id').disabled = false;
-        document.getElementById('stu_name').value = '';
-        document.getElementById('stu_class').value = '';
-        document.getElementById('stu_photo').value = '';
+        document.getElementById('studentModalTitle').innerText = 'เพิ่มนักเรียนใหม่';
+        document.getElementById('editStudentId').value = '';
+        document.getElementById('stuId').value = '';
+        document.getElementById('stuId').disabled = false;
+        document.getElementById('stuName').value = '';
+        document.getElementById('stuClass').value = '';
+        document.getElementById('stuPhoto').value = '';
       }
     }
 
-    async function saveStudent() {
-      const id = document.getElementById('stu_id').value.trim();
-      const name = document.getElementById('stu_name').value.trim();
-      if (!id || !name) return Swal.fire('❌ ผิดพลาด', 'รหัสและชื่อเป็นข้อมูลบังคับ', 'error');
+    function closeStudentModal() {
+      document.getElementById('studentModal').classList.add('hidden');
+      document.getElementById('studentModal').classList.remove('flex');
+    }
+
+    async function saveStudentData() {
+      const btn = document.getElementById('btnSaveStudent');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
 
       const data = {
-        id, name,
-        gender: document.getElementById('stu_gender').value,
-        class: document.getElementById('stu_class').value,
-        photo: document.getElementById('stu_photo').value
+        id: document.getElementById('stuId').value.trim(),
+        name: document.getElementById('stuName').value.trim(),
+        gender: document.getElementById('stuGender').value,
+        class: document.getElementById('stuClass').value.trim(),
+        photo: document.getElementById('stuPhoto').value.trim()
       };
 
-      const action = document.getElementById('stu_id_old').value ? 'updateStudent' : 'addStudent';
-      const res = await callGAS(action, data);
+      if (!data.id || !data.name || !data.class) {
+        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+        btn.disabled = false; btn.innerHTML = 'บันทึก';
+        return;
+      }
+
+      const res = await callGAS('saveStudent', data);
+      btn.disabled = false; btn.innerHTML = 'บันทึก';
+      
       if (res.success) {
-        closeModal('studentFormModal');
-        await loadStudents();
-        Swal.fire('✅ สำเร็จ', res.message, 'success');
+        Swal.fire('สำเร็จ', res.message, 'success');
+        closeStudentModal();
+        loadStudents();
       } else {
-        Swal.fire('❌ ผิดพลาด', res.message, 'error');
+        Swal.fire('ผิดพลาด', res.message, 'error');
       }
     }
 
     async function deleteStudent(id) {
-      if (!confirm('ยืนยันการลบข้อมูลนี้?')) return;
-      const res = await callGAS('deleteStudent', { id });
-      if (res.success) {
-        await loadStudents();
-        Swal.fire('✅ ลบเรียบร้อย', '', 'success');
-      } else {
-        Swal.fire('❌ ผิดพลาด', res.message, 'error');
+      const result = await Swal.fire({ title: 'ยืนยันการลบ?', text: `รหัส ${id} จะถูกลบออกจากระบบ`, icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+      if (result.isConfirmed) {
+        const res = await callGAS('deleteStudent', { id });
+        if (res.success) {
+          Swal.fire('สำเร็จ', 'ลบข้อมูลเรียบร้อย', 'success');
+          loadStudents();
+        } else {
+          Swal.fire('ผิดพลาด', res.message, 'error');
+        }
       }
     }
 
-    async function clearCache() {
-      const res = await callGAS('clearCache');
-      Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
-    }
+    // ==========================================
+    // 📊 STATISTICS
+    // ==========================================
+    let chartClassInstance = null;
+    let chartPrayerInstance = null;
 
-    function loadConfig() {
-      // โหลดค่าจาก localStorage ถ้ามี
-      const saved = JSON.parse(localStorage.getItem('adminConfig') || '{}');
-      if (saved.user) document.getElementById('cfg_user').value = saved.user;
-      if (saved.pass) document.getElementById('cfg_pass').value = saved.pass;
-      if (saved.line) document.getElementById('cfg_line').value = saved.line;
-    }
-
-    async function saveConfig() {
-      const data = {
-        admin_username: document.getElementById('cfg_user').value,
-        admin_password: document.getElementById('cfg_pass').value,
-        line_token: document.getElementById('cfg_line').value
+    async function loadStatistics() {
+      const filters = {
+        startDate: document.getElementById('statStartDate').value,
+        endDate: document.getElementById('statEndDate').value
       };
-      // บันทึกลง localStorage ด้วย
-      localStorage.setItem('adminConfig', JSON.stringify({ user: data.admin_username, pass: data.admin_password, line: data.line_token }));
       
-      const res = await callGAS('updateConfig', data);
-      Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
+      const res = await callGAS('getStats', { filters });
+      if (!res.success) {
+        Swal.fire('ผิดพลาด', res.message, 'error');
+        return;
+      }
+
+      const stats = res.stats;
+      document.getElementById('statTotal').innerText = stats.total.toLocaleString();
+      document.getElementById('statUnique').innerText = stats.unique.toLocaleString();
+
+      // Chart Class
+      const ctxClass = document.getElementById('chartClass').getContext('2d');
+      if (chartClassInstance) chartClassInstance.destroy();
+      chartClassInstance = new Chart(ctxClass, {
+        type: 'bar',
+        data: {
+          labels: stats.byClass.map(x => x.name),
+          datasets: [{ label: 'จำนวนครั้ง', data: stats.byClass.map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Chart Prayer
+      const ctxPrayer = document.getElementById('chartPrayer').getContext('2d');
+      if (chartPrayerInstance) chartPrayerInstance.destroy();
+      chartPrayerInstance = new Chart(ctxPrayer, {
+        type: 'doughnut',
+        data: {
+          labels: stats.byPrayer.map(x => x.name),
+          datasets: [{ data: stats.byPrayer.map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
+        },
+        options: { responsive: true }
+      });
     }
 
+    // ==========================================
+    // ⚙️ SETTINGS & BATCH
+    // ==========================================
     async function processBatch() {
       const btn = document.getElementById('btnProcessBatch');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
       const res = await callGAS('processBatch');
-      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync mr-2"></i>ประมวลผลข้อมูลค้างในชุด (Batch)';
-      Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync"></i> ประมวลผลคิวทั้งหมด';
+      if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
+      else Swal.fire('ผิดพลาด', res.message, 'error');
+    }
+
+    async function clearCache() {
+      const res = await callGAS('clearCache');
+      if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
+    }
+
+    async function saveSetting(key) {
+      const val = document.getElementById('settingLineToken').value;
+      if (!val) return;
+      const res = await callGAS('setConfig', { key, value: val });
+      if (res.success) Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าเรียบร้อย', 'success');
     }
 
     // ==========================================
-    // 📤 EXPORT CSV
+    // 🔐 AUTH & EXPORT
     // ==========================================
-    function openExportModal() {
-      document.getElementById('exportModal').classList.remove('hidden');
+    let authTarget = '';
+    function promptAuth(target) {
+      authTarget = target;
+      document.getElementById('authModal').classList.remove('hidden');
+      document.getElementById('authModal').classList.add('flex');
+      document.getElementById('authUser').focus();
     }
 
-    async function exportCSVWithFilters() {
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const prayerSelect = document.getElementById("exportPrayerSelect");
-      const selectedPrayers = Array.from(prayerSelect.selectedOptions).map(option => option.value);
-
-      if (!startDate || !endDate) {
-        Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด', 'error');
-        return;
-      }
-
-      const filters = {
-        startDate,
-        endDate,
-        prayers: selectedPrayers.length > 0 ? selectedPrayers : ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"]
-      };
-
-      const btnExport = document.getElementById("btnExport");
-      btnExport.disabled = true;
-      btnExport.innerHTML = '<span class="spinner"></span> กำลังสร้างไฟล์...';
-
-      const result = await callGAS("exportCSV", { filters });
-
-      btnExport.disabled = false;
-      btnExport.innerHTML = '<i class="fas fa-download mr-2"></i>ดาวน์โหลด CSV';
-
-      if (!result.success && result.message) {
-        Swal.fire('❌ ผิดพลาด', result.message, 'error');
-        return;
-      }
-
-      if (result.content) {
-        const blob = new Blob([result.content], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = result.filename || 'PrayerLog.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        closeModal('exportModal');
-        Swal.fire('✅ สำเร็จ', 'ดาวน์โหลด CSV เรียบร้อย', 'success');
+    async function submitAuth() {
+      const user = document.getElementById('authUser').value;
+      const pass = document.getElementById('authPass').value;
+      const res = await callGAS('login', { credentials: { username: user, password: pass } });
+      
+      if (res.success) {
+        document.getElementById('authModal').classList.add('hidden');
+        if (authTarget === 'export') {
+          document.getElementById('exportModal').classList.remove('hidden');
+          document.getElementById('exportModal').classList.add('flex');
+        }
       } else {
-        Swal.fire('❌ ผิดพลาด', 'ไม่ได้รับข้อมูลไฟล์', 'error');
+        Swal.fire('ผิดพลาด', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
       }
     }
 
-    // ==========================================
-    // 🎛️ MODAL MANAGEMENT (แก้ไข aria-hidden)
-    // ==========================================
-    function closeModal(id) { 
-      const modal = document.getElementById(id);
-      modal.classList.add('hidden');
-      // ✅ แก้ไข: คืน focus ให้ manualCode หลังจากปิด modal
-      setTimeout(() => {
-        const manualInput = document.getElementById('manualCode');
-        if (manualInput) manualInput.focus();
-      }, 100);
-    }
-
-    // ปิด modal เมื่อคลิกพื้นหลัง
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-      modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-          this.classList.add('hidden');
-          setTimeout(() => {
-            const manualInput = document.getElementById('manualCode');
-            if (manualInput) manualInput.focus();
-          }, 100);
+    async function exportCSV() {
+      const btn = document.getElementById('btnExport');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังสร้างไฟล์...';
+      
+      const res = await callGAS('exportCSV', {
+        filters: {
+          startDate: document.getElementById('expStart').value,
+          endDate: document.getElementById('expEnd').value,
+          prayers: ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"]
         }
       });
-    });
-
-    // ==========================================
-    // 🚀 INIT
-    // ==========================================
-    window.addEventListener('DOMContentLoaded', () => {
-      updateOfflineBadge();
       
-      // Init QR Scanner
-      try {
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, 
-          (decodedText) => handleScan(decodedText), () => {}
-        ).catch(err => console.log("Camera not available, use RFID/Manual"));
-      } catch (e) {
-        console.log("QR Scanner init error:", e);
+      btn.disabled = false; btn.innerHTML = 'ดาวน์โหลด';
+      
+      if (res.success && res.content) {
+        const blob = new Blob([res.content], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = res.filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        document.getElementById('exportModal').classList.add('hidden');
+        Swal.fire('สำเร็จ', 'ดาวน์โหลดไฟล์เรียบร้อย', 'success');
+      } else {
+        Swal.fire('ผิดพลาด', res.message || 'ไม่มีข้อมูล', 'error');
       }
-
-      // Focus manual input for RFID
-      document.getElementById('manualCode').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); submitManualCode(); }
-      });
-
-      // Check connection
-      callGAS('checkStatus').then(res => {
-        if(res.success) updateConnectionStatus(true);
-      });
-    });
-
-    // Auto sync when online
-    window.addEventListener('online', () => {
-      updateConnectionStatus(true);
-      syncOfflineQueue();
-    });
-    window.addEventListener('offline', () => updateConnectionStatus(false));
+    }
   </script>
 </body>
 </html>
