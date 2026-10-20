@@ -20,12 +20,13 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    /* RFID Input ซ่อนแต่รับค่าได้ */
     #rfidInput { position: absolute; opacity: 0; pointer-events: none; }
+    .stat-card { transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body class="p-4">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <!-- Header -->
     <div class="glass-card p-4 mb-4 flex justify-between items-center">
       <div class="flex items-center gap-3">
@@ -81,13 +82,13 @@
               <i class="fas fa-check"></i>
             </button>
           </div>
-          <p class="text-xs text-gray-500 mt-2 text-center">💡 รองรับเครื่องอ่าน RFID (โหมด Keyboard Wedge) โดยไม่ต้องติดตั้งไดรเวอร์</p>
+          <p class="text-xs text-gray-500 mt-2 text-center">💡 รองรับเครื่องอ่าน RFID (โหมด Keyboard Wedge)</p>
         </div>
 
         <!-- Right: Result & Batch -->
         <div class="glass-card p-4 flex flex-col">
           <h3 class="font-bold text-green-800 mb-3"><i class="fas fa-user-check mr-2"></i>ผลลัพธ์ล่าสุด</h3>
-          <div id="scanResult" class="flex-1 flex items-center justify-center text-gray-400 text-center p-4 border-2 border-dashed border-gray-200 rounded-lg">
+          <div id="scanResult" class="flex-1 flex items-center justify-center text-gray-400 text-center p-4 border-2 border-dashed border-gray-200 rounded-lg min-h-[200px]">
             <div>
               <i class="fas fa-fingerprint text-4xl mb-2 text-gray-300"></i>
               <p>รอการสแกน...</p>
@@ -161,21 +162,21 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div class="glass-card p-4 text-center">
+        <div class="glass-card p-4 text-center stat-card">
           <p class="text-gray-500 text-sm">จำนวนครั้งสแกนทั้งหมด</p>
           <p id="statTotal" class="text-3xl font-bold text-green-600">0</p>
         </div>
-        <div class="glass-card p-4 text-center">
+        <div class="glass-card p-4 text-center stat-card">
           <p class="text-gray-500 text-sm">จำนวนนักเรียนที่ไม่ซ้ำ</p>
           <p id="statUnique" class="text-3xl font-bold text-blue-600">0</p>
         </div>
-        <div class="glass-card p-4 text-center cursor-pointer hover:bg-green-50 transition" onclick="promptAuth('export')">
+        <div class="glass-card p-4 text-center cursor-pointer hover:bg-green-50 transition stat-card" onclick="promptAuth('export')">
           <p class="text-gray-500 text-sm">ส่งออกข้อมูล</p>
           <p class="text-xl font-bold text-purple-600"><i class="fas fa-file-csv mr-1"></i> CSV</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div class="glass-card p-4">
           <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายห้อง/ระดับชั้น</h4>
           <canvas id="chartClass"></canvas>
@@ -183,6 +184,27 @@
         <div class="glass-card p-4">
           <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายกะละหมาด</h4>
           <canvas id="chartPrayer"></canvas>
+        </div>
+      </div>
+
+      <!-- ตารางสถิติรายบุคคล -->
+      <div class="glass-card p-4">
+        <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list-ol mr-2"></i>สถิติรายบุคคล (Top 20)</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-green-50 text-green-800">
+              <tr>
+                <th class="p-3 rounded-tl-lg">อันดับ</th>
+                <th class="p-3">รหัส</th>
+                <th class="p-3">ชื่อ-นามสกุล</th>
+                <th class="p-3">ระดับชั้น</th>
+                <th class="p-3 rounded-tr-lg text-center">จำนวนครั้ง</th>
+              </tr>
+            </thead>
+            <tbody id="studentStatsTableBody" class="divide-y divide-gray-100">
+              <tr><td colspan="5" class="p-4 text-center text-gray-500">ยังไม่มีข้อมูล</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -283,10 +305,10 @@
     // ==========================================
     // ⚙️ CONFIGURATION
     // ==========================================
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqO5b8YmhgHUPGY2WvqXw47QNlPusbIPp_RRX3XtbVBRyr4jTDbECXg2rRgw6Z-wM/exec"; // ⚠️ เปลี่ยนตรงนี้
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec"; // ⚠️ เปลี่ยนตรงนี้
     
     // ==========================================
-    // 🌐 API HELPER
+    //  API HELPER
     // ==========================================
     async function callGAS(action, payload = {}) {
       try {
@@ -295,7 +317,8 @@
           body: JSON.stringify({ action, ...payload }),
           redirect: "follow"
         });
-        return await response.json();
+        const result = await response.json();
+        return result;
       } catch (error) {
         console.error("API Error:", error);
         return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
@@ -303,7 +326,7 @@
     }
 
     // ==========================================
-    // 🎨 UI & TABS
+    //  UI & TABS
     // ==========================================
     function switchTab(tabName) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
@@ -313,7 +336,6 @@
       
       if (tabName === 'students') loadStudents();
       if (tabName === 'stats') {
-        // Set default dates
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('statStartDate').value = today;
         document.getElementById('statEndDate').value = today;
@@ -350,11 +372,14 @@
       callGAS(action, { studentId: decodedText, prayer }).then(res => {
         isProcessing = false;
         if (res.success) {
-          successSound.play().catch(e => {}); // เล่นเสียง
+          successSound.play().catch(e => {});
           showScanResult(res, true);
         } else {
           showScanResult(res, false);
         }
+      }).catch(err => {
+        isProcessing = false;
+        showScanResult({ message: err.message, id: decodedText }, false);
       });
     }
 
@@ -366,30 +391,33 @@
 
     function showScanResult(res, isSuccess) {
       const div = document.getElementById('scanResult');
+      const studentId = res.id || "ไม่ระบุ";
+      
       if (isSuccess) {
-        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in";
+        const photo = res.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(res.name || "Student") + "&background=10b981&color=fff&size=128";
+        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
-            <img src="${res.photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
-            <h4 class="font-bold text-green-800 text-lg">${res.name}</h4>
-            <p class="text-sm text-gray-600">${res.class} | ${res.gender}</p>
+            <img src="${photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
+            <h4 class="font-bold text-green-800 text-lg">${res.name || "ไม่ระบุชื่อ"}</h4>
+            <p class="text-sm text-gray-600">${res.class || ""} | ${res.gender || ""}</p>
             <span class="inline-block mt-2 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-              ✅ ${res.prayer} สำเร็จ
+              ✅ ${res.prayer || ""} สำเร็จ
             </span>
           </div>
         `;
-        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${res.name} (${res.class})`, timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${res.name || ""} (${res.class || ""})`, timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
       } else {
-        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-red-400 bg-red-50 rounded-lg fade-in";
+        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-red-400 bg-red-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
             <i class="fas fa-times-circle text-4xl text-red-500 mb-2"></i>
             <h4 class="font-bold text-red-800">ไม่สำเร็จ</h4>
-            <p class="text-sm text-gray-600">${res.message || res.status}</p>
-            <p class="text-xs text-gray-400 mt-1">รหัส: ${res.id}</p>
+            <p class="text-sm text-gray-600">${res.message || res.status || "เกิดข้อผิดพลาด"}</p>
+            <p class="text-xs text-gray-400 mt-1">รหัส: ${studentId}</p>
           </div>
         `;
-        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message, timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message || "เกิดข้อผิดพลาด", timer: 1500, showConfirmButton: false });
       }
     }
 
@@ -409,7 +437,7 @@
       if (code) {
         handleScan(code);
         document.getElementById('manualCode').value = '';
-        document.getElementById('manualCode').focus(); // กลับไปโฟกัสเพื่อรับค่า RFID ถัดไป
+        document.getElementById('manualCode').focus();
       }
     }
 
@@ -429,7 +457,6 @@
         console.log("QR Scanner not started (maybe no camera):", err);
       });
       
-      // โฟกัสที่ input RFID ตลอดเวลาถ้าอยู่หน้าสแกน
       document.getElementById('manualCode').focus();
       document.addEventListener('click', (e) => {
         if (document.getElementById('view-scan').classList.contains('hidden') === false && !e.target.closest('button') && !e.target.closest('select')) {
@@ -448,8 +475,10 @@
       tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
       const res = await callGAS('getStudents');
       if (res.success) {
-        allStudents = res.data;
+        allStudents = res.data || [];
         renderStudentTable();
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ' + (res.message || "") + '</td></tr>';
       }
     }
 
@@ -466,7 +495,7 @@
       tbody.innerHTML = filtered.map(s => `
         <tr class="hover:bg-gray-50 transition">
           <td class="p-3 font-mono text-sm">${s.id}</td>
-          <td class="p-3"><img src="${s.photo}" class="w-10 h-10 rounded-full object-cover border"></td>
+          <td class="p-3"><img src="${s.photo}" class="w-10 h-10 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff'"></td>
           <td class="p-3 font-medium">${s.name}</td>
           <td class="p-3 text-sm">${s.gender}</td>
           <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
@@ -507,6 +536,10 @@
       document.getElementById('studentModal').classList.remove('flex');
     }
 
+    function editStudent(id) {
+      openStudentModal(id);
+    }
+
     async function saveStudentData() {
       const btn = document.getElementById('btnSaveStudent');
       btn.disabled = true;
@@ -521,7 +554,7 @@
       };
 
       if (!data.id || !data.name || !data.class) {
-        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน (รหัส, ชื่อ, ระดับชั้น)', 'error');
         btn.disabled = false; btn.innerHTML = 'บันทึก';
         return;
       }
@@ -570,8 +603,8 @@
       }
 
       const stats = res.stats;
-      document.getElementById('statTotal').innerText = stats.total.toLocaleString();
-      document.getElementById('statUnique').innerText = stats.unique.toLocaleString();
+      document.getElementById('statTotal').innerText = (stats.total || 0).toLocaleString();
+      document.getElementById('statUnique').innerText = (stats.unique || 0).toLocaleString();
 
       // Chart Class
       const ctxClass = document.getElementById('chartClass').getContext('2d');
@@ -579,8 +612,8 @@
       chartClassInstance = new Chart(ctxClass, {
         type: 'bar',
         data: {
-          labels: stats.byClass.map(x => x.name),
-          datasets: [{ label: 'จำนวนครั้ง', data: stats.byClass.map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
+          labels: (stats.byClass || []).map(x => x.name),
+          datasets: [{ label: 'จำนวนครั้ง', data: (stats.byClass || []).map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
         },
         options: { responsive: true, plugins: { legend: { display: false } } }
       });
@@ -591,11 +624,28 @@
       chartPrayerInstance = new Chart(ctxPrayer, {
         type: 'doughnut',
         data: {
-          labels: stats.byPrayer.map(x => x.name),
-          datasets: [{ data: stats.byPrayer.map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
+          labels: (stats.byPrayer || []).map(x => x.name),
+          datasets: [{ data: (stats.byPrayer || []).map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
         },
         options: { responsive: true }
       });
+
+      // Student Stats Table
+      const tbody = document.getElementById('studentStatsTableBody');
+      const topStudents = (stats.byStudent || []).slice(0, 20);
+      if (topStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">ยังไม่มีข้อมูล</td></tr>';
+      } else {
+        tbody.innerHTML = topStudents.map((s, idx) => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="p-3 font-bold ${idx < 3 ? 'text-yellow-600' : 'text-gray-600'}">#${idx + 1}</td>
+            <td class="p-3 font-mono text-sm">${s.id}</td>
+            <td class="p-3 font-medium">${s.name}</td>
+            <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+            <td class="p-3 text-center font-bold text-green-600">${s.count}</td>
+          </tr>
+        `).join('');
+      }
     }
 
     // ==========================================
@@ -613,13 +663,18 @@
     async function clearCache() {
       const res = await callGAS('clearCache');
       if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
+      else Swal.fire('ผิดพลาด', res.message, 'error');
     }
 
     async function saveSetting(key) {
-      const val = document.getElementById('settingLineToken').value;
-      if (!val) return;
-      const res = await callGAS('setConfig', { key, value: val });
+      const val = document.getElementById('settingLineToken').value.trim();
+      if (!val) {
+        Swal.fire('ผิดพลาด', 'กรุณากรอก Token', 'error');
+        return;
+      }
+      const res = await callGAS('setConfig', { key: String(key), value: String(val) });
       if (res.success) Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าเรียบร้อย', 'success');
+      else Swal.fire('ผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
 
     // ==========================================
