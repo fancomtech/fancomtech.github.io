@@ -127,6 +127,7 @@
             </button>
           </div>
         </div>
+        <div id="studentCount" class="text-sm text-gray-600 mb-3"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-left">
             <thead class="bg-green-50 text-green-800">
@@ -352,12 +353,12 @@
 
   <script>
     // ==========================================
-    // ⚙️ CONFIGURATION
+    // ️ CONFIGURATION
     // ==========================================
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec"; // ⚠️ เปลี่ยนตรงนี้
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec"; // ️ เปลี่ยนตรงนี้
     
     // ==========================================
-    //  DEBUG & LOGGING
+    // 🐛 DEBUG & LOGGING
     // ==========================================
     const debugLog = [];
     function addDebugLog(action, data) {
@@ -447,7 +448,8 @@
         <div class="space-y-1">
           <div>✅ PrayerLog: ${status.prayerLogExists ? 'มี' : 'ไม่มี'}</div>
           <div>✅ StudentDatabase: ${status.studentDbExists ? 'มี' : 'ไม่มี'}</div>
-          <div> จำนวนนักเรียน: ${students.count || 0} คน</div>
+          <div>📊 จำนวนนักเรียน: ${students.count || 0} คน</div>
+          ${students.count === 0 ? '<div class="text-red-600 font-bold">⚠️ ไม่พบข้อมูลนักเรียน! กรุณาตรวจสอบชีต StudentDatabase</div>' : ''}
         </div>
       `;
       
@@ -455,7 +457,7 @@
     }
 
     // ==========================================
-    //  TEST STUDENT ID
+    // 🧪 TEST STUDENT ID
     // ==========================================
     async function testStudent() {
       const studentId = document.getElementById('testStudentId').value.trim();
@@ -489,7 +491,7 @@
               <div class="text-sm mt-2">
                 <div>รหัสที่ค้นหา: ${res.searchedId}</div>
                 <div>จำนวนนักเรียนทั้งหมด: ${res.totalStudents} คน</div>
-                ${res.sampleIds.length > 0 ? `<div>รหัสตัวอย่าง: ${res.sampleIds.join(', ')}</div>` : ''}
+                ${res.sampleIds.length > 0 ? `<div class="mt-1">รหัสตัวอย่าง: ${res.sampleIds.join(', ')}</div>` : ''}
               </div>
             </div>
           `;
@@ -633,11 +635,19 @@
 
     async function loadStudents() {
       const tbody = document.getElementById('studentTableBody');
+      const countDiv = document.getElementById('studentCount');
       tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
+      countDiv.textContent = '';
+      
       const res = await callGAS('getStudents');
       if (res.success) {
         allStudents = res.data || [];
-        renderStudentTable();
+        countDiv.textContent = `พบนักเรียน ${allStudents.length} คน`;
+        if (allStudents.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-yellow-600">⚠️ ไม่พบข้อมูลนักเรียน กรุณาตรวจสอบชีต StudentDatabase หรือล้าง Cache</td></tr>';
+        } else {
+          renderStudentTable();
+        }
       } else {
         tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ' + (res.message || "") + '</td></tr>';
       }
@@ -810,7 +820,7 @@
     }
 
     // ==========================================
-    // ️ SETTINGS & BATCH
+    // ⚙️ SETTINGS & BATCH
     // ==========================================
     async function processBatch() {
       const btn = document.getElementById('btnProcessBatch');
@@ -824,9 +834,9 @@
     async function clearCache() {
       const res = await callGAS('clearCache');
       if (res.success) {
-        Swal.fire('สำเร็จ', res.message, 'success');
+        Swal.fire('สำเร็จ', res.message + ' ระบบจะอ่านข้อมูลใหม่จากชีต', 'success');
         // โหลดข้อมูลนักเรียนใหม่ทันที
-        if (allStudents.length > 0) loadStudents();
+        loadStudents();
       } else {
         Swal.fire('ผิดพลาด', res.message, 'error');
       }
@@ -844,7 +854,7 @@
     }
 
     // ==========================================
-    //  AUTH & EXPORT
+    // 🔐 AUTH & EXPORT
     // ==========================================
     let authTarget = '';
     function promptAuth(target) {
