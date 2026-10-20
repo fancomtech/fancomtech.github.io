@@ -20,9 +20,9 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    #rfidInput { position: absolute; opacity: 0; pointer-events: none; }
     .stat-card { transition: transform 0.2s; }
     .stat-card:hover { transform: translateY(-2px); }
+    .debug-panel { background: #1f2937; color: #10b981; font-family: monospace; font-size: 11px; padding: 8px; border-radius: 6px; max-height: 150px; overflow-y: auto; }
   </style>
 </head>
 <body class="p-4">
@@ -36,7 +36,31 @@
           <p id="connectionStatus" class="text-xs text-gray-500"><i class="fas fa-circle text-yellow-500"></i> กำลังเชื่อมต่อ...</p>
         </div>
       </div>
-      <button onclick="toggleFullscreen()" class="text-gray-500 hover:text-green-600"><i class="fas fa-expand"></i></button>
+      <div class="flex gap-2">
+        <button onclick="toggleDebug()" class="text-gray-500 hover:text-green-600 text-sm" title="Debug Mode">
+          <i class="fas fa-bug"></i>
+        </button>
+        <button onclick="toggleFullscreen()" class="text-gray-500 hover:text-green-600"><i class="fas fa-expand"></i></button>
+      </div>
+    </div>
+
+    <!-- Debug Panel (ซ่อนโดย default) -->
+    <div id="debugPanel" class="hidden mb-4">
+      <div class="glass-card p-3">
+        <div class="flex justify-between items-center mb-2">
+          <h4 class="font-bold text-sm"><i class="fas fa-bug mr-1"></i> Debug Console</h4>
+          <button onclick="clearDebug()" class="text-xs text-gray-500 hover:text-red-500"><i class="fas fa-trash"></i> ล้าง</button>
+        </div>
+        <div id="debugLog" class="debug-panel">พร้อมใช้งาน...</div>
+        <div class="mt-2 flex gap-2">
+          <button onclick="debugCheckDB()" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+            <i class="fas fa-database mr-1"></i> ตรวจสอบฐานข้อมูล
+          </button>
+          <button onclick="forceClearCache()" class="bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700">
+            <i class="fas fa-broom mr-1"></i> ล้าง Cache บังคับ
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -83,6 +107,11 @@
             </button>
           </div>
           <p class="text-xs text-gray-500 mt-2 text-center">💡 รองรับเครื่องอ่าน RFID (โหมด Keyboard Wedge)</p>
+          
+          <!-- ปุ่มล้าง Cache ด่วน -->
+          <button onclick="forceClearCache()" class="mt-3 w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition text-sm">
+            <i class="fas fa-broom mr-1"></i> ล้าง Cache (ใช้เมื่อสแกนไม่เจอ)
+          </button>
         </div>
 
         <!-- Right: Result & Batch -->
@@ -187,7 +216,6 @@
         </div>
       </div>
 
-      <!-- ตารางสถิติรายบุคคล -->
       <div class="glass-card p-4">
         <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list-ol mr-2"></i>สถิติรายบุคคล (Top 20)</h4>
         <div class="overflow-x-auto">
@@ -226,7 +254,7 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">ล้าง Cache ข้อมูลนักเรียน</label>
             <p class="text-xs text-gray-500 mb-2">ใช้เมื่อมีการเพิ่ม/แก้ไข นักเรียนแล้วต้องการให้อัปเดตทันที</p>
-            <button onclick="clearCache()" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition text-sm">
+            <button onclick="forceClearCache()" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition text-sm">
               <i class="fas fa-broom mr-1"></i> ล้าง Cache
             </button>
           </div>
@@ -308,9 +336,50 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec"; // ⚠️ เปลี่ยนตรงนี้
     
     // ==========================================
+    // 🐛 DEBUG SYSTEM
+    // ==========================================
+    let debugMode = false;
+    function toggleDebug() {
+      debugMode = !debugMode;
+      document.getElementById('debugPanel').classList.toggle('hidden', !debugMode);
+      logDebug("Debug Mode: " + (debugMode ? "เปิด" : "ปิด"));
+    }
+    function logDebug(msg) {
+      const log = document.getElementById('debugLog');
+      const time = new Date().toLocaleTimeString('th-TH');
+      log.innerHTML += `<div>[${time}] ${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+      console.log("[DEBUG]", msg);
+    }
+    function clearDebug() {
+      document.getElementById('debugLog').innerHTML = 'ล้างแล้ว...';
+    }
+    async function debugCheckDB() {
+      logDebug("กำลังตรวจสอบฐานข้อมูล...");
+      const res = await callGAS('debugDB');
+      logDebug("ผลลัพธ์: " + JSON.stringify(res));
+      if (res.success) {
+        Swal.fire('ข้อมูลฐานข้อมูล', `จำนวนนักเรียน: ${res.count} คน<br>ตัวอย่างรหัส: ${res.sample.join(', ')}`, 'info');
+      }
+    }
+    async function forceClearCache() {
+      logDebug("กำลังล้าง Cache...");
+      const res = await callGAS('clearCache');
+      logDebug("ล้าง Cache: " + JSON.stringify(res));
+      if (res.success) {
+        Swal.fire('สำเร็จ', res.message, 'success');
+      } else {
+        Swal.fire('ผิดพลาด', res.message, 'error');
+      }
+    }
+
+    // ==========================================
     //  API HELPER
     // ==========================================
     async function callGAS(action, payload = {}) {
+      const startTime = Date.now();
+      logDebug(`📤 ส่งคำขอ: ${action}`, payload);
+      
       try {
         const response = await fetch(GAS_API_URL, {
           method: "POST",
@@ -318,15 +387,18 @@
           redirect: "follow"
         });
         const result = await response.json();
+        const duration = Date.now() - startTime;
+        logDebug(`📥 ตอบกลับ: ${action} (${duration}ms)`, result);
         return result;
       } catch (error) {
-        console.error("API Error:", error);
+        const duration = Date.now() - startTime;
+        logDebug(`❌ Error: ${action} (${duration}ms) - ${error.message}`);
         return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
       }
     }
 
     // ==========================================
-    //  UI & TABS
+    // 🎨 UI & TABS
     // ==========================================
     function switchTab(tabName) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
@@ -349,7 +421,7 @@
     }
 
     // ==========================================
-    // 📷 SCANNER & RFID
+    //  SCANNER & RFID
     // ==========================================
     let isProcessing = false;
     let lastScanTime = 0;
@@ -366,11 +438,13 @@
       const prayer = document.getElementById('prayerSelect').value === 'auto' ? detectPrayer() : document.getElementById('prayerSelect').value;
       const mode = document.getElementById('modeSelect').value;
       
+      logDebug(`📷 สแกน: ${decodedText} | กะ: ${prayer} | โหมด: ${mode}`);
       showScanLoading(decodedText, prayer);
 
       const action = mode === 'batch' ? 'stageScan' : 'logScan';
       callGAS(action, { studentId: decodedText, prayer }).then(res => {
         isProcessing = false;
+        logDebug(`✅ ผลลัพธ์สแกน:`, res);
         if (res.success) {
           successSound.play().catch(e => {});
           showScanResult(res, true);
@@ -379,13 +453,14 @@
         }
       }).catch(err => {
         isProcessing = false;
+        logDebug(`❌ สแกนผิดพลาด: ${err.message}`);
         showScanResult({ message: err.message, id: decodedText }, false);
       });
     }
 
     function showScanLoading(id, prayer) {
       document.getElementById('scanResult').innerHTML = `
-        <div class="text-center"><div class="spinner mb-2"></div><p class="text-gray-600">กำลังบันทึก: ${id}</p></div>
+        <div class="text-center"><div class="spinner mb-2"></div><p class="text-gray-600">กำลังบันทึก: ${id}</p><p class="text-xs text-gray-400">กะ: ${prayer}</p></div>
       `;
     }
 
@@ -398,7 +473,7 @@
         div.className = "flex-1 flex items-center justify-center p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
-            <img src="${photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
+            <img src="${photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(res.name || 'Student')}&background=10b981&color=fff&size=128'">
             <h4 class="font-bold text-green-800 text-lg">${res.name || "ไม่ระบุชื่อ"}</h4>
             <p class="text-sm text-gray-600">${res.class || ""} | ${res.gender || ""}</p>
             <span class="inline-block mt-2 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold">
@@ -415,9 +490,12 @@
             <h4 class="font-bold text-red-800">ไม่สำเร็จ</h4>
             <p class="text-sm text-gray-600">${res.message || res.status || "เกิดข้อผิดพลาด"}</p>
             <p class="text-xs text-gray-400 mt-1">รหัส: ${studentId}</p>
+            <button onclick="forceClearCache()" class="mt-2 text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+              <i class="fas fa-broom mr-1"></i> ลองล้าง Cache
+            </button>
           </div>
         `;
-        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message || "เกิดข้อผิดพลาด", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message || "เกิดข้อผิดพลาด", timer: 2000, showConfirmButton: false });
       }
     }
 
@@ -447,14 +525,17 @@
         const statusEl = document.getElementById('connectionStatus');
         if(res.success) {
           statusEl.innerHTML = '<i class="fas fa-circle text-green-500"></i> เชื่อมต่อเซิร์ฟเวอร์สำเร็จ';
+          logDebug("✅ เชื่อมต่อเซิร์ฟเวอร์สำเร็จ");
         } else {
           statusEl.innerHTML = '<i class="fas fa-circle text-red-500"></i> เชื่อมต่อล้มเหลว';
+          logDebug("❌ เชื่อมต่อล้มเหลว");
         }
       });
 
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, handleScan, () => {}).catch(err => {
         console.log("QR Scanner not started (maybe no camera):", err);
+        logDebug("⚠️ QR Scanner ไม่สามารถเริ่มต้นได้: " + err);
       });
       
       document.getElementById('manualCode').focus();
@@ -473,11 +554,14 @@
     async function loadStudents() {
       const tbody = document.getElementById('studentTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
+      logDebug(" โหลดข้อมูลนักเรียน...");
       const res = await callGAS('getStudents');
       if (res.success) {
         allStudents = res.data || [];
+        logDebug(`✅ โหลดนักเรียนสำเร็จ: ${allStudents.length} คน`);
         renderStudentTable();
       } else {
+        logDebug(`❌ โหลดนักเรียนล้มเหลว: ${res.message}`);
         tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ' + (res.message || "") + '</td></tr>';
       }
     }
@@ -559,14 +643,17 @@
         return;
       }
 
+      logDebug(" บันทึกนักเรียน:", data);
       const res = await callGAS('saveStudent', data);
       btn.disabled = false; btn.innerHTML = 'บันทึก';
       
       if (res.success) {
+        logDebug("✅ บันทึกสำเร็จ: " + res.message);
         Swal.fire('สำเร็จ', res.message, 'success');
         closeStudentModal();
         loadStudents();
       } else {
+        logDebug("❌ บันทึกล้มเหลว: " + res.message);
         Swal.fire('ผิดพลาด', res.message, 'error');
       }
     }
@@ -574,6 +661,7 @@
     async function deleteStudent(id) {
       const result = await Swal.fire({ title: 'ยืนยันการลบ?', text: `รหัส ${id} จะถูกลบออกจากระบบ`, icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
       if (result.isConfirmed) {
+        logDebug("🗑️ ลบนักเรียน: " + id);
         const res = await callGAS('deleteStudent', { id });
         if (res.success) {
           Swal.fire('สำเร็จ', 'ลบข้อมูลเรียบร้อย', 'success');
@@ -596,6 +684,7 @@
         endDate: document.getElementById('statEndDate').value
       };
       
+      logDebug("📊 โหลดสถิติ:", filters);
       const res = await callGAS('getStats', { filters });
       if (!res.success) {
         Swal.fire('ผิดพลาด', res.message, 'error');
@@ -654,16 +743,16 @@
     async function processBatch() {
       const btn = document.getElementById('btnProcessBatch');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
+      logDebug("🔄 ประมวลผล Batch...");
       const res = await callGAS('processBatch');
       btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync"></i> ประมวลผลคิวทั้งหมด';
-      if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
-      else Swal.fire('ผิดพลาด', res.message, 'error');
-    }
-
-    async function clearCache() {
-      const res = await callGAS('clearCache');
-      if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
-      else Swal.fire('ผิดพลาด', res.message, 'error');
+      if (res.success) {
+        logDebug("✅ Batch สำเร็จ: " + res.message);
+        Swal.fire('สำเร็จ', res.message, 'success');
+      } else {
+        logDebug("❌ Batch ล้มเหลว: " + res.message);
+        Swal.fire('ผิดพลาด', res.message, 'error');
+      }
     }
 
     async function saveSetting(key) {
@@ -672,6 +761,7 @@
         Swal.fire('ผิดพลาด', 'กรุณากรอก Token', 'error');
         return;
       }
+      logDebug("⚙️ บันทึกตั้งค่า: " + key);
       const res = await callGAS('setConfig', { key: String(key), value: String(val) });
       if (res.success) Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าเรียบร้อย', 'success');
       else Swal.fire('ผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
