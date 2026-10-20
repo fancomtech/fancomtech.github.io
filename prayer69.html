@@ -28,6 +28,9 @@
     @keyframes bounceIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     input, select { transition: border-color 0.2s, box-shadow 0.2s; }
     input:focus, select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+    /* ✅ แก้ไข: ซ่อน scrollbar ใน modal แต่ยัง scroll ได้ */
+    .modal-overlay::-webkit-scrollbar { width: 6px; }
+    .modal-overlay::-webkit-scrollbar-thumb { background: #10b981; border-radius: 3px; }
   </style>
 </head>
 <body class="flex items-center justify-center p-4">
@@ -38,7 +41,7 @@
     <span id="offlineCount">0</span> รายการรอซิงค์ (คลิกเพื่อซิงค์)
   </div>
 
-  <div class="glass w-full max-w-lg p-6 relative">
+  <div id="mainCard" class="glass w-full max-w-lg p-6 relative">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-emerald-700"><i class="fas fa-mosque mr-2"></i>สแกนละหมาด</h2>
@@ -60,7 +63,7 @@
 
     <!-- RFID / Manual Input -->
     <div class="mb-4 relative">
-      <input type="text" id="manualCode" placeholder=" สแกน RFID หรือกรอกรหัสแล้วกด Enter..." 
+      <input type="text" id="manualCode" placeholder="📡 สแกน RFID หรือกรอกรหัสแล้วกด Enter..." 
              class="w-full p-3 pr-12 border border-gray-300 rounded-lg text-lg font-mono tracking-wider" autocomplete="off">
       <button onclick="submitManualCode()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700">
         <i class="fas fa-arrow-right"></i>
@@ -70,7 +73,7 @@
     <!-- Controls -->
     <div class="grid grid-cols-2 gap-3 mb-4">
       <select id="prayerSelect" class="p-3 border border-gray-300 rounded-lg bg-white">
-        <option value="auto">🕒 กะ: อัตโนมัติ</option>
+        <option value="auto"> กะ: อัตโนมัติ</option>
         <option value="Subhi">Subhi</option>
         <option value="Dhur">Dhur</option>
         <option value="Asri">Asri</option>
@@ -189,11 +192,44 @@
     </div>
   </div>
 
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal-overlay fixed inset-0 flex items-center justify-center hidden p-4">
+    <div class="modal-content glass w-full max-w-sm p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-emerald-700"><i class="fas fa-file-csv mr-2"></i>ส่งออก CSV</h3>
+        <button onclick="closeModal('exportModal')" class="text-gray-500 hover:text-red-500 text-2xl">&times;</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium mb-1">วันที่เริ่ม</label>
+          <input type="date" id="startDate" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
+          <input type="date" id="endDate" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">เลือกกะ (กด Ctrl/Cmd เพื่อเลือกหลายค่า)</label>
+          <select id="exportPrayerSelect" multiple class="w-full p-2 border rounded-lg" size="5">
+            <option value="Subhi">Subhi</option>
+            <option value="Dhur">Dhur</option>
+            <option value="Asri">Asri</option>
+            <option value="Maqrhib">Maqrhib</option>
+            <option value="Isha">Isha</option>
+          </select>
+        </div>
+      </div>
+      <button id="btnExport" onclick="exportCSVWithFilters()" class="btn bg-emerald-600 text-white w-full py-3 mt-4">
+        <i class="fas fa-download mr-2"></i>ดาวน์โหลด CSV
+      </button>
+    </div>
+  </div>
+
   <script>
     // ==========================================
     // ⚙️ CONFIGURATION
     // ==========================================
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1OgZSVWNDWO1r1_Jc9rQGSN7yCV4JPVdwPhy1WtcIqUDvLLgMigTtyCkKcSvUDzQ/exec"; // ⚠️  เปลี่ยนตรงนี้
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1ZPAtwwLCck-1p5Cw4OiF-0wmgRvBxpbsXkInoWG1rQJPs8kgymTajR8h8rF2rw/exec"; // ⚠️ เปลี่ยนตรงนี้
     const successSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
     
     let currentAuthAction = null;
@@ -201,7 +237,7 @@
     let isProcessing = false;
 
     // ==========================================
-    // 🌐 API & OFFLINE QUEUE
+    //  API & OFFLINE QUEUE
     // ==========================================
     async function callGAS(action, payload = {}) {
       const dataToSend = { action, ...payload };
@@ -231,17 +267,14 @@
 
       Swal.fire({ title: 'กำลังซิงค์ข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       let successCount = 0;
-      let failedItems = [];
 
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
         const res = await callGAS(item.action, item.payload);
         if (res.success) successCount++;
-        else failedItems.push(item);
       }
 
-      // เก็บเฉพาะรายการที่ยังส่งไม่สำเร็จ
-      localStorage.setItem('prayerOfflineQueue', JSON.stringify(failedItems));
+      localStorage.setItem('prayerOfflineQueue', JSON.stringify([]));
       updateOfflineBadge();
       Swal.fire('✅ สำเร็จ', `ซิงค์ข้อมูล ${successCount} รายการเรียบร้อย`, 'success');
     }
@@ -257,11 +290,11 @@
       const el = document.getElementById('connectionStatus');
       el.innerHTML = connected 
         ? '<i class="fas fa-circle text-emerald-500"></i> ออนไลน์' 
-        : '<i class="fas fa-circle text-red-500 animate-pulse"></i> ออฟไลน์ (บันทึกในเครื่อง)';
+        : '<i class="fas fa-circle text-red-500 animate-pulse"></i> ออฟไลน์';
     }
 
     // ==========================================
-    //  SCAN LOGIC (รองรับ RFID & QR)
+    //  SCAN LOGIC
     // ==========================================
     async function handleScan(decodedText) {
       if (isProcessing) return;
@@ -291,7 +324,7 @@
 
       isProcessing = false;
       document.getElementById('manualCode').value = '';
-      document.getElementById('manualCode').focus();
+      setTimeout(() => document.getElementById('manualCode').focus(), 100);
     }
 
     function showStudentDisplay(id, details, statusClass, photoUrl) {
@@ -308,7 +341,7 @@
       setTimeout(() => { display.classList.add('hidden'); display.classList.remove('flex'); }, 4000);
     }
 
-    function playSound() { successSound.play().catch(e => {}); }
+    function playSound() { try { successSound.play(); } catch(e) {} }
 
     function detectPrayer() {
       const now = new Date();
@@ -425,9 +458,7 @@
         photo: document.getElementById('stu_photo').value
       };
 
-      const oldId = document.getElementById('stu_id_old').value;
-      const action = oldId ? 'updateStudent' : 'addStudent';
-
+      const action = document.getElementById('stu_id_old').value ? 'updateStudent' : 'addStudent';
       const res = await callGAS(action, data);
       if (res.success) {
         closeModal('studentFormModal');
@@ -454,10 +485,11 @@
       Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
     }
 
-    async function loadConfig() {
+    function loadConfig() {
       // โหลดค่าจาก localStorage ถ้ามี
       const saved = JSON.parse(localStorage.getItem('adminConfig') || '{}');
       if (saved.user) document.getElementById('cfg_user').value = saved.user;
+      if (saved.pass) document.getElementById('cfg_pass').value = saved.pass;
       if (saved.line) document.getElementById('cfg_line').value = saved.line;
     }
 
@@ -467,9 +499,8 @@
         admin_password: document.getElementById('cfg_pass').value,
         line_token: document.getElementById('cfg_line').value
       };
-      
-      // บันทึกลง localStorage เพื่อความสะดวก
-      localStorage.setItem('adminConfig', JSON.stringify({ user: data.admin_username, line: data.line_token }));
+      // บันทึกลง localStorage ด้วย
+      localStorage.setItem('adminConfig', JSON.stringify({ user: data.admin_username, pass: data.admin_password, line: data.line_token }));
       
       const res = await callGAS('updateConfig', data);
       Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
@@ -483,41 +514,87 @@
       Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
     }
 
+    // ==========================================
+    // 📤 EXPORT CSV
+    // ==========================================
     function openExportModal() {
-      Swal.fire({
-        title: 'ส่งออก CSV',
-        html: `
-          <input type="date" id="exp_start" class="swal2-input" placeholder="วันที่เริ่ม">
-          <input type="date" id="exp_end" class="swal2-input" placeholder="วันที่สิ้นสุด">
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'ดาวน์โหลด',
-        cancelButtonText: 'ยกเลิก',
-        preConfirm: () => {
-          const start = document.getElementById('exp_start').value;
-          const end = document.getElementById('exp_end').value;
-          if (!start || !end) { Swal.showValidationMessage('กรุณาเลือกวันที่'); return false; }
-          return { startDate: start, endDate: end };
-        }
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          Swal.fire({ title: 'กำลังสร้างไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-          const res = await callGAS('exportCSV', { filters: { ...result.value, prayers: ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"] } });
-          if (res.success && res.content) {
-            const blob = new Blob([res.content], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = res.filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            Swal.fire('✅ สำเร็จ', 'ดาวน์โหลด CSV เรียบร้อย', 'success');
-          } else {
-            Swal.fire('❌ ผิดพลาด', res.message || 'ไม่มีข้อมูล', 'error');
-          }
-        }
-      });
+      document.getElementById('exportModal').classList.remove('hidden');
     }
 
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    async function exportCSVWithFilters() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const prayerSelect = document.getElementById("exportPrayerSelect");
+      const selectedPrayers = Array.from(prayerSelect.selectedOptions).map(option => option.value);
+
+      if (!startDate || !endDate) {
+        Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด', 'error');
+        return;
+      }
+
+      const filters = {
+        startDate,
+        endDate,
+        prayers: selectedPrayers.length > 0 ? selectedPrayers : ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"]
+      };
+
+      const btnExport = document.getElementById("btnExport");
+      btnExport.disabled = true;
+      btnExport.innerHTML = '<span class="spinner"></span> กำลังสร้างไฟล์...';
+
+      const result = await callGAS("exportCSV", { filters });
+
+      btnExport.disabled = false;
+      btnExport.innerHTML = '<i class="fas fa-download mr-2"></i>ดาวน์โหลด CSV';
+
+      if (!result.success && result.message) {
+        Swal.fire('❌ ผิดพลาด', result.message, 'error');
+        return;
+      }
+
+      if (result.content) {
+        const blob = new Blob([result.content], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename || 'PrayerLog.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        closeModal('exportModal');
+        Swal.fire('✅ สำเร็จ', 'ดาวน์โหลด CSV เรียบร้อย', 'success');
+      } else {
+        Swal.fire('❌ ผิดพลาด', 'ไม่ได้รับข้อมูลไฟล์', 'error');
+      }
+    }
+
+    // ==========================================
+    // 🎛️ MODAL MANAGEMENT (แก้ไข aria-hidden)
+    // ==========================================
+    function closeModal(id) { 
+      const modal = document.getElementById(id);
+      modal.classList.add('hidden');
+      // ✅ แก้ไข: คืน focus ให้ manualCode หลังจากปิด modal
+      setTimeout(() => {
+        const manualInput = document.getElementById('manualCode');
+        if (manualInput) manualInput.focus();
+      }, 100);
+    }
+
+    // ปิด modal เมื่อคลิกพื้นหลัง
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.add('hidden');
+          setTimeout(() => {
+            const manualInput = document.getElementById('manualCode');
+            if (manualInput) manualInput.focus();
+          }, 100);
+        }
+      });
+    });
 
     // ==========================================
     // 🚀 INIT
@@ -525,30 +602,32 @@
     window.addEventListener('DOMContentLoaded', () => {
       updateOfflineBadge();
       
-      const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, 
-        (decodedText) => handleScan(decodedText), () => {}
-      ).catch(err => console.log("Camera not available, use RFID/Manual"));
+      // Init QR Scanner
+      try {
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, 
+          (decodedText) => handleScan(decodedText), () => {}
+        ).catch(err => console.log("Camera not available, use RFID/Manual"));
+      } catch (e) {
+        console.log("QR Scanner init error:", e);
+      }
 
+      // Focus manual input for RFID
       document.getElementById('manualCode').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); submitManualCode(); }
       });
-      
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.target.id === 'authModal' && mutation.target.classList.contains('hidden')) {
-            setTimeout(() => document.getElementById('manualCode').focus(), 300);
-          }
-        });
-      });
-      observer.observe(document.getElementById('authModal'), { attributes: true, attributeFilter: ['class'] });
 
+      // Check connection
       callGAS('checkStatus').then(res => {
         if(res.success) updateConnectionStatus(true);
       });
     });
 
-    window.addEventListener('online', () => { updateConnectionStatus(true); syncOfflineQueue(); });
+    // Auto sync when online
+    window.addEventListener('online', () => {
+      updateConnectionStatus(true);
+      syncOfflineQueue();
+    });
     window.addEventListener('offline', () => updateConnectionStatus(false));
   </script>
 </body>
