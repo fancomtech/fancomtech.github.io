@@ -10,136 +10,49 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-    body {
-      font-family: 'Prompt', sans-serif;
-      background: linear-gradient(135deg, #10b981, #047857);
-      min-height: 100vh;
-      color: #1f2937;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-    }
-    .btn {
-      transition: all 0.3s ease;
-      border-radius: 0.75rem;
-      font-weight: 500;
-    }
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    }
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    .modal {
-      background: rgba(0, 0, 0, 0.6);
-      animation: fadeIn 0.3s ease;
-      z-index: 1000;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .modal-content {
-      animation: slideIn 0.3s ease;
-    }
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .badge {
-      background: linear-gradient(90deg, #10b981, #047857);
-      border-radius: 0.5rem;
-      padding: 0.5rem 1rem;
-      color: white;
-      display: inline-block;
-      margin: 0.25rem;
-      font-weight: 500;
-      animation: popIn 0.2s ease;
-    }
-    @keyframes popIn {
-      from { transform: scale(0.8); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    input[type="date"], input[type="text"], input[type="password"], input[type="number"], select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.5rem;
-    }
-    .toggle-btn {
-      background: #6b7280;
-      color: white;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    .toggle-btn:hover {
-      background: #4b5563;
-      transform: scale(1.1);
-    }
-    .input-section {
-      transition: max-height 0.3s ease, opacity 0.3s ease;
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-    }
-    .input-section.visible {
-      max-height: 400px;
-      opacity: 1;
-    }
-    .spinner {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    body { font-family: 'Prompt', sans-serif; background: linear-gradient(135deg, #10b981, #047857); min-height: 100vh; color: #1f2937; }
+    .card { background: rgba(255, 255, 255, 0.95); border-radius: 1rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease; }
+    .btn { transition: all 0.2s ease; border-radius: 0.75rem; font-weight: 500; }
+    .btn:hover { transform: scale(1.02); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+    .modal { background: rgba(0, 0, 0, 0.6); animation: fadeIn 0.3s ease; z-index: 1000; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-content { animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .badge { background: linear-gradient(90deg, #10b981, #047857); border-radius: 0.5rem; padding: 0.4rem 0.8rem; color: white; display: inline-block; margin: 0.2rem; font-weight: 500; animation: popIn 0.2s ease; }
+    .badge.offline { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    input, select { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 0.5rem; }
+    .toggle-btn { background: #6b7280; color: white; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; transition: 0.3s; }
+    .toggle-btn:hover { background: #4b5563; transform: scale(1.1); }
+    .input-section { transition: max-height 0.3s ease, opacity 0.3s ease; overflow: hidden; max-height: 0; opacity: 0; }
+    .input-section.visible { max-height: 500px; opacity: 1; }
+    .spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="flex items-center justify-center p-4">
   <div class="card w-full max-w-md p-6">
-    <h2 class="text-2xl font-bold text-center text-green-700 mb-6">
-      <i class="fas fa-mosque mr-2"></i> สแกนละหมาด 1
+    <h2 class="text-2xl font-bold text-center text-green-700 mb-4">
+      <i class="fas fa-mosque mr-2"></i> สแกนละหมาด
     </h2>
 
-    <!-- Connection Status -->
-    <div id="connectionStatus" class="text-center text-xs text-gray-500 mb-2">
-      <i class="fas fa-circle text-yellow-500"></i> กำลังเชื่อมต่อ...
+    <!-- Connection & Stats Status -->
+    <div class="bg-gray-50 rounded-lg p-3 mb-4 flex justify-between items-center text-sm">
+      <div id="connectionStatus"><i class="fas fa-circle text-yellow-500"></i> กำลังเชื่อมต่อ...</div>
+      <div id="dailyStats" class="text-gray-600 font-medium">วันนี้: <span class="text-green-600 font-bold">-</span> | รวม: <span class="text-green-600 font-bold">-</span></div>
     </div>
     
-    <div class="flex justify-end mb-4">
-      <button id="toggleInputFields" class="toggle-btn" onclick="toggleInputFields()" title="แสดงตัวเลือกการบันทึก">
+    <div class="flex justify-end mb-2">
+      <button class="toggle-btn" onclick="toggleInputFields()" title="แสดงตัวเลือก">
         <i id="toggleInputIcon" class="fas fa-plus"></i>
       </button>
     </div>
 
     <div id="inputFields" class="input-section mb-4">
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          <i class="fas fa-pray mr-1"></i> เลือกกะ
-        </label>
-        <select id="prayerSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-pray mr-1"></i> เลือกกะ</label>
+        <select id="prayerSelect">
           <option value="auto">อัตโนมัติ</option>
           <option value="Subhi">Subhi</option>
           <option value="Dhur">Dhur</option>
@@ -148,211 +61,162 @@
           <option value="Isha">Isha</option>
         </select>
       </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          <i class="fas fa-cogs mr-1"></i> โหมดบันทึก
-        </label>
-        <select id="modeSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-cogs mr-1"></i> โหมดบันทึก</label>
+        <select id="modeSelect">
           <option value="realtime">บันทึกทันที</option>
           <option value="batch">บันทึกแบบเป็นชุด</option>
         </select>
       </div>
-
-      <div class="mb-4">
-        <button id="btnProcessBatch" onclick="processBatch()" class="btn bg-blue-600 text-white w-full py-3">
-          <i class="fas fa-sync mr-1"></i> ประมวลผลชุดข้อมูล
-        </button>
-      </div>
+      <button id="btnProcessBatch" onclick="processBatch()" class="btn bg-blue-600 text-white w-full py-3 mb-2">
+        <i class="fas fa-sync mr-1"></i> ประมวลผลชุดข้อมูล
+      </button>
     </div>
 
-    <div id="reader" class="w-full mb-4 border-2 border-green-300 rounded-lg overflow-hidden"></div>
+    <div id="reader" class="w-full mb-4 border-2 border-green-300 rounded-lg overflow-hidden bg-gray-100" style="min-height: 250px;"></div>
 
-    <div id="manualInput" class="mb-4">
+    <div class="mb-4">
       <div class="flex items-center gap-2">
-        <input type="text" id="manualCode" placeholder="กรอกรหัส QR..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+        <input type="text" id="manualCode" placeholder="กรอกรหัส QR หรือรหัสนิ้วมือ..." class="flex-1">
         <button id="btnManualSubmit" onclick="submitManualCode()" class="btn bg-green-600 text-white px-4 py-3">
-          <i class="fas fa-check mr-1"></i> ยืนยัน
+          <i class="fas fa-check"></i>
         </button>
       </div>
     </div>
 
-    <div id="scanned" class="text-center mb-4 flex flex-wrap justify-center"></div>
+    <div id="scanned" class="text-center mb-4 flex flex-wrap justify-center max-h-32 overflow-y-auto"></div>
 
-    <div class="flex justify-end mb-4">
-      <button id="toggleActionButtons" class="toggle-btn" onclick="toggleActionButtons()" title="แสดงปุ่มการจัดการ">
-        <i id="toggleActionIcon" class="fas fa-plus"></i>
+    <div class="flex justify-end mb-2">
+      <button class="toggle-btn" onclick="toggleActionButtons()" title="จัดการระบบ">
+        <i id="toggleActionIcon" class="fas fa-cog"></i>
       </button>
     </div>
 
-    <div id="actionButtons" class="flex flex-wrap justify-center gap-4 hidden">
-      <button onclick="promptAuth('export')" class="btn bg-green-600 text-white px-6 py-3">
-        <i class="fas fa-file-export mr-1"></i> ส่งออก CSV
-      </button>
-      <button onclick="promptAuth('settings')" class="btn bg-gray-600 text-white px-6 py-3">
-        <i class="fas fa-cog mr-1"></i> ตั้งค่าเวลาละหมาด
-      </button>
+    <div id="actionButtons" class="flex flex-wrap justify-center gap-3 hidden mb-4">
+      <button onclick="promptAuth('export')" class="btn bg-green-600 text-white px-4 py-2 text-sm"><i class="fas fa-file-export mr-1"></i> ส่งออก CSV</button>
+      <button onclick="promptAuth('settings')" class="btn bg-gray-600 text-white px-4 py-2 text-sm"><i class="fas fa-sliders-h mr-1"></i> ตั้งค่า</button>
     </div>
 
-    <!-- Prayer Settings Modal -->
+    <!-- Modals (Prayer, Export, Auth) -->
     <div id="prayerModal" class="modal fixed inset-0 flex items-center justify-center hidden">
       <div class="modal-content card w-full max-w-sm p-6">
-        <span class="close text-gray-500 text-2xl font-bold float-right cursor-pointer hover:text-gray-800" onclick="closeModal()">×</span>
-        <h3 class="text-xl font-bold text-green-700 mb-4">
-          <i class="fas fa-clock mr-1"></i> ตั้งค่าวักตูละหมาด
-        </h3>
+        <span class="text-gray-500 text-2xl font-bold float-right cursor-pointer" onclick="closeModal('prayerModal')">×</span>
+        <h3 class="text-xl font-bold text-green-700 mb-4"><i class="fas fa-clock mr-1"></i> ตั้งค่าวักตู</h3>
         <div id="prayerForm" class="space-y-3"></div>
-        <button onclick="savePrayerTimes()" class="btn bg-green-600 text-white w-full py-3 mt-4">
-          <i class="fas fa-save mr-1"></i> บันทึก
-        </button>
+        <button onclick="savePrayerTimes()" class="btn bg-green-600 text-white w-full py-3 mt-4">บันทึก</button>
       </div>
     </div>
 
-    <!-- Export Modal -->
     <div id="exportModal" class="modal fixed inset-0 flex items-center justify-center hidden">
       <div class="modal-content card w-full max-w-sm p-6">
-        <span class="close text-gray-500 text-2xl font-bold float-right cursor-pointer hover:text-gray-800" onclick="closeExportModal()">×</span>
-        <h3 class="text-xl font-bold text-green-700 mb-4">
-          <i class="fas fa-file-export mr-1"></i> ส่งออก CSV
-        </h3>
+        <span class="text-gray-500 text-2xl font-bold float-right cursor-pointer" onclick="closeModal('exportModal')">×</span>
+        <h3 class="text-xl font-bold text-green-700 mb-4"><i class="fas fa-file-export mr-1"></i> ส่งออก CSV</h3>
         <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่ม</label>
-            <input type="date" id="startDate" class="w-full p-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สิ้นสุด</label>
-            <input type="date" id="endDate" class="w-full p-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">เลือกกะ</label>
-            <select id="exportPrayerSelect" multiple class="w-full p-2" size="5">
-              <option value="Subhi">Subhi</option>
-              <option value="Dhur">Dhur</option>
-              <option value="Asri">Asri</option>
-              <option value="Maqrhib">Maqrhib</option>
-              <option value="Isha">Isha</option>
-            </select>
-          </div>
+          <input type="date" id="startDate" placeholder="วันที่เริ่ม">
+          <input type="date" id="endDate" placeholder="วันที่สิ้นสุด">
+          <select id="exportPrayerSelect" multiple size="5">
+            <option value="Subhi">Subhi</option><option value="Dhur">Dhur</option><option value="Asri">Asri</option><option value="Maqrhib">Maqrhib</option><option value="Isha">Isha</option>
+          </select>
         </div>
-        <button id="btnExport" onclick="exportCSVWithFilters()" class="btn bg-green-600 text-white w-full py-3 mt-4">
-          <i class="fas fa-download mr-1"></i> ดาวน์โหลด CSV
-        </button>
+        <button id="btnExport" onclick="exportCSVWithFilters()" class="btn bg-green-600 text-white w-full py-3 mt-4">ดาวน์โหลด CSV</button>
       </div>
     </div>
 
-    <!-- Auth Modal -->
     <div id="authModal" class="modal fixed inset-0 flex items-center justify-center hidden">
       <div class="modal-content card w-full max-w-sm p-6">
-        <span class="close text-gray-500 text-2xl font-bold float-right cursor-pointer hover:text-gray-800" onclick="closeAuthModal()">×</span>
-        <h3 class="text-xl font-bold text-green-700 mb-4">
-          <i class="fas fa-lock mr-1"></i> กรุณายืนยันตัวตน
-        </h3>
+        <span class="text-gray-500 text-2xl font-bold float-right cursor-pointer" onclick="closeModal('authModal')">×</span>
+        <h3 class="text-xl font-bold text-green-700 mb-4"><i class="fas fa-lock mr-1"></i> ยืนยันตัวตน</h3>
         <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้</label>
-            <input type="text" id="authUsername" class="w-full p-2" placeholder="ชื่อผู้ใช้">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-            <input type="password" id="authPassword" class="w-full p-2" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')submitAuth()">
-          </div>
+          <input type="text" id="authUsername" placeholder="ชื่อผู้ใช้">
+          <input type="password" id="authPassword" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')submitAuth()">
         </div>
-        <button id="btnAuth" onclick="submitAuth()" class="btn bg-green-600 text-white w-full py-3 mt-4">
-          <i class="fas fa-sign-in-alt mr-1"></i> เข้าสู่ระบบ
-        </button>
+        <button id="btnAuth" onclick="submitAuth()" class="btn bg-green-600 text-white w-full py-3 mt-4">เข้าสู่ระบบ</button>
       </div>
     </div>
 
-    <footer style="background-color: #f4f4f4; color: #333; text-align: center; padding: 1rem; border-top: 2px solid #4CAF50; font-family: 'Sarabun', sans-serif; font-size: 0.95rem; margin-top: 1rem; border-radius: 0.5rem;">
-      © 2025 <strong>ระบบสแกนละหมาด</strong> | <span style="color: #4CAF50; font-weight: bold;">FANTECH</span>
+    <footer class="text-center text-sm text-gray-600 mt-4 pt-4 border-t border-gray-200">
+      © 2025 <strong>ระบบสแกนละหมาด</strong> | <span class="text-green-600 font-bold">FANTECH</span>
     </footer>
   </div>
 
+  <!-- เสียงตอบรับ -->
+  <audio id="successSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg" preload="auto"></audio>
+  <audio id="errorSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
   <script>
-    // ============================================
-    // ⚙️ CONFIGURATION - เปลี่ยน URL ตรงนี้
-    // ============================================
+    // ⚠️ เปลี่ยน URL นี้เป็น Web App URL ของคุณ
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1OgZSVWNDWO1r1_Jc9rQGSN7yCV4JPVdwPhy1WtcIqUDvLLgMigTtyCkKcSvUDzQ/exec";
 
-    // ============================================
-    // 🚀 GLOBAL STATE
-    // ============================================
-    let prayerTimes = [
-      { name: "Subhi", end: 630 },
-      { name: "Dhur", end: 1430 },
-      { name: "Asri", end: 1730 },
-      { name: "Maqrhib", end: 1900 },
-      { name: "Isha", end: 2359 }
-    ];
+    let prayerTimes = [{ name: "Subhi", end: 630 }, { name: "Dhur", end: 1430 }, { name: "Asri", end: 1730 }, { name: "Maqrhib", end: 1900 }, { name: "Isha", end: 2359 }];
     const scannedMap = new Set();
     let lastAlertTime = 0;
-    const alertCooldown = 2000;
     let lastDate = null;
     let authAction = null;
-    let actionButtonsVisible = false;
-    let inputFieldsVisible = false;
     let isProcessing = false;
 
-    // ============================================
-    // 🌐 CENTRAL API CALL (แทน google.script.run ทั้งหมด)
-    // ============================================
+    // --- Central API Call ---
     async function callGAS(action, payload = {}) {
       const dataToSend = { action, ...payload };
-      
       try {
-        // ส่งแบบ text/plain เพื่อหลีกเลี่ยง CORS preflight (OPTIONS request)
-        const response = await fetch(GAS_API_URL, {
-          method: "POST",
-          body: JSON.stringify(dataToSend),
-          redirect: "follow"
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        return result;
+        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(dataToSend), redirect: "follow" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
       } catch (error) {
-        console.error("🚨 GAS API Error:", error);
-        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
+        console.error("API Error:", error);
+        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message, isOffline: true };
       }
     }
 
-    // ============================================
-    // 📡 CONNECTION STATUS
-    // ============================================
-    function updateConnectionStatus(connected, message = "") {
-      const statusEl = document.getElementById("connectionStatus");
-      if (connected) {
-        statusEl.innerHTML = `<i class="fas fa-circle text-green-500"></i> เชื่อมต่อแล้ว${message}`;
-      } else {
-        statusEl.innerHTML = `<i class="fas fa-circle text-red-500"></i> ขาดการเชื่อมต่อ${message}`;
-      }
+    // --- Offline Queue Management ---
+    function saveToOfflineQueue(data) {
+      let queue = JSON.parse(localStorage.getItem('scanQueue') || '[]');
+      queue.push({ ...data, timestamp: Date.now() });
+      localStorage.setItem('scanQueue', JSON.stringify(queue));
+      updateConnectionStatus(false, " (บันทึกในเครื่อง รอส่งข้อมูล)");
     }
 
-    // ============================================
-    // ⏰ PRAYER TIME LOGIC
-    // ============================================
+    async function processOfflineQueue() {
+      let queue = JSON.parse(localStorage.getItem('scanQueue') || '[]');
+      if (queue.length === 0) return;
+      
+      updateConnectionStatus(true, " (กำลังส่งข้อมูลที่ค้างอยู่...)");
+      let processed = 0;
+      
+      for (let i = 0; i < queue.length; i++) {
+        const item = queue[i];
+        const res = await callGAS(item.action, item.payload);
+        if (res.success) processed++;
+      }
+      
+      if (processed > 0) {
+        queue = queue.slice(processed);
+        localStorage.setItem('scanQueue', JSON.stringify(queue));
+        Swal.fire({ icon: 'success', title: 'ซิงค์ข้อมูลสำเร็จ', text: `ส่งข้อมูลที่ค้างอยู่ ${processed} รายการ`, timer: 2000, showConfirmButton: false, toast: true, position: 'top' });
+      }
+      updateConnectionStatus(true);
+      loadDailyStats();
+    }
+
+    window.addEventListener('online', () => {
+      processOfflineQueue();
+      updateConnectionStatus(true);
+    });
+
+    // --- Core Logic ---
+    function updateConnectionStatus(connected, extra = "") {
+      const el = document.getElementById("connectionStatus");
+      if (connected) el.innerHTML = `<i class="fas fa-circle text-green-500"></i> ออนไลน์${extra}`;
+      else el.innerHTML = `<i class="fas fa-circle text-yellow-500"></i> ออฟไลน์${extra}`;
+    }
+
     function detectPrayer() {
       const now = new Date();
       const hhmm = parseInt(`${now.getHours()}${now.getMinutes().toString().padStart(2, '0')}`);
-      return prayerTimes.find(prayer => hhmm <= prayer.end)?.name || "Isha";
-    }
-
-    function getCurrentPrayer() {
-      const select = document.getElementById("prayerSelect").value;
-      return select === "auto" ? detectPrayer() : select;
-    }
-
-    function getCurrentMode() {
-      return document.getElementById("modeSelect").value;
+      return prayerTimes.find(p => hhmm <= p.end)?.name || "Isha";
     }
 
     function checkDateAndReset() {
-      const now = new Date();
-      const currentDate = now.toLocaleDateString('th-TH');
+      const currentDate = new Date().toLocaleDateString('th-TH');
       if (lastDate && lastDate !== currentDate) {
         scannedMap.clear();
         document.getElementById("scanned").innerHTML = "";
@@ -360,57 +224,28 @@
       lastDate = currentDate;
     }
 
-    // ============================================
-    // 📷 QR SCAN HANDLER (Optimized)
-    // ============================================
     async function handleScan(decodedText) {
-      if (isProcessing) return; // ป้องกันการสแกนซ้ำขณะกำลังประมวลผล
-      
+      if (isProcessing) return;
       checkDateAndReset();
       
-      const currentPrayer = getCurrentPrayer();
-      const mode = getCurrentMode();
+      const currentPrayer = document.getElementById("prayerSelect").value === "auto" ? detectPrayer() : document.getElementById("prayerSelect").value;
+      const mode = document.getElementById("modeSelect").value;
       const key = `${decodedText}|${currentPrayer}|${lastDate}`;
-      const now = Date.now();
 
-      // ตรวจสอบ Duplicate บน Client-side ก่อน (เร็วมาก)
       if (scannedMap.has(key)) {
-        if (now - lastAlertTime >= alertCooldown) {
-          Swal.fire({
-            icon: 'info',
-            title: 'ℹ️ ซ้ำ',
-            text: `รหัสนิ้วมือ ${decodedText} บันทึกแล้วสำหรับ ${currentPrayer}`,
-            timer: 1000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-          });
-          lastAlertTime = now;
+        if (Date.now() - lastAlertTime >= 2000) {
+          Swal.fire({ icon: 'info', title: 'ซ้ำ', text: `บันทึกแล้ว: ${decodedText}`, timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
+          lastAlertTime = Date.now();
         }
         return;
       }
 
-      // แสดง Badge ทันที (Optimistic UI)
       scannedMap.add(key);
-      const scannedDiv = document.getElementById("scanned");
       const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.textContent = decodedText;
-      scannedDiv.appendChild(badge);
+      badge.className = "badge offline"; // สมมติว่าออฟไลน์ก่อน
+      badge.textContent = decodedText + " ⏳";
+      document.getElementById("scanned").prepend(badge);
 
-      // แสดง Toast สแกนแล้ว
-      Swal.fire({
-        title: '📌 กำลังบันทึก...',
-        text: `${decodedText} - ${currentPrayer}`,
-        icon: 'info',
-        timer: 500,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end'
-      });
-      lastAlertTime = now;
-
-      // เรียก API
       const action = mode === "batch" ? "stageScan" : "logScan";
       const payload = { studentId: decodedText, prayer: currentPrayer };
       
@@ -418,104 +253,61 @@
       const res = await callGAS(action, payload);
       isProcessing = false;
 
-      // จัดการผลลัพธ์
-      if (res.success) {
-        Swal.fire({
-          icon: 'success',
-          title: '✅ ' + (mode === "batch" ? 'จัดเตรียมเรียบร้อย' : 'บันทึกเรียบร้อย'),
-          html: `รหัสนิ้วมือ: ${res.id}<br>ชื่อ: ${res.name}<br>เพศ: ${res.gender}<br>ชั้น: ${res.class}<br>กะ: ${currentPrayer}`,
-          timer: 1500,
-          showConfirmButton: false,
-          toast: true,
-          position: 'top'
-        });
+      if (res.isOffline) {
+        saveToOfflineQueue({ action, payload });
+        badge.textContent = decodedText + " (รอส่ง)";
+        document.getElementById("errorSound").play();
+      } else if (res.success) {
+        badge.className = "badge";
+        badge.textContent = decodedText;
+        document.getElementById("successSound").play();
+        Swal.fire({ icon: 'success', title: 'สำเร็จ', html: `${res.name}<br>${res.class}`, timer: 1500, showConfirmButton: false, toast: true, position: 'top' });
+        loadDailyStats();
       } else if (res.status === "not_found") {
-        Swal.fire({
-          icon: 'warning',
-          title: '⚠️ ไม่พบข้อมูล',
-          text: `รหัสนิ้วมือ ${res.id} ไม่มีในฐานข้อมูล`,
-          timer: 1500,
-          showConfirmButton: false
-        });
-      } else if (res.status === "duplicate") {
-        if (now - lastAlertTime >= alertCooldown) {
-          Swal.fire({
-            icon: 'info',
-            title: 'ℹ️ ซ้ำ',
-            text: `รหัสนิ้วมือ ${res.id} บันทึกแล้วสำหรับ ${currentPrayer}`,
-            timer: 1000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-          });
-        }
+        badge.style.background = "#ef4444";
+        badge.textContent = decodedText + " (ไม่พบ)";
+        document.getElementById("errorSound").play();
+        Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: decodedText, timer: 1500, showConfirmButton: false });
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: '❌ ผิดพลาด',
-          text: res.message || 'ไม่สามารถบันทึกได้',
-          timer: 1500,
-          showConfirmButton: false
-        });
+        badge.style.background = "#f59e0b";
+        badge.textContent = decodedText + " (ซ้ำ)";
+        Swal.fire({ icon: 'info', title: 'บันทึกซ้ำ', timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
       }
       lastAlertTime = Date.now();
     }
 
-    // ============================================
-    // 📝 MANUAL INPUT
-    // ============================================
     function submitManualCode() {
-      const manualCode = document.getElementById("manualCode").value.trim();
-      if (manualCode) {
-        handleScan(manualCode);
-        document.getElementById("manualCode").value = "";
+      const code = document.getElementById("manualCode").value.trim();
+      if (code) { handleScan(code); document.getElementById("manualCode").value = ""; }
+    }
+
+    async function loadDailyStats() {
+      const res = await callGAS("getDailyStats");
+      if (res.success) {
+        document.querySelector("#dailyStats span:first-child").textContent = res.today;
+        document.querySelector("#dailyStats span:last-child").textContent = res.total;
       }
     }
 
-    // ============================================
-    // 🔄 SYSTEM CHECK (เรียกตอนโหลดหน้า)
-    // ============================================
     async function initSystem() {
       const status = await callGAS("checkStatus");
-      
       if (status.success) {
         updateConnectionStatus(true);
-        if (!status.prayerLogExists) {
-          Swal.fire('❌ ผิดพลาด', 'ไม่พบชีต PrayerLog', 'error');
-        }
-        if (!status.studentDbExists) {
-          Swal.fire('❌ ผิดพลาด', 'ไม่พบชีต StudentDatabase', 'error');
-        } else if (!status.studentDbHasData) {
-          Swal.fire('⚠️ คำเตือน', 'ชีต StudentDatabase ว่าง กรุณาเพิ่มข้อมูล', 'warning');
-        }
-        if (!status.tempScansExists) {
-          Swal.fire('❌ ผิดพลาด', 'ไม่พบชีต TempScans', 'error');
-        }
+        loadDailyStats();
+        processOfflineQueue(); // ตรวจสอบคิวค้างทันทีที่โหลด
       } else {
-        updateConnectionStatus(false, ` - ${status.message}`);
-        Swal.fire('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', status.message, 'error');
+        updateConnectionStatus(false, " - " + status.message);
       }
     }
 
-    // ============================================
-    // 📷 START QR SCANNER
-    // ============================================
     function initScanner() {
       const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 250, height: 250 } }, // ปรับ fps เป็น 15 เพื่อลดการใช้ CPU
-        (decodedText) => handleScan(decodedText),
-        () => {}
-      ).catch(err => {
+      html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, handleScan, () => {}).catch(err => {
         console.error("Scanner error:", err);
-        Swal.fire('❌ ผิดพลาด', 'ไม่สามารถเริ่มสแกนได้: ' + err, 'error');
       });
     }
 
-    // ============================================
-    // 🔐 AUTH SYSTEM
-    // ============================================
+    // --- Auth & Modals ---
     function promptAuth(action) {
       authAction = action;
       document.getElementById("authModal").classList.remove("hidden");
@@ -525,143 +317,85 @@
       setTimeout(() => document.getElementById("authUsername").focus(), 100);
     }
 
-    function closeAuthModal() {
-      document.getElementById("authModal").style.display = "none";
-      authAction = null;
-    }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
     async function submitAuth() {
       const username = document.getElementById("authUsername").value.trim();
       const password = document.getElementById("authPassword").value.trim();
+      if (!username || !password) return Swal.fire('❌ ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบ', 'error');
 
-      if (!username || !password) {
-        Swal.fire('❌ ผิดพลาด', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'error');
-        return;
-      }
+      const btn = document.getElementById("btnAuth");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังตรวจสอบ...';
 
-      const btnAuth = document.getElementById("btnAuth");
-      btnAuth.disabled = true;
-      btnAuth.innerHTML = '<span class="spinner"></span> กำลังตรวจสอบ...';
+      const res = await callGAS("login", { credentials: { username, password } });
+      btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ';
 
-      const result = await callGAS("login", { credentials: { username, password } });
-
-      btnAuth.disabled = false;
-      btnAuth.innerHTML = '<i class="fas fa-sign-in-alt mr-1"></i> เข้าสู่ระบบ';
-
-      if (result.success) {
-        const action = authAction;
-        closeAuthModal();
-        if (action === 'export') {
-          openExportModal();
-        } else if (action === 'settings') {
-          openPrayerModal();
-        } else {
-          Swal.fire('❌ ผิดพลาด', 'ไม่พบการกระทำที่เลือก', 'error');
-        }
+      if (res.success) {
+        closeModal("authModal");
+        if (authAction === 'export') document.getElementById("exportModal").style.display = "flex";
+        else if (authAction === 'settings') openPrayerModal();
       } else {
-        Swal.fire('❌ ผิดพลาด', result.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
+        Swal.fire('❌ ผิดพลาด', res.message, 'error');
       }
     }
 
-    // ============================================
-    // 📦 BATCH PROCESSING
-    // ============================================
     async function processBatch() {
       const btn = document.getElementById("btnProcessBatch");
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
-
-      const result = await callGAS("processBatch");
-
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-sync mr-1"></i> ประมวลผลชุดข้อมูล';
-
-      if (result.success) {
-        Swal.fire('✅ สำเร็จ', result.message, 'success');
-      } else {
-        Swal.fire('❌ ผิดพลาด', result.message, 'error');
-      }
-    }
-
-    // ============================================
-    // 📤 EXPORT CSV
-    // ============================================
-    function openExportModal() {
-      document.getElementById("exportModal").style.display = "flex";
-      document.getElementById("exportModal").classList.remove("hidden");
-    }
-
-    function closeExportModal() {
-      document.getElementById("exportModal").style.display = "none";
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
+      const res = await callGAS("processBatch");
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync mr-1"></i> ประมวลผลชุดข้อมูล';
+      if (res.success) Swal.fire('✅ สำเร็จ', res.message, 'success');
+      else Swal.fire('❌ ผิดพลาด', res.message, 'error');
+      loadDailyStats();
     }
 
     async function exportCSVWithFilters() {
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
-      const prayerSelect = document.getElementById("exportPrayerSelect");
-      const selectedPrayers = Array.from(prayerSelect.selectedOptions).map(option => option.value);
+      if (!startDate || !endDate) return Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่', 'error');
 
-      if (!startDate || !endDate) {
-        Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด', 'error');
-        return;
-      }
+      const selectedPrayers = Array.from(document.getElementById("exportPrayerSelect").selectedOptions).map(o => o.value);
+      const filters = { startDate, endDate, prayers: selectedPrayers.length > 0 ? selectedPrayers : ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"] };
 
-      const filters = {
-        startDate,
-        endDate,
-        prayers: selectedPrayers.length > 0 ? selectedPrayers : ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"]
-      };
+      const btn = document.getElementById("btnExport");
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังสร้างไฟล์...';
 
-      const btnExport = document.getElementById("btnExport");
-      btnExport.disabled = true;
-      btnExport.innerHTML = '<span class="spinner"></span> กำลังสร้างไฟล์...';
+      const res = await callGAS("exportCSV", { filters });
+      btn.disabled = false; btn.innerHTML = 'ดาวน์โหลด CSV';
 
-      const result = await callGAS("exportCSV", { filters });
-
-      btnExport.disabled = false;
-      btnExport.innerHTML = '<i class="fas fa-download mr-1"></i> ดาวน์โหลด CSV';
-
-      if (!result.success && result.message) {
-        Swal.fire('❌ ผิดพลาด', result.message, 'error');
-        return;
-      }
-
-      if (result.content) {
-        // สร้างและดาวน์โหลดไฟล์ CSV
-        const blob = new Blob([result.content], { type: 'text/csv;charset=utf-8;' });
+      if (res.success && res.content) {
+        const blob = new Blob([res.content], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = result.filename || 'PrayerLog.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const a = document.createElement('a'); a.href = url; a.download = res.filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
-        closeExportModal();
-        Swal.fire('✅ สำเร็จ', 'ดาวน์โหลด CSV เรียบร้อย', 'success');
+        closeModal("exportModal");
+        Swal.fire('✅ สำเร็จ', 'ดาวน์โหลดเรียบร้อย', 'success');
       } else {
-        Swal.fire('❌ ผิดพลาด', 'ไม่ได้รับข้อมูลไฟล์', 'error');
+        Swal.fire('❌ ผิดพลาด', res.message || 'ไม่ได้รับข้อมูล', 'error');
       }
     }
 
-    // ============================================
-    // ⚙️ PRAYER TIME SETTINGS
-    // ============================================
     function openPrayerModal() {
       const form = document.getElementById("prayerForm");
       form.innerHTML = prayerTimes.map((p, i) => `
         <div class="flex items-center gap-2">
           <label class="text-sm font-medium text-gray-700 w-20">${p.name}:</label>
-          <input type="number" id="end-${i}" value="${p.end}" min="0" max="2359" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+          <input type="number" id="end-${i}" value="${p.end}" min="0" max="2359" class="flex-1 p-2 border rounded">
         </div>
-      `).join("");
+      `).join("") + `<button onclick="clearCache()" class="btn bg-red-500 text-white w-full py-2 mt-4"><i class="fas fa-trash mr-1"></i> ล้างแคชฐานข้อมูลนักเรียน</button>`;
       document.getElementById("prayerModal").style.display = "flex";
-      document.getElementById("prayerModal").classList.remove("hidden");
     }
 
-    function closeModal() {
-      document.getElementById("prayerModal").style.display = "none";
+    async function clearCache() {
+      if(!confirm("ต้องการล้างแคชฐานข้อมูลนักเรียนหรือไม่? (ระบบจะดึงข้อมูลใหม่ในการสแกนครั้งถัดไป)")) return;
+      const res = await callGAS("clearCache");
+      if(res.success) {
+        Swal.fire('✅ สำเร็จ', res.message, 'success');
+        closeModal("prayerModal");
+      } else {
+        Swal.fire('❌ ผิดพลาด', res.message, 'error');
+      }
     }
 
     function savePrayerTimes() {
@@ -669,48 +403,28 @@
         const end = parseInt(document.getElementById(`end-${i}`).value);
         return { name: p.name, end: isNaN(end) ? p.end : end };
       });
-      closeModal();
-      Swal.fire('✅ อัปเดตเรียบร้อย', 'บันทึกเวลาละหมาดแล้ว', 'success');
+      closeModal("prayerModal");
+      Swal.fire('✅ อัปเดตเรียบร้อย', '', 'success');
     }
 
-    // ============================================
-    // 🎛️ UI TOGGLES
-    // ============================================
     function toggleActionButtons() {
-      const actionButtons = document.getElementById("actionButtons");
-      const toggleIcon = document.getElementById("toggleActionIcon");
-      const toggleBtn = document.getElementById("toggleActionButtons");
-
-      actionButtonsVisible = !actionButtonsVisible;
-      actionButtons.classList.toggle("hidden", !actionButtonsVisible);
-      toggleIcon.className = actionButtonsVisible ? "fas fa-minus" : "fas fa-plus";
-      toggleBtn.setAttribute("title", actionButtonsVisible ? "ซ่อนปุ่มการจัดการ" : "แสดงปุ่มการจัดการ");
+      const el = document.getElementById("actionButtons");
+      const icon = document.getElementById("toggleActionIcon");
+      el.classList.toggle("hidden");
+      icon.className = el.classList.contains("hidden") ? "fas fa-cog" : "fas fa-times";
     }
 
     function toggleInputFields() {
-      const inputFields = document.getElementById("inputFields");
-      const toggleIcon = document.getElementById("toggleInputIcon");
-      const toggleBtn = document.getElementById("toggleInputFields");
-
-      inputFieldsVisible = !inputFieldsVisible;
-      inputFields.classList.toggle("visible", inputFieldsVisible);
-      toggleIcon.className = inputFieldsVisible ? "fas fa-minus" : "fas fa-plus";
-      toggleBtn.setAttribute("title", inputFieldsVisible ? "ซ่อนตัวเลือกการบันทึก" : "แสดงตัวเลือกการบันทึก");
+      const el = document.getElementById("inputFields");
+      const icon = document.getElementById("toggleInputIcon");
+      el.classList.toggle("visible");
+      icon.className = el.classList.contains("visible") ? "fas fa-minus" : "fas fa-plus";
     }
 
-    // ============================================
-    // 🎯 KEYBOARD SHORTCUTS
-    // ============================================
     document.getElementById("manualCode").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        submitManualCode();
-      }
+      if (e.key === "Enter") { e.preventDefault(); submitManualCode(); }
     });
 
-    // ============================================
-    // 🚀 INITIALIZATION
-    // ============================================
     window.addEventListener("DOMContentLoaded", () => {
       initSystem();
       initScanner();
