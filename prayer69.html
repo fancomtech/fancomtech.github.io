@@ -60,7 +60,7 @@
 
     <!-- RFID / Manual Input -->
     <div class="mb-4 relative">
-      <input type="text" id="manualCode" placeholder="📡 สแกน RFID หรือกรอกรหัสแล้วกด Enter..." 
+      <input type="text" id="manualCode" placeholder=" สแกน RFID หรือกรอกรหัสแล้วกด Enter..." 
              class="w-full p-3 pr-12 border border-gray-300 rounded-lg text-lg font-mono tracking-wider" autocomplete="off">
       <button onclick="submitManualCode()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-md hover:bg-emerald-700">
         <i class="fas fa-arrow-right"></i>
@@ -231,18 +231,17 @@
 
       Swal.fire({ title: 'กำลังซิงค์ข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       let successCount = 0;
+      let failedItems = [];
 
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
-        // ใช้ logScan หรือ stageScan ตาม action เดิม
         const res = await callGAS(item.action, item.payload);
         if (res.success) successCount++;
+        else failedItems.push(item);
       }
 
-      // ลบที่สำเร็จออก
-      queue = queue.filter((_, i) => { /* ง่ายๆ คือล้างทั้งหมดถ้าเน็ตมา หรือทำแบบละเอียดก็ได้ */ return false; }); 
-      // หมายเหตุ: ใน production จริงควรเช็ค res.success ทีละตัวแล้ว filter ออก
-      localStorage.setItem('prayerOfflineQueue', JSON.stringify([])); // ล้างคิวสำหรับตัวอย่างนี้
+      // เก็บเฉพาะรายการที่ยังส่งไม่สำเร็จ
+      localStorage.setItem('prayerOfflineQueue', JSON.stringify(failedItems));
       updateOfflineBadge();
       Swal.fire('✅ สำเร็จ', `ซิงค์ข้อมูล ${successCount} รายการเรียบร้อย`, 'success');
     }
@@ -262,7 +261,7 @@
     }
 
     // ==========================================
-    // 📷 SCAN LOGIC (รองรับ RFID & QR)
+    //  SCAN LOGIC (รองรับ RFID & QR)
     // ==========================================
     async function handleScan(decodedText) {
       if (isProcessing) return;
@@ -273,7 +272,6 @@
       const action = mode === 'batch' ? 'stageScan' : 'logScan';
       const payload = { studentId: decodedText, prayer };
 
-      // แสดงสถานะกำลังโหลด
       showStudentDisplay(decodedText, "กำลังตรวจสอบ...", "bg-yellow-100 text-yellow-800", "https://ui-avatars.com/api/?name=Loading&background=ccc");
 
       const res = await callGAS(action, payload);
@@ -307,7 +305,6 @@
       statusEl.className = `mt-2 px-3 py-1 rounded-full text-sm font-semibold ${statusClass}`;
       statusEl.textContent = statusClass.includes('emerald') ? '✅ สำเร็จ' : (statusClass.includes('amber') ? '⏳ รอซิงค์' : '❌ ผิดพลาด');
       
-      // ซ่อน display หลังจาก 3 วินาที
       setTimeout(() => { display.classList.add('hidden'); display.classList.remove('flex'); }, 4000);
     }
 
@@ -348,7 +345,7 @@
       if (res.success) {
         closeModal('authModal');
         if (currentAuthAction === 'admin') openAdminPanel();
-        else if (currentAuthAction === 'export') openExportModal(); // (คุณสามารถเพิ่ม modal export ได้เหมือนเดิม)
+        else if (currentAuthAction === 'export') openExportModal();
       } else {
         Swal.fire('❌ ผิดพลาด', res.message, 'error');
       }
@@ -392,6 +389,8 @@
       `).join('');
     }
 
+    function editStudent(id) { openStudentForm(id); }
+
     function openStudentForm(id = null) {
       document.getElementById('studentFormModal').classList.remove('hidden');
       if (id) {
@@ -428,7 +427,6 @@
 
       const oldId = document.getElementById('stu_id_old').value;
       const action = oldId ? 'updateStudent' : 'addStudent';
-      if (oldId) data.oldId = oldId; // สำหรับกรณีแก้รหัส (ในโค้ดนี้ใช้ id เดิมเป็น key)
 
       const res = await callGAS(action, data);
       if (res.success) {
@@ -457,8 +455,10 @@
     }
 
     async function loadConfig() {
-      // ในที่นี้เราโหลดจาก UI ที่กรอกไว้ก่อน หรือจะทำ API แยกก็ได้ เพื่อความง่ายให้กรอกใหม่แล้วบันทึกทับ
-      // หรือถ้าต้องการดึงค่าเดิม ต้องเพิ่ม API getConfig แต่เพื่อความปลอดภัยไม่ควรส่งรหัสผ่านกลับมา
+      // โหลดค่าจาก localStorage ถ้ามี
+      const saved = JSON.parse(localStorage.getItem('adminConfig') || '{}');
+      if (saved.user) document.getElementById('cfg_user').value = saved.user;
+      if (saved.line) document.getElementById('cfg_line').value = saved.line;
     }
 
     async function saveConfig() {
@@ -467,6 +467,10 @@
         admin_password: document.getElementById('cfg_pass').value,
         line_token: document.getElementById('cfg_line').value
       };
+      
+      // บันทึกลง localStorage เพื่อความสะดวก
+      localStorage.setItem('adminConfig', JSON.stringify({ user: data.admin_username, line: data.line_token }));
+      
       const res = await callGAS('updateConfig', data);
       Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
     }
@@ -479,6 +483,40 @@
       Swal.fire(res.success ? '✅ สำเร็จ' : '❌ ผิดพลาด', res.message, res.success ? 'success' : 'error');
     }
 
+    function openExportModal() {
+      Swal.fire({
+        title: 'ส่งออก CSV',
+        html: `
+          <input type="date" id="exp_start" class="swal2-input" placeholder="วันที่เริ่ม">
+          <input type="date" id="exp_end" class="swal2-input" placeholder="วันที่สิ้นสุด">
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'ดาวน์โหลด',
+        cancelButtonText: 'ยกเลิก',
+        preConfirm: () => {
+          const start = document.getElementById('exp_start').value;
+          const end = document.getElementById('exp_end').value;
+          if (!start || !end) { Swal.showValidationMessage('กรุณาเลือกวันที่'); return false; }
+          return { startDate: start, endDate: end };
+        }
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          Swal.fire({ title: 'กำลังสร้างไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+          const res = await callGAS('exportCSV', { filters: { ...result.value, prayers: ["Subhi", "Dhur", "Asri", "Maqrhib", "Isha"] } });
+          if (res.success && res.content) {
+            const blob = new Blob([res.content], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = res.filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            Swal.fire('✅ สำเร็จ', 'ดาวน์โหลด CSV เรียบร้อย', 'success');
+          } else {
+            Swal.fire('❌ ผิดพลาด', res.message || 'ไม่มีข้อมูล', 'error');
+          }
+        }
+      });
+    }
+
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     // ==========================================
@@ -487,18 +525,15 @@
     window.addEventListener('DOMContentLoaded', () => {
       updateOfflineBadge();
       
-      // Init QR Scanner
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, 
         (decodedText) => handleScan(decodedText), () => {}
       ).catch(err => console.log("Camera not available, use RFID/Manual"));
 
-      // Focus manual input for RFID
       document.getElementById('manualCode').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); submitManualCode(); }
       });
       
-      // Auto focus manual input when modal closes
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.target.id === 'authModal' && mutation.target.classList.contains('hidden')) {
@@ -508,17 +543,12 @@
       });
       observer.observe(document.getElementById('authModal'), { attributes: true, attributeFilter: ['class'] });
 
-      // Check connection
       callGAS('checkStatus').then(res => {
         if(res.success) updateConnectionStatus(true);
       });
     });
 
-    // Auto sync when online
-    window.addEventListener('online', () => {
-      updateConnectionStatus(true);
-      syncOfflineQueue();
-    });
+    window.addEventListener('online', () => { updateConnectionStatus(true); syncOfflineQueue(); });
     window.addEventListener('offline', () => updateConnectionStatus(false));
   </script>
 </body>
