@@ -23,6 +23,7 @@
     .stat-card { transition: transform 0.2s; }
     .stat-card:hover { transform: translateY(-2px); }
     .debug-box { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.875rem; }
+    .error-box { background: #fee2e2; border: 1px solid #ef4444; border-radius: 0.5rem; padding: 1rem; color: #991b1b; }
   </style>
 </head>
 <body class="p-4">
@@ -65,7 +66,7 @@
           <div class="flex justify-between items-center mb-3">
             <h3 class="font-bold text-green-800"><i class="fas fa-camera mr-2"></i>สแกน QR / RFID</h3>
             <select id="prayerSelect" class="text-sm border rounded px-2 py-1 bg-green-50 border-green-200">
-              <option value="auto">🕒 อัตโนมัติ</option>
+              <option value="auto"> อัตโนมัติ</option>
               <option value="Subhi">Subhi</option>
               <option value="Dhur">Dhur</option>
               <option value="Asri">Asri</option>
@@ -256,6 +257,17 @@
             </button>
             <div id="diagnosisResult" class="mt-2 hidden"></div>
           </div>
+
+          <hr class="border-gray-200">
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">ตรวจสอบการเชื่อมต่อ</label>
+            <p class="text-xs text-gray-500 mb-2">ทดสอบว่า Frontend เชื่อมต่อกับ GAS ได้หรือไม่</p>
+            <button onclick="testConnection()" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition text-sm">
+              <i class="fas fa-plug mr-1"></i> ทดสอบการเชื่อมต่อ
+            </button>
+            <div id="connectionTestResult" class="mt-2 hidden"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -355,8 +367,14 @@
   </div>
 
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec";
+    // ==========================================
+    // ⚙️ CONFIGURATION - สำคัญมาก!
+    // ==========================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzajI-2BGXyN65ahAVtrJyiH0hAfJy9yZr0uXaRd1RWMw8HGgd8qroAv7ko6s7CHVQ/exec"; // ⚠️ เปลี่ยน URL ตรงนี้
     
+    // ==========================================
+    // 🐛 DEBUG & LOGGING
+    // ==========================================
     const debugLog = [];
     function addDebugLog(action, data) {
       const timestamp = new Date().toLocaleTimeString('th-TH');
@@ -365,25 +383,130 @@
       updateDebugPanel();
     }
 
+    // ==========================================
+    // 🌐 API HELPER (แก้ไขแล้ว - จัดการ redirect และ error)
+    // ==========================================
     async function callGAS(action, payload = {}) {
       const startTime = Date.now();
       try {
+        console.log(` Calling GAS: ${action}`, payload);
+        
         const response = await fetch(GAS_API_URL, {
           method: "POST",
           body: JSON.stringify({ action, ...payload }),
-          redirect: "follow"
+          redirect: "follow" // สำคัญ: อนุญาตให้ follow redirect
         });
+        
+        console.log(`📥 Response status: ${response.status}`, response);
+        
+        // ตรวจสอบว่าเป็น JSON หรือไม่
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error("❌ Response ไม่ใช่ JSON:", text.substring(0, 200));
+          throw new Error(`Response ไม่ใช่ JSON (ได้ ${contentType}): ${text.substring(0, 100)}`);
+        }
+        
         const result = await response.json();
         const duration = Date.now() - startTime;
+        console.log(`✅ Success: ${action} (${duration}ms)`, result);
         addDebugLog(action, { success: result.success, duration: duration + 'ms' });
         return result;
       } catch (error) {
         const duration = Date.now() - startTime;
+        console.error(`❌ Error: ${action}`, error);
         addDebugLog(action, { error: error.message, duration: duration + 'ms' });
-        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
+        
+        // แสดงข้อความ error ที่ชัดเจน
+        let errorMsg = error.message;
+        if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+          errorMsg = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบ URL หรือการเชื่อมต่ออินเทอร์เน็ต";
+        } else if (errorMsg.includes("Unexpected token")) {
+          errorMsg = "เซิร์ฟเวอร์ตอบกลับเป็น HTML แทน JSON กรุณาตรวจสอบ Web App URL";
+        }
+        
+        return { success: false, message: errorMsg };
       }
     }
 
+    // ==========================================
+    //  TEST CONNECTION
+    // ==========================================
+    async function testConnection() {
+      const resultDiv = document.getElementById('connectionTestResult');
+      resultDiv.classList.remove('hidden');
+      resultDiv.innerHTML = '<div class="spinner"></div> กำลังทดสอบ...';
+      
+      console.log("🔌 Testing connection to:", GAS_API_URL);
+      
+      try {
+        const response = await fetch(GAS_API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "checkStatus" }),
+          redirect: "follow"
+        });
+        
+        console.log("Response:", response);
+        
+        if (response.ok) {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            resultDiv.innerHTML = `
+              <div class="bg-green-50 border border-green-200 rounded p-3">
+                <div class="font-bold text-green-800">✅ เชื่อมต่อสำเร็จ!</div>
+                <div class="text-sm mt-2">
+                  <div>Status: ${response.status}</div>
+                  <div>Content-Type: ${contentType}</div>
+                  <div>Response: ${JSON.stringify(data)}</div>
+                </div>
+              </div>
+            `;
+          } else {
+            const text = await response.text();
+            resultDiv.innerHTML = `
+              <div class="error-box">
+                <div class="font-bold"> Response ไม่ใช่ JSON</div>
+                <div class="text-sm mt-2">
+                  <div>Status: ${response.status}</div>
+                  <div>Content-Type: ${contentType}</div>
+                  <div>Response (200 ตัวแรก): ${text.substring(0, 200)}</div>
+                </div>
+                <div class="text-sm mt-2 text-yellow-800">
+                  <strong>วิธีแก้:</strong> ตรวจสอบว่า Web App URL ถูกต้อง และ Deploy ตั้งค่า "Execute as: Me" และ "Who has access: Anyone"
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          resultDiv.innerHTML = `
+            <div class="error-box">
+              <div class="font-bold">❌ HTTP Error: ${response.status}</div>
+              <div class="text-sm mt-2">กรุณาตรวจสอบ Web App URL</div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error-box">
+            <div class="font-bold">❌ Connection Error</div>
+            <div class="text-sm mt-2">${error.message}</div>
+            <div class="text-sm mt-2 text-yellow-800">
+              <strong>วิธีแก้:</strong>
+              <ol class="list-decimal list-inside mt-1">
+                <li>ตรวจสอบว่า GAS_API_URL ถูกต้อง</li>
+                <li>ตรวจสอบว่า Deploy เป็น Web App แล้ว</li>
+                <li>ตรวจสอบว่าตั้งค่า "Who has access: Anyone"</li>
+              </ol>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================
+    // 🎨 UI & TABS
+    // ==========================================
     function switchTab(tabName) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
       document.getElementById(`view-${tabName}`).classList.remove('hidden');
@@ -436,8 +559,8 @@
         const d = res.diagnosis;
         resultDiv.innerHTML = `
           <div class="bg-gray-50 border border-gray-200 rounded p-3 text-sm">
-            <div class="font-bold mb-2"> ผลการวินิจฉัย:</div>
-            <div>ชีต StudentDatabase: ${d.sheetExists ? '✅ มี' : '❌ ไม่มี'}</div>
+            <div class="font-bold mb-2">📋 ผลการวินิจฉัย:</div>
+            <div>ชีต StudentDatabase: ${d.sheetExists ? '✅ มี' : ' ไม่มี'}</div>
             <div>จำนวนแถว: ${d.lastRow}</div>
             <div>จำนวนคอลัมน์: ${d.lastColumn}</div>
             ${d.headers.length > 0 ? `<div>Header: ${d.headers.join(', ')}</div>` : ''}
@@ -497,6 +620,9 @@
       }
     }
 
+    // ==========================================
+    // 📷 SCANNER & RFID
+    // ==========================================
     let isProcessing = false;
     let lastScanTime = 0;
     const scanCooldown = 1500;
@@ -598,12 +724,32 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // ทดสอบการเชื่อมต่อก่อน
       callGAS('checkStatus').then(res => {
         const statusEl = document.getElementById('connectionStatus');
         if(res.success) {
           statusEl.innerHTML = '<i class="fas fa-circle text-green-500"></i> เชื่อมต่อเซิร์ฟเวอร์สำเร็จ';
         } else {
-          statusEl.innerHTML = '<i class="fas fa-circle text-red-500"></i> เชื่อมต่อล้มเหลว';
+          statusEl.innerHTML = '<i class="fas fa-circle text-red-500"></i> เชื่อมต่อล้มเหลว - ' + (res.message || '');
+          // แสดง alert ถ้าเชื่อมต่อไม่ได้
+          setTimeout(() => {
+            Swal.fire({
+              icon: 'warning',
+              title: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+              html: `
+                <div class="text-left text-sm">
+                  <p class="mb-2">กรุณาตรวจสอบ:</p>
+                  <ol class="list-decimal list-inside space-y-1">
+                    <li>Web App URL ถูกต้อง</li>
+                    <li>Deploy ตั้งค่า "Execute as: Me"</li>
+                    <li>Deploy ตั้งค่า "Who has access: Anyone"</li>
+                  </ol>
+                  <p class="mt-3 text-xs text-gray-600">URL ปัจจุบัน: <br><code class="break-all">${GAS_API_URL}</code></p>
+                </div>
+              `,
+              confirmButtonText: 'เข้าใจแล้ว'
+            });
+          }, 1000);
         }
       });
 
@@ -620,6 +766,9 @@
       });
     });
 
+    // ==========================================
+    // 👨‍🎓 STUDENT CRUD
+    // ==========================================
     let allStudents = [];
 
     async function loadStudents() {
@@ -638,7 +787,7 @@
               <td colspan="6" class="p-4 text-center">
                 <div class="text-yellow-600">
                   <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                  <div>⚠️ ไม่พบข้อมูลนักเรียน</div>
+                  <div>️ ไม่พบข้อมูลนักเรียน</div>
                   <div class="text-sm mt-2">กรุณาตรวจสอบชีต StudentDatabase หรือ</div>
                   <button onclick="clearCache()" class="mt-2 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
                     <i class="fas fa-broom mr-1"></i> ล้าง Cache
@@ -651,7 +800,7 @@
           renderStudentTable();
         }
       } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ' + (res.message || "") + '</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ${res.message || ""}</td></tr>`;
       }
     }
 
@@ -757,6 +906,9 @@
       }
     }
 
+    // ==========================================
+    //  STATISTICS
+    // ==========================================
     let chartClassInstance = null;
     let chartPrayerInstance = null;
 
@@ -815,6 +967,9 @@
       }
     }
 
+    // ==========================================
+    // ️ SETTINGS & BATCH
+    // ==========================================
     async function processBatch() {
       const btn = document.getElementById('btnProcessBatch');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
@@ -845,6 +1000,9 @@
       else Swal.fire('ผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
 
+    // ==========================================
+    // 🔐 AUTH & EXPORT
+    // ==========================================
     let authTarget = '';
     function promptAuth(target) {
       authTarget = target;
