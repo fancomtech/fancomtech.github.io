@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบสแกนละหมาด Pro</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -25,52 +25,62 @@
     .debug-box { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.875rem; }
     .error-box { background: #fee2e2; border: 1px solid #ef4444; border-radius: 0.5rem; padding: 1rem; color: #991b1b; }
     .qr-code-img { max-width: 200px; border: 2px solid #10b981; border-radius: 0.5rem; }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .tab-btn span { display: none; }
+      .tab-btn i { font-size: 1.2rem; }
+      .glass-card { padding: 0.75rem; }
+      table { font-size: 0.75rem; }
+      th, td { padding: 0.5rem; }
+      .hide-mobile { display: none; }
+      .stack-mobile { flex-direction: column; }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .hide-tablet { display: none; }
+    }
+    
+    /* Touch-friendly buttons */
+    button, .btn { min-height: 44px; min-width: 44px; }
+    input, select, textarea { min-height: 44px; }
   </style>
 </head>
-<body class="p-4">
+<body class="p-2 md:p-4">
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="glass-card p-4 mb-4 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-mosque text-3xl text-green-600"></i>
+    <div class="glass-card p-3 md:p-4 mb-3 md:mb-4 flex justify-between items-center">
+      <div class="flex items-center gap-2 md:gap-3">
+        <i class="fas fa-mosque text-2xl md:text-3xl text-green-600"></i>
         <div>
-          <h1 class="text-xl font-bold text-green-800">ระบบสแกนละหมาด Pro</h1>
+          <h1 class="text-lg md:text-xl font-bold text-green-800">ระบบสแกนละหมาด Pro</h1>
           <p id="connectionStatus" class="text-xs text-gray-500"><i class="fas fa-circle text-yellow-500"></i> กำลังเชื่อมต่อ...</p>
         </div>
       </div>
       <div class="flex gap-2">
-        <button onclick="showAdminLogin()" class="text-gray-500 hover:text-green-600" title="Admin Login"><i class="fas fa-user-shield"></i></button>
-        <button onclick="showDebugPanel()" class="text-gray-500 hover:text-blue-600" title="Debug"><i class="fas fa-bug"></i></button>
-        <button onclick="toggleFullscreen()" class="text-gray-500 hover:text-green-600"><i class="fas fa-expand"></i></button>
+        <button onclick="showUserInfo()" class="text-gray-500 hover:text-green-600 p-2" title="ข้อมูลผู้ใช้"><i class="fas fa-user"></i></button>
+        <button onclick="showAdminLogin()" class="text-gray-500 hover:text-green-600 p-2" title="Admin Login"><i class="fas fa-user-shield"></i></button>
+        <button onclick="toggleFullscreen()" class="text-gray-500 hover:text-green-600 p-2"><i class="fas fa-expand"></i></button>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="glass-card p-2 mb-4 flex overflow-x-auto gap-2">
-      <button onclick="switchTab('scan')" id="tab-scan" class="tab-btn active flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+    <div class="glass-card p-2 mb-3 md:mb-4 flex overflow-x-auto gap-2">
+      <button onclick="switchTab('scan')" id="tab-scan" class="tab-btn active flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg flex items-center justify-center gap-2 whitespace-nowrap">
         <i class="fas fa-qrcode"></i> <span class="hidden sm:inline">สแกน</span>
       </button>
-      <button onclick="switchTab('students')" id="tab-students" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-        <i class="fas fa-users"></i> <span class="hidden sm:inline">จัดการนักเรียน</span>
-      </button>
-      <button onclick="switchTab('history')" id="tab-history" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-        <i class="fas fa-history"></i> <span class="hidden sm:inline">ประวัติการสแกน</span>
-      </button>
-      <button onclick="switchTab('stats')" id="tab-stats" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-        <i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">สถิติ</span>
-      </button>
-      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg flex items-center justify-center gap-2 whitespace-nowrap">
         <i class="fas fa-cog"></i> <span class="hidden sm:inline">ตั้งค่า</span>
       </button>
     </div>
 
     <!-- TAB 1: SCAN -->
     <div id="view-scan" class="view-section fade-in">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="glass-card p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <div class="glass-card p-3 md:p-4">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold text-green-800"><i class="fas fa-camera mr-2"></i>สแกน QR / RFID</h3>
-            <select id="prayerSelect" class="text-sm border rounded px-2 py-1 bg-green-50 border-green-200">
+            <h3 class="font-bold text-green-800 text-sm md:text-base"><i class="fas fa-camera mr-2"></i>สแกน QR / RFID</h3>
+            <select id="prayerSelect" class="text-xs md:text-sm border rounded px-2 py-1 bg-green-50 border-green-200">
               <option value="auto">🕒 อัตโนมัติ</option>
               <option value="Subhi">Subhi</option>
               <option value="Dhur">Dhur</option>
@@ -83,177 +93,184 @@
           
           <div class="relative">
             <input type="text" id="manualCode" placeholder="แตะที่นี่แล้วใช้เครื่องอ่าน RFID หรือพิมพ์รหัส..." 
-                   class="w-full p-3 pl-10 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                   class="w-full p-2 md:p-3 pl-10 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition text-sm"
                    onkeydown="if(event.key==='Enter'){event.preventDefault(); submitManualCode();}">
-            <i class="fas fa-barcode absolute left-3 top-4 text-gray-400"></i>
-            <button onclick="submitManualCode()" class="absolute right-2 top-2 bg-green-600 text-white px-4 py-1.5 rounded-md hover:bg-green-700 transition">
+            <i class="fas fa-barcode absolute left-3 top-3 md:top-4 text-gray-400"></i>
+            <button onclick="submitManualCode()" class="absolute right-2 top-2 bg-green-600 text-white px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition">
               <i class="fas fa-check"></i>
             </button>
           </div>
           <p class="text-xs text-gray-500 mt-2 text-center">💡 รองรับเครื่องอ่าน RFID (โหมด Keyboard Wedge)</p>
         </div>
 
-        <div class="glass-card p-4 flex flex-col">
-          <h3 class="font-bold text-green-800 mb-3"><i class="fas fa-user-check mr-2"></i>ผลลัพธ์ล่าสุด</h3>
-          <div id="scanResult" class="flex-1 flex items-center justify-center text-gray-400 text-center p-4 border-2 border-dashed border-gray-200 rounded-lg min-h-[200px]">
+        <div class="glass-card p-3 md:p-4 flex flex-col">
+          <h3 class="font-bold text-green-800 mb-3 text-sm md:text-base"><i class="fas fa-user-check mr-2"></i>ผลลัพธ์ล่าสุด</h3>
+          <div id="scanResult" class="flex-1 flex items-center justify-center text-gray-400 text-center p-3 md:p-4 border-2 border-dashed border-gray-200 rounded-lg min-h-[200px]">
             <div>
-              <i class="fas fa-fingerprint text-4xl mb-2 text-gray-300"></i>
-              <p>รอการสแกน...</p>
+              <i class="fas fa-fingerprint text-3xl md:text-4xl mb-2 text-gray-300"></i>
+              <p class="text-sm">รอการสแกน...</p>
             </div>
           </div>
           
-          <div class="mt-4 pt-4 border-t border-gray-200">
+          <div class="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-gray-700">โหมดบันทึก:</span>
-              <select id="modeSelect" class="text-sm border rounded px-2 py-1">
+              <span class="text-xs md:text-sm font-medium text-gray-700">โหมดบันทึก:</span>
+              <select id="modeSelect" class="text-xs md:text-sm border rounded px-2 py-1">
                 <option value="realtime">ทันที (Real-time)</option>
                 <option value="batch">เป็นชุด (Batch)</option>
               </select>
             </div>
-            <button id="btnProcessBatch" onclick="processBatch()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
-              <i class="fas fa-sync"></i> ประมวลผลคิวทั้งหมด
+            <button id="btnProcessBatch" onclick="processBatch()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 text-sm">
+              <i class="fas fa-sync"></i> <span class="hidden-mobile">ประมวลผลคิวทั้งหมด</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: STUDENTS CRUD -->
-    <div id="view-students" class="view-section hidden fade-in">
-      <div class="glass-card p-4">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
-          <h3 class="font-bold text-green-800 text-lg"><i class="fas fa-users-cog mr-2"></i>จัดการฐานข้อมูลนักเรียน</h3>
-          <div class="flex gap-2 flex-wrap">
-            <input type="text" id="searchStudent" placeholder="ค้นหารหัส หรือ ชื่อ..." class="flex-1 sm:w-64 p-2 border rounded-lg text-sm" onkeyup="renderStudentTable()">
-            <button onclick="openStudentModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">
-              <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
-            </button>
-            <button onclick="openImportModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap">
-              <i class="fas fa-file-import mr-1"></i> นำเข้า
-            </button>
-            <button onclick="downloadTemplate()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap">
-              <i class="fas fa-download mr-1"></i> เทมเพลต
-            </button>
-          </div>
-        </div>
-        <div id="studentCount" class="text-sm text-gray-600 mb-3"></div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left">
-            <thead class="bg-green-50 text-green-800">
-              <tr>
-                <th class="p-3 rounded-tl-lg">รหัสนักเรียน</th>
-                <th class="p-3">รหัส RFID</th>
-                <th class="p-3">รูป</th>
-                <th class="p-3">ชื่อ-นามสกุล</th>
-                <th class="p-3">เพศ</th>
-                <th class="p-3">ระดับชั้น</th>
-                <th class="p-3 rounded-tr-lg text-center">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="studentTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="7" class="p-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: SCAN HISTORY -->
-    <div id="view-history" class="view-section hidden fade-in">
-      <div class="glass-card p-4">
-        <h3 class="font-bold text-green-800 text-lg mb-4"><i class="fas fa-history mr-2"></i>ประวัติการสแกน</h3>
-        <div class="mb-4 flex gap-2">
-          <input type="text" id="searchHistory" placeholder="ค้นหารหัสนักเรียน..." class="flex-1 p-2 border rounded-lg" onkeyup="renderHistoryTable()">
-          <button onclick="loadAllScanHistory()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-            <i class="fas fa-refresh mr-1"></i> โหลดใหม่
-          </button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left">
-            <thead class="bg-green-50 text-green-800">
-              <tr>
-                <th class="p-3">ลำดับ</th>
-                <th class="p-3">รหัสนักเรียน</th>
-                <th class="p-3">ชื่อ-นามสกุล</th>
-                <th class="p-3">ระดับชั้น</th>
-                <th class="p-3">วันที่</th>
-                <th class="p-3">กะ</th>
-                <th class="p-3">เวลา</th>
-              </tr>
-            </thead>
-            <tbody id="historyTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="7" class="p-4 text-center text-gray-500">กำลังโหลด...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: STATISTICS -->
-    <div id="view-stats" class="view-section hidden fade-in">
-      <div class="glass-card p-4 mb-4">
-        <div class="flex flex-col sm:flex-row gap-3 items-end">
-          <div class="flex-1">
-            <label class="text-xs text-gray-600">วันที่เริ่ม</label>
-            <input type="date" id="statStartDate" class="w-full p-2 border rounded-lg text-sm">
-          </div>
-          <div class="flex-1">
-            <label class="text-xs text-gray-600">วันที่สิ้นสุด</label>
-            <input type="date" id="statEndDate" class="w-full p-2 border rounded-lg text-sm">
-          </div>
-          <button onclick="loadStatistics()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition h-10">
-            <i class="fas fa-search mr-1"></i> ดูสถิติ
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div class="glass-card p-4 text-center stat-card">
-          <p class="text-gray-500 text-sm">จำนวนครั้งสแกนทั้งหมด</p>
-          <p id="statTotal" class="text-3xl font-bold text-green-600">0</p>
-        </div>
-        <div class="glass-card p-4 text-center stat-card">
-          <p class="text-gray-500 text-sm">จำนวนนักเรียนที่ไม่ซ้ำ</p>
-          <p id="statUnique" class="text-3xl font-bold text-blue-600">0</p>
-        </div>
-        <div class="glass-card p-4 text-center cursor-pointer hover:bg-green-50 transition stat-card" onclick="promptAuth('export')">
-          <p class="text-gray-500 text-sm">ส่งออกข้อมูล</p>
-          <p class="text-xl font-bold text-purple-600"><i class="fas fa-file-csv mr-1"></i> CSV</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div class="glass-card p-4">
-          <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายห้อง/ระดับชั้น</h4>
-          <canvas id="chartClass"></canvas>
-        </div>
-        <div class="glass-card p-4">
-          <h4 class="font-bold text-gray-700 mb-3 text-center">สถิติรายกะละหมาด</h4>
-          <canvas id="chartPrayer"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: SETTINGS -->
+    <!-- TAB 2: SETTINGS (รวม Students, History, Users, Columns) -->
     <div id="view-settings" class="view-section hidden fade-in">
-      <div class="glass-card p-4 max-w-md mx-auto">
-        <h3 class="font-bold text-green-800 mb-4 text-center"><i class="fas fa-cogs mr-2"></i>ตั้งค่าระบบ</h3>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">LINE Notify Token</label>
-            <input type="password" id="settingLineToken" class="w-full p-2 border rounded-lg text-sm" placeholder="ใส่ Token เพื่อเปิดการแจ้งเตือน">
-            <button onclick="saveSetting('LINE_TOKEN')" class="mt-2 w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition text-sm">บันทึก Token</button>
+      <!-- Sub-tabs for Settings -->
+      <div class="glass-card p-2 mb-4 flex overflow-x-auto gap-2">
+        <button onclick="switchSubTab('students')" id="subtab-students" class="subtab-btn active flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap bg-green-100">
+          <i class="fas fa-users"></i> <span>จัดการนักเรียน</span>
+        </button>
+        <button onclick="switchSubTab('history')" id="subtab-history" class="subtab-btn flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+          <i class="fas fa-history"></i> <span>ประวัติการสแกน</span>
+        </button>
+        <button onclick="switchSubTab('users')" id="subtab-users" class="subtab-btn flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+          <i class="fas fa-user-cog"></i> <span>จัดการผู้ใช้</span>
+        </button>
+        <button onclick="switchSubTab('columns')" id="subtab-columns" class="subtab-btn flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+          <i class="fas fa-columns"></i> <span>กำหนดคอลัมน์</span>
+        </button>
+      </div>
+
+      <!-- Students Management -->
+      <div id="subview-students" class="subview-section">
+        <div class="glass-card p-3 md:p-4">
+          <div class="flex flex-col sm:flex-row justify-between items-center mb-3 md:mb-4 gap-2">
+            <h3 class="font-bold text-green-800 text-base md:text-lg"><i class="fas fa-users-cog mr-2"></i>จัดการฐานข้อมูลนักเรียน</h3>
+            <div class="flex gap-2 flex-wrap w-full sm:w-auto">
+              <input type="text" id="searchStudent" placeholder="ค้นหารหัส หรือ ชื่อ..." class="flex-1 sm:w-48 md:w-64 p-2 border rounded-lg text-sm" onkeyup="renderStudentTable()">
+              <button onclick="openStudentModal()" class="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">
+                <i class="fas fa-plus mr-1"></i> <span class="hidden-mobile">เพิ่มใหม่</span>
+              </button>
+              <button onclick="openImportModal()" class="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm whitespace-nowrap">
+                <i class="fas fa-file-import mr-1"></i> <span class="hidden-mobile">นำเข้า</span>
+              </button>
+              <button onclick="downloadTemplate()" class="bg-purple-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-purple-700 transition text-sm whitespace-nowrap">
+                <i class="fas fa-download mr-1"></i> <span class="hidden-mobile">เทมเพลต</span>
+              </button>
+            </div>
           </div>
-          
-          <hr class="border-gray-200">
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">ล้าง Cache ข้อมูลนักเรียน</label>
-            <p class="text-xs text-gray-500 mb-2">ใช้เมื่อมีการเพิ่ม/แก้ไข นักเรียนแล้วต้องการให้อัปเดตทันที</p>
-            <button onclick="clearCache()" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition text-sm">
-              <i class="fas fa-broom mr-1"></i> ล้าง Cache
+          <div id="studentCount" class="text-sm text-gray-600 mb-3"></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs md:text-sm text-left">
+              <thead class="bg-green-50 text-green-800">
+                <tr>
+                  <th class="p-2 md:p-3 rounded-tl-lg">รหัสนักเรียน</th>
+                  <th class="p-2 md:p-3 hide-mobile">รหัส RFID</th>
+                  <th class="p-2 md:p-3">รูป</th>
+                  <th class="p-2 md:p-3">ชื่อ-นามสกุล</th>
+                  <th class="p-2 md:p-3 hide-mobile">เพศ</th>
+                  <th class="p-2 md:p-3">ระดับชั้น</th>
+                  <th class="p-2 md:p-3 rounded-tr-lg text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody" class="divide-y divide-gray-100">
+                <tr><td colspan="7" class="p-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scan History -->
+      <div id="subview-history" class="subview-section hidden">
+        <div class="glass-card p-3 md:p-4">
+          <h3 class="font-bold text-green-800 text-base md:text-lg mb-3 md:mb-4"><i class="fas fa-history mr-2"></i>ประวัติการสแกน</h3>
+          <div class="mb-3 md:mb-4 flex gap-2 flex-col sm:flex-row">
+            <input type="text" id="searchHistory" placeholder="ค้นหารหัสนักเรียน..." class="flex-1 p-2 border rounded-lg text-sm" onkeyup="renderHistoryTable()">
+            <button onclick="loadAllScanHistory()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+              <i class="fas fa-refresh mr-1"></i> โหลดใหม่
             </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs md:text-sm text-left">
+              <thead class="bg-green-50 text-green-800">
+                <tr>
+                  <th class="p-2 md:p-3">ลำดับ</th>
+                  <th class="p-2 md:p-3">รหัสนักเรียน</th>
+                  <th class="p-2 md:p-3">ชื่อ-นามสกุล</th>
+                  <th class="p-2 md:p-3 hide-mobile">ระดับชั้น</th>
+                  <th class="p-2 md:p-3">วันที่</th>
+                  <th class="p-2 md:p-3 hide-mobile">กะ</th>
+                  <th class="p-2 md:p-3">เวลา</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody" class="divide-y divide-gray-100">
+                <tr><td colspan="7" class="p-4 text-center text-gray-500">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Management -->
+      <div id="subview-users" class="subview-section hidden">
+        <div class="glass-card p-3 md:p-4">
+          <div class="flex flex-col sm:flex-row justify-between items-center mb-3 md:mb-4 gap-2">
+            <h3 class="font-bold text-green-800 text-base md:text-lg"><i class="fas fa-user-cog mr-2"></i>จัดการผู้ใช้</h3>
+            <button onclick="openUserModal()" class="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">
+              <i class="fas fa-plus mr-1"></i> <span class="hidden-mobile">เพิ่มผู้ใช้</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs md:text-sm text-left">
+              <thead class="bg-blue-50 text-blue-800">
+                <tr>
+                  <th class="p-2 md:p-3">ชื่อผู้ใช้</th>
+                  <th class="p-2 md:p-3">ชื่อ-นามสกุล</th>
+                  <th class="p-2 md:p-3 hide-mobile">บทบาท</th>
+                  <th class="p-2 md:p-3 hide-mobile">ชั้น</th>
+                  <th class="p-2 md:p-3">สถานะ</th>
+                  <th class="p-2 md:p-3 text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody" class="divide-y divide-gray-100">
+                <tr><td colspan="6" class="p-4 text-center text-gray-500">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Columns -->
+      <div id="subview-columns" class="subview-section hidden">
+        <div class="glass-card p-3 md:p-4">
+          <div class="flex flex-col sm:flex-row justify-between items-center mb-3 md:mb-4 gap-2">
+            <h3 class="font-bold text-green-800 text-base md:text-lg"><i class="fas fa-columns mr-2"></i>กำหนดคอลัมน์ครูประจำชั้น</h3>
+            <button onclick="openColumnModal()" class="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm whitespace-nowrap">
+              <i class="fas fa-plus mr-1"></i> <span class="hidden-mobile">เพิ่มคอลัมน์</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs md:text-sm text-left">
+              <thead class="bg-purple-50 text-purple-800">
+                <tr>
+                  <th class="p-2 md:p-3">ชื่อคอลัมน์</th>
+                  <th class="p-2 md:p-3 hide-mobile">ประเภท</th>
+                  <th class="p-2 md:p-3 hide-mobile">เงื่อนไข</th>
+                  <th class="p-2 md:p-3">สูตร</th>
+                  <th class="p-2 md:p-3 hide-mobile">ลำดับ</th>
+                  <th class="p-2 md:p-3 text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="columnTableBody" class="divide-y divide-gray-100">
+                <tr><td colspan="6" class="p-4 text-center text-gray-500">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -264,13 +281,29 @@
   <!-- Admin Login Modal -->
   <div id="adminLoginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="glass-card w-full max-w-sm p-6 fade-in">
-      <h3 class="text-xl font-bold text-green-800 mb-4 text-center"><i class="fas fa-user-shield mr-2"></i>เข้าสู่ระบบ Admin</h3>
+      <h3 class="text-xl font-bold text-green-800 mb-4 text-center"><i class="fas fa-user-shield mr-2"></i>เข้าสู่ระบบ</h3>
       <div class="space-y-3">
-        <input type="text" id="adminUser" class="w-full p-2 border rounded-lg" placeholder="ชื่อผู้ใช้">
-        <input type="password" id="adminPass" class="w-full p-2 border rounded-lg" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')submitAdminLogin()">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้</label>
+          <input type="text" id="adminUser" class="w-full p-2 border rounded-lg" placeholder="กรอกชื่อผู้ใช้">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+          <input type="password" id="adminPass" class="w-full p-2 border rounded-lg" placeholder="กรอกรหัสผ่าน" onkeydown="if(event.key==='Enter')submitAdminLogin()">
+        </div>
         <button onclick="submitAdminLogin()" id="btnAdminLogin" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">เข้าสู่ระบบ</button>
         <button onclick="closeAdminLogin()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
       </div>
+    </div>
+  </div>
+
+  <!-- User Info Modal -->
+  <div id="userInfoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-sm p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4 text-center"><i class="fas fa-user mr-2"></i>ข้อมูลผู้ใช้</h3>
+      <div id="userInfoContent" class="space-y-2 text-sm"></div>
+      <button onclick="logout()" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 mt-4">ออกจากระบบ</button>
+      <button onclick="closeUserInfo()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 mt-2">ปิด</button>
     </div>
   </div>
 
@@ -281,37 +314,37 @@
       <input type="hidden" id="editStudentId">
       <div class="space-y-3">
         <div>
-          <label class="text-sm text-gray-600">รหัสนักเรียน *</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">รหัสนักเรียน *</label>
           <input type="text" id="stuId" class="w-full p-2 border rounded-lg" required>
         </div>
         <div>
-          <label class="text-sm text-gray-600">รหัส RFID (ถ้ามี)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">รหัส RFID (ถ้ามี)</label>
           <div class="flex gap-2">
             <input type="text" id="stuRfid" class="flex-1 p-2 border rounded-lg" placeholder="แตะบัตร RFID หรือพิมพ์รหัส">
-            <button onclick="captureRFID()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700">
+            <button onclick="captureRFID()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700" title="รับรหัส RFID">
               <i class="fas fa-id-card"></i>
             </button>
           </div>
         </div>
         <div>
-          <label class="text-sm text-gray-600">ชื่อ-นามสกุล *</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล *</label>
           <input type="text" id="stuName" class="w-full p-2 border rounded-lg" required>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-sm text-gray-600">เพศ</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">เพศ</label>
             <select id="stuGender" class="w-full p-2 border rounded-lg">
               <option value="ชาย">ชาย</option>
               <option value="หญิง">หญิง</option>
             </select>
           </div>
           <div>
-            <label class="text-sm text-gray-600">ระดับชั้น/ห้อง *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">ระดับชั้น/ห้อง *</label>
             <input type="text" id="stuClass" class="w-full p-2 border rounded-lg" placeholder="เช่น ม.1/1" required>
           </div>
         </div>
         <div>
-          <label class="text-sm text-gray-600">URL รูปถ่าย (ถ้ามี)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">URL รูปถ่าย (ถ้ามี)</label>
           <input type="text" id="stuPhoto" class="w-full p-2 border rounded-lg text-sm" placeholder="https://... หรือ เว้นว่างไว้">
         </div>
       </div>
@@ -340,7 +373,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">อัปโหลดไฟล์ CSV</label>
           <input type="file" id="csvFile" accept=".csv" class="w-full p-2 border rounded-lg">
-          <p class="text-xs text-gray-500 mt-1">รูปแบบไฟล์: รหัสนักเรียน,รหัส RFID,ชื่อ-นามสกุล,เพศ,ระดับชั้น,URL รูปถ่าย</p>
+          <p class="text-xs text-gray-500 mt-1">รูปแบบ: รหัสนักเรียน,รหัส RFID,ชื่อ-นามสกุล,เพศ,ระดับชั้น,URL รูปถ่าย</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">หรือวางข้อมูล CSV</label>
@@ -371,16 +404,125 @@
     </div>
   </div>
 
+  <!-- User Modal -->
+  <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-md p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4" id="userModalTitle">เพิ่มผู้ใช้</h3>
+      <input type="hidden" id="editUsername">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้ *</label>
+          <input type="text" id="usrUsername" class="w-full p-2 border rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน *</label>
+          <input type="password" id="usrPassword" class="w-full p-2 border rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล *</label>
+          <input type="text" id="usrName" class="w-full p-2 border rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">บทบาท *</label>
+          <select id="usrRole" class="w-full p-2 border rounded-lg" onchange="onRoleChange()">
+            <option value="admin">ผู้ดูแลระบบ (Admin)</option>
+            <option value="homeroom">ครูประจำชั้น</option>
+            <option value="duty">ครูเวร</option>
+            <option value="member">สมาชิก</option>
+          </select>
+        </div>
+        <div id="classField">
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชั้นที่รับผิดชอบ</label>
+          <input type="text" id="usrClass" class="w-full p-2 border rounded-lg" placeholder="เช่น ม.1/1 (สำหรับครูประจำชั้น)">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+          <select id="usrStatus" class="w-full p-2 border rounded-lg">
+            <option value="active">ใช้งาน</option>
+            <option value="inactive">ระงับ</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">สิทธิ์การเข้าถึง</label>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="scan"> สแกน</label>
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="students"> จัดการนักเรียน</label>
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="history"> ดูประวัติ</label>
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="stats"> ดูสถิติ</label>
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="users"> จัดการผู้ใช้</label>
+            <label class="flex items-center"><input type="checkbox" class="perm-check mr-2" value="columns"> กำหนดคอลัมน์</label>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeUserModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+        <button onclick="saveUserData()" id="btnSaveUser" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Column Modal -->
+  <div id="columnModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-md p-6 fade-in">
+      <h3 class="text-xl font-bold text-green-800 mb-4" id="columnModalTitle">เพิ่มคอลัมน์</h3>
+      <input type="hidden" id="editColumnName">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อคอลัมน์ *</label>
+          <input type="text" id="colName" class="w-full p-2 border rounded-lg" placeholder="เช่น มกราคม, กุมภาพันธ์" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ประเภท *</label>
+          <select id="colType" class="w-full p-2 border rounded-lg">
+            <option value="score">คะแนน</option>
+            <option value="total">ผลรวม</option>
+            <option value="text">ข้อความ</option>
+            <option value="date">วันที่</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">เงื่อนไข</label>
+          <select id="colCondition" class="w-full p-2 border rounded-lg">
+            <option value="scan_count">จำนวนครั้งที่สแกน</option>
+            <option value="custom">กำหนดเอง</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">สูตร (ถ้ามี)</label>
+          <input type="text" id="colFormula" class="w-full p-2 border rounded-lg font-mono text-sm" placeholder="=COUNTIF(...)">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ลำดับการแสดงผล</label>
+          <input type="number" id="colOrder" class="w-full p-2 border rounded-lg" value="1" min="1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">บทบาทที่ใช้</label>
+          <select id="colRole" class="w-full p-2 border rounded-lg">
+            <option value="homeroom">ครูประจำชั้น</option>
+            <option value="duty">ครูเวร</option>
+            <option value="all">ทุกบทบาท</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeColumnModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+        <button onclick="saveColumnData()" id="btnSaveColumn" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwZHSjDtTXwEBZh3h2URPyYyu3n-Zs4vtuuqnEAF6SyD_wa0Z6RN30V1UL-YMEuhI6T/exec";
-    let isAdmin = false;
+    let currentUser = null;
     let allStudents = [];
     let scanHistory = [];
+    let allUsers = [];
+    let customColumns = [];
     let currentQRCodeUrl = "";
     let currentEditStudentId = "";
-    
+
     // ==========================================
-    // 🌐 API HELPER
+    //  API HELPER
     // ==========================================
     async function callGAS(action, payload = {}) {
       const startTime = Date.now();
@@ -420,7 +562,7 @@
     }
 
     // ==========================================
-    // 🔐 ADMIN AUTHENTICATION
+    // 🔐 AUTHENTICATION
     // ==========================================
     function showAdminLogin() {
       document.getElementById('adminLoginModal').classList.remove('hidden');
@@ -452,16 +594,81 @@
       btn.innerHTML = 'เข้าสู่ระบบ';
 
       if (res.success) {
-        isAdmin = true;
+        currentUser = res.user;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         closeAdminLogin();
-        Swal.fire('สำเร็จ', 'เข้าสู่ระบบ Admin สำเร็จ', 'success');
-        // โหลดข้อมูลนักเรียนใหม่
-        if (document.getElementById('view-students').classList.contains('hidden') === false) {
-          loadStudents();
-        }
+        Swal.fire('สำเร็จ', `ยินดีต้อนรับ ${currentUser.name}`, 'success');
+        updateUIForRole();
+        loadStudents();
       } else {
         Swal.fire('ผิดพลาด', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
       }
+    }
+
+    function showUserInfo() {
+      if (!currentUser) {
+        showAdminLogin();
+        return;
+      }
+      
+      const roleNames = {
+        'admin': 'ผู้ดูแลระบบ',
+        'homeroom': 'ครูประจำชั้น',
+        'duty': 'ครูเวร',
+        'member': 'สมาชิก'
+      };
+      
+      document.getElementById('userInfoContent').innerHTML = `
+        <div class="bg-green-50 p-3 rounded-lg">
+          <p><strong>ชื่อผู้ใช้:</strong> ${currentUser.username}</p>
+          <p><strong>ชื่อ-นามสกุล:</strong> ${currentUser.name}</p>
+          <p><strong>บทบาท:</strong> ${roleNames[currentUser.role] || currentUser.role}</p>
+          ${currentUser.class ? `<p><strong>ชั้นที่รับผิดชอบ:</strong> ${currentUser.class}</p>` : ''}
+          <p><strong>สิทธิ์:</strong> ${currentUser.permissions || 'ทั้งหมด'}</p>
+        </div>
+      `;
+      
+      document.getElementById('userInfoModal').classList.remove('hidden');
+      document.getElementById('userInfoModal').classList.add('flex');
+    }
+
+    function closeUserInfo() {
+      document.getElementById('userInfoModal').classList.add('hidden');
+      document.getElementById('userInfoModal').classList.remove('flex');
+    }
+
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('currentUser');
+      closeUserInfo();
+      Swal.fire('สำเร็จ', 'ออกจากระบบแล้ว', 'success');
+      updateUIForRole();
+    }
+
+    function updateUIForRole() {
+      if (!currentUser) {
+        // ซ่อนแท็บตั้งค่าถ้ายังไม่ได้ login
+        document.getElementById('tab-settings').style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('tab-settings').style.display = 'flex';
+      
+      const role = currentUser.role;
+      const permissions = currentUser.permissions || 'all';
+      
+      // ซ่อน/แสดง sub-tabs ตามบทบาท
+      const subtabs = {
+        'students': role === 'admin' || permissions.includes('students'),
+        'history': role === 'admin' || role === 'homeroom' || role === 'duty' || permissions.includes('history'),
+        'users': role === 'admin' || permissions.includes('users'),
+        'columns': role === 'admin' || permissions.includes('columns')
+      };
+      
+      Object.keys(subtabs).forEach(tab => {
+        const el = document.getElementById(`subtab-${tab}`);
+        if (el) el.style.display = subtabs[tab] ? 'flex' : 'none';
+      });
     }
 
     // ==========================================
@@ -473,26 +680,25 @@
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
       
-      if (tabName === 'students') {
-        if (!isAdmin) {
+      if (tabName === 'settings') {
+        if (!currentUser) {
           showAdminLogin();
         } else {
-          loadStudents();
+          switchSubTab('students');
         }
       }
-      if (tabName === 'history') {
-        if (!isAdmin) {
-          showAdminLogin();
-        } else {
-          loadAllScanHistory();
-        }
-      }
-      if (tabName === 'stats') {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('statStartDate').value = today;
-        document.getElementById('statEndDate').value = today;
-        loadStatistics();
-      }
+    }
+
+    function switchSubTab(subTabName) {
+      document.querySelectorAll('.subview-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`subview-${subTabName}`).classList.remove('hidden');
+      document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active', 'bg-green-100'));
+      document.getElementById(`subtab-${subTabName}`).classList.add('active', 'bg-green-100');
+      
+      if (subTabName === 'students') loadStudents();
+      if (subTabName === 'history') loadAllScanHistory();
+      if (subTabName === 'users') loadUsers();
+      if (subTabName === 'columns') loadCustomColumns();
     }
 
     function toggleFullscreen() {
@@ -500,24 +706,8 @@
       else document.exitFullscreen();
     }
 
-    function showDebugPanel() {
-      Swal.fire({
-        title: 'Debug Info',
-        html: `
-          <div class="text-left text-sm">
-            <p><strong>API URL:</strong></p>
-            <p class="break-all bg-gray-100 p-2 rounded">${GAS_API_URL}</p>
-            <p class="mt-2"><strong>Admin Status:</strong> ${isAdmin ? '✅ Logged in' : ' Not logged in'}</p>
-            <p><strong>Students Loaded:</strong> ${allStudents.length}</p>
-            <p><strong>Scan History Loaded:</strong> ${scanHistory.length}</p>
-          </div>
-        `,
-        confirmButtonText: 'ปิด'
-      });
-    }
-
     // ==========================================
-    // 👨‍🎓 STUDENT CRUD WITH RFID
+    // 👨‍🎓 STUDENT CRUD
     // ==========================================
     async function loadStudents() {
       const tbody = document.getElementById('studentTableBody');
@@ -525,7 +715,13 @@
       tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
       countDiv.textContent = '';
       
-      const res = await callGAS('getStudents');
+      const payload = {};
+      if (currentUser) {
+        payload.role = currentUser.role;
+        payload.class = currentUser.class;
+      }
+      
+      const res = await callGAS('getStudents', payload);
       if (res.success) {
         allStudents = res.data || [];
         countDiv.textContent = `พบนักเรียน ${allStudents.length} คน`;
@@ -536,9 +732,7 @@
                 <div class="text-yellow-600">
                   <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
                   <div>⚠️ ไม่พบข้อมูลนักเรียน</div>
-                  <button onclick="openImportModal()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    <i class="fas fa-file-import mr-1"></i> นำเข้าข้อมูล
-                  </button>
+                  ${currentUser?.role === 'admin' ? `<button onclick="openImportModal()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-file-import mr-1"></i> นำเข้าข้อมูล</button>` : ''}
                 </div>
               </td>
             </tr>
@@ -565,26 +759,35 @@
         return;
       }
 
+      const canEdit = currentUser?.role === 'admin';
+      
       tbody.innerHTML = filtered.map(s => `
         <tr class="hover:bg-gray-50 transition">
-          <td class="p-3 font-mono text-sm">${s.id}</td>
-          <td class="p-3 font-mono text-xs">${s.rfid || '-'}</td>
-          <td class="p-3">
-            ${s.photo ? `<img src="${s.photo}" class="w-10 h-10 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff'">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff" class="w-10 h-10 rounded-full object-cover border">`}
+          <td class="p-2 md:p-3 font-mono text-xs md:text-sm">${s.id}</td>
+          <td class="p-2 md:p-3 font-mono text-xs hide-mobile">${s.rfid || '-'}</td>
+          <td class="p-2 md:p-3">
+            ${s.photo ? `<img src="${s.photo}" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff'">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border">`}
           </td>
-          <td class="p-3 font-medium">${s.name}</td>
-          <td class="p-3 text-sm">${s.gender}</td>
-          <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
-          <td class="p-3 text-center">
-            <button onclick="openStudentModal('${s.id}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
-            <button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>
-            <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
+          <td class="p-2 md:p-3 font-medium text-xs md:text-sm">${s.name}</td>
+          <td class="p-2 md:p-3 text-xs hide-mobile">${s.gender}</td>
+          <td class="p-2 md:p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+          <td class="p-2 md:p-3 text-center">
+            ${canEdit ? `
+              <button onclick="openStudentModal('${s.id}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
+              <button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>
+              <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
+            ` : `<button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>`}
           </td>
         </tr>
       `).join('');
     }
 
     function openStudentModal(id = null) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้นที่แก้ไขข้อมูลได้', 'error');
+        return;
+      }
+      
       currentEditStudentId = id || "";
       document.getElementById('studentModal').classList.remove('hidden');
       document.getElementById('studentModal').classList.add('flex');
@@ -601,7 +804,6 @@
         document.getElementById('stuClass').value = s.class;
         document.getElementById('stuPhoto').value = s.photo || "";
         
-        // แสดง QR Code ถ้ามี
         if (s.qrCode) {
           document.getElementById('qrCodeSection').classList.remove('hidden');
           document.getElementById('studentQRCode').src = s.qrCode;
@@ -657,6 +859,11 @@
     }
 
     async function deleteStudent(id) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้นที่ลบข้อมูลได้', 'error');
+        return;
+      }
+      
       const result = await Swal.fire({ 
         title: 'ยืนยันการลบ?', 
         text: `รหัสนักเรียน ${id} จะถูกลบออกจากระบบ`, 
@@ -676,9 +883,6 @@
       }
     }
 
-    // ==========================================
-    //  RFID CAPTURE
-    // ==========================================
     function captureRFID() {
       Swal.fire({
         title: 'แตะบัตร RFID',
@@ -708,9 +912,6 @@
       });
     }
 
-    // ==========================================
-    //  QR CODE GENERATION
-    // ==========================================
     async function showQRCode(studentId) {
       const student = allStudents.find(s => s.id === studentId);
       if (!student) {
@@ -732,11 +933,7 @@
         if (res.success) {
           document.getElementById('modalQRCode').src = res.qrCodeUrl;
           currentQRCodeUrl = res.qrCodeUrl;
-          document.getElementById('modalQRInfo').innerHTML = `
-            <p class="font-bold">${student.name}</p>
-            <p class="text-xs">รหัส: ${student.id} | ชั้น: ${student.class}</p>
-          `;
-          loadStudents(); // โหลดใหม่เพื่ออัปเดต QR Code URL
+          loadStudents();
         } else {
           document.getElementById('modalQRInfo').innerHTML = `<p class="text-red-600">❌ ${res.message}</p>`;
         }
@@ -782,10 +979,11 @@
       }
     }
 
-    // ==========================================
-    //  IMPORT/EXPORT STUDENTS
-    // ==========================================
     function openImportModal() {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
       document.getElementById('importModal').classList.remove('hidden');
       document.getElementById('importModal').classList.add('flex');
     }
@@ -852,7 +1050,13 @@
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
       
-      const res = await callGAS('getAllScanHistory', { limit: 200 });
+      const payload = { limit: 200 };
+      if (currentUser) {
+        payload.role = currentUser.role;
+        payload.class = currentUser.class;
+      }
+      
+      const res = await callGAS('getAllScanHistory', payload);
       if (res.success) {
         scanHistory = res.data || [];
         renderHistoryTable();
@@ -876,15 +1080,328 @@
 
       tbody.innerHTML = filtered.map((h, idx) => `
         <tr class="hover:bg-gray-50 transition">
-          <td class="p-3 text-sm">${idx + 1}</td>
-          <td class="p-3 font-mono text-sm">${h.studentId}</td>
-          <td class="p-3 font-medium">${h.studentName}</td>
-          <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${h.studentClass}</span></td>
-          <td class="p-3 text-sm">${h.date}</td>
-          <td class="p-3 text-sm">${h.prayer}</td>
-          <td class="p-3 text-sm">${h.time}</td>
+          <td class="p-2 md:p-3 text-xs">${idx + 1}</td>
+          <td class="p-2 md:p-3 font-mono text-xs">${h.studentId}</td>
+          <td class="p-2 md:p-3 font-medium text-xs">${h.studentName}</td>
+          <td class="p-2 md:p-3 hide-mobile"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${h.studentClass}</span></td>
+          <td class="p-2 md:p-3 text-xs">${h.date}</td>
+          <td class="p-2 md:p-3 text-xs hide-mobile">${h.prayer}</td>
+          <td class="p-2 md:p-3 text-xs">${h.time}</td>
         </tr>
       `).join('');
+    }
+
+    // ==========================================
+    // 👥 USER MANAGEMENT
+    // ==========================================
+    async function loadUsers() {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
+      
+      const res = await callGAS('getUsers');
+      if (res.success) {
+        allUsers = res.data || [];
+        renderUserTable();
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ${res.message || ""}</td></tr>`;
+      }
+    }
+
+    function renderUserTable() {
+      const tbody = document.getElementById('userTableBody');
+      const roleNames = {
+        'admin': 'ผู้ดูแลระบบ',
+        'homeroom': 'ครูประจำชั้น',
+        'duty': 'ครูเวร',
+        'member': 'สมาชิก'
+      };
+      
+      if (allUsers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allUsers.map(u => `
+        <tr class="hover:bg-gray-50 transition">
+          <td class="p-2 md:p-3 font-mono text-xs">${u.username}</td>
+          <td class="p-2 md:p-3 text-xs">${u.name}</td>
+          <td class="p-2 md:p-3 text-xs hide-mobile"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${roleNames[u.role] || u.role}</span></td>
+          <td class="p-2 md:p-3 text-xs hide-mobile">${u.class || '-'}</td>
+          <td class="p-2 md:p-3"><span class="${u.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded text-xs">${u.status === 'active' ? 'ใช้งาน' : 'ระงับ'}</span></td>
+          <td class="p-2 md:p-3 text-center">
+            <button onclick="openUserModal('${u.username}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
+            ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openUserModal(username = null) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      document.getElementById('userModal').classList.remove('hidden');
+      document.getElementById('userModal').classList.add('flex');
+      
+      if (username) {
+        const u = allUsers.find(x => x.username === username);
+        document.getElementById('userModalTitle').innerText = 'แก้ไขผู้ใช้';
+        document.getElementById('editUsername').value = u.username;
+        document.getElementById('usrUsername').value = u.username;
+        document.getElementById('usrUsername').disabled = true;
+        document.getElementById('usrPassword').value = u.password;
+        document.getElementById('usrName').value = u.name;
+        document.getElementById('usrRole').value = u.role;
+        document.getElementById('usrClass').value = u.class || "";
+        document.getElementById('usrStatus').value = u.status;
+        
+        // Set permissions
+        const perms = u.permissions ? u.permissions.split(',') : [];
+        document.querySelectorAll('.perm-check').forEach(cb => {
+          cb.checked = perms.includes(cb.value) || u.permissions === 'all';
+        });
+      } else {
+        document.getElementById('userModalTitle').innerText = 'เพิ่มผู้ใช้ใหม่';
+        document.getElementById('editUsername').value = '';
+        document.getElementById('usrUsername').value = '';
+        document.getElementById('usrUsername').disabled = false;
+        document.getElementById('usrPassword').value = '';
+        document.getElementById('usrName').value = '';
+        document.getElementById('usrRole').value = 'member';
+        document.getElementById('usrClass').value = '';
+        document.getElementById('usrStatus').value = 'active';
+        document.querySelectorAll('.perm-check').forEach(cb => cb.checked = false);
+      }
+      
+      onRoleChange();
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.add('hidden');
+      document.getElementById('userModal').classList.remove('flex');
+    }
+
+    function onRoleChange() {
+      const role = document.getElementById('usrRole').value;
+      const classField = document.getElementById('classField');
+      
+      if (role === 'homeroom' || role === 'duty') {
+        classField.style.display = 'block';
+      } else {
+        classField.style.display = 'none';
+      }
+    }
+
+    async function saveUserData() {
+      const btn = document.getElementById('btnSaveUser');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+
+      const permissions = Array.from(document.querySelectorAll('.perm-check:checked')).map(cb => cb.value).join(',');
+      
+      const data = {
+        username: document.getElementById('usrUsername').value.trim(),
+        password: document.getElementById('usrPassword').value.trim(),
+        name: document.getElementById('usrName').value.trim(),
+        role: document.getElementById('usrRole').value,
+        class: document.getElementById('usrClass').value.trim(),
+        status: document.getElementById('usrStatus').value,
+        permissions: permissions || 'all'
+      };
+
+      if (!data.username || !data.password || !data.name) {
+        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+        btn.disabled = false; btn.innerHTML = 'บันทึก';
+        return;
+      }
+
+      const res = await callGAS('saveUser', data);
+      btn.disabled = false; btn.innerHTML = 'บันทึก';
+      
+      if (res.success) {
+        Swal.fire('สำเร็จ', res.message, 'success');
+        closeUserModal();
+        loadUsers();
+      } else {
+        Swal.fire('ผิดพลาด', res.message, 'error');
+      }
+    }
+
+    async function deleteUser(username) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      const result = await Swal.fire({ 
+        title: 'ยืนยันการลบ?', 
+        text: `ผู้ใช้ ${username} จะถูกลบออกจากระบบ`, 
+        icon: 'warning', 
+        showCancelButton: true, 
+        confirmButtonText: 'ลบ', 
+        cancelButtonText: 'ยกเลิก' 
+      });
+      if (result.isConfirmed) {
+        const res = await callGAS('deleteUser', { username });
+        if (res.success) {
+          Swal.fire('สำเร็จ', 'ลบผู้ใช้เรียบร้อย', 'success');
+          loadUsers();
+        } else {
+          Swal.fire('ผิดพลาด', res.message, 'error');
+        }
+      }
+    }
+
+    // ==========================================
+    // 📋 CUSTOM COLUMNS
+    // ==========================================
+    async function loadCustomColumns() {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      const tbody = document.getElementById('columnTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
+      
+      const res = await callGAS('getCustomColumns', { role: 'homeroom' });
+      if (res.success) {
+        customColumns = res.data || [];
+        renderColumnTable();
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ${res.message || ""}</td></tr>`;
+      }
+    }
+
+    function renderColumnTable() {
+      const tbody = document.getElementById('columnTableBody');
+      const typeNames = {
+        'score': 'คะแนน',
+        'total': 'ผลรวม',
+        'text': 'ข้อความ',
+        'date': 'วันที่'
+      };
+      
+      if (customColumns.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = customColumns.map(c => `
+        <tr class="hover:bg-gray-50 transition">
+          <td class="p-2 md:p-3 text-xs font-medium">${c.name}</td>
+          <td class="p-2 md:p-3 text-xs hide-mobile"><span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${typeNames[c.type] || c.type}</span></td>
+          <td class="p-2 md:p-3 text-xs hide-mobile">${c.condition}</td>
+          <td class="p-2 md:p-3 text-xs font-mono">${c.formula || '-'}</td>
+          <td class="p-2 md:p-3 text-xs hide-mobile">${c.order}</td>
+          <td class="p-2 md:p-3 text-center">
+            <button onclick="openColumnModal('${c.name}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteCustomColumn('${c.name}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openColumnModal(columnName = null) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      document.getElementById('columnModal').classList.remove('hidden');
+      document.getElementById('columnModal').classList.add('flex');
+      
+      if (columnName) {
+        const c = customColumns.find(x => x.name === columnName);
+        document.getElementById('columnModalTitle').innerText = 'แก้ไขคอลัมน์';
+        document.getElementById('editColumnName').value = c.name;
+        document.getElementById('colName').value = c.name;
+        document.getElementById('colName').disabled = true;
+        document.getElementById('colType').value = c.type;
+        document.getElementById('colCondition').value = c.condition;
+        document.getElementById('colFormula').value = c.formula || "";
+        document.getElementById('colOrder').value = c.order;
+        document.getElementById('colRole').value = c.role;
+      } else {
+        document.getElementById('columnModalTitle').innerText = 'เพิ่มคอลัมน์ใหม่';
+        document.getElementById('editColumnName').value = '';
+        document.getElementById('colName').value = '';
+        document.getElementById('colName').disabled = false;
+        document.getElementById('colType').value = 'score';
+        document.getElementById('colCondition').value = 'scan_count';
+        document.getElementById('colFormula').value = '';
+        document.getElementById('colOrder').value = '1';
+        document.getElementById('colRole').value = 'homeroom';
+      }
+    }
+
+    function closeColumnModal() {
+      document.getElementById('columnModal').classList.add('hidden');
+      document.getElementById('columnModal').classList.remove('flex');
+    }
+
+    async function saveColumnData() {
+      const btn = document.getElementById('btnSaveColumn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+
+      const data = {
+        name: document.getElementById('colName').value.trim(),
+        type: document.getElementById('colType').value,
+        condition: document.getElementById('colCondition').value,
+        formula: document.getElementById('colFormula').value.trim(),
+        order: parseInt(document.getElementById('colOrder').value) || 1,
+        role: document.getElementById('colRole').value
+      };
+
+      if (!data.name) {
+        Swal.fire('ผิดพลาด', 'กรุณากรอกชื่อคอลัมน์', 'error');
+        btn.disabled = false; btn.innerHTML = 'บันทึก';
+        return;
+      }
+
+      const res = await callGAS('saveCustomColumn', data);
+      btn.disabled = false; btn.innerHTML = 'บันทึก';
+      
+      if (res.success) {
+        Swal.fire('สำเร็จ', res.message, 'success');
+        closeColumnModal();
+        loadCustomColumns();
+      } else {
+        Swal.fire('ผิดพลาด', res.message, 'error');
+      }
+    }
+
+    async function deleteCustomColumn(columnName) {
+      if (currentUser?.role !== 'admin') {
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
+        return;
+      }
+      
+      const result = await Swal.fire({ 
+        title: 'ยืนยันการลบ?', 
+        text: `คอลัมน์ ${columnName} จะถูกลบออก`, 
+        icon: 'warning', 
+        showCancelButton: true, 
+        confirmButtonText: 'ลบ', 
+        cancelButtonText: 'ยกเลิก' 
+      });
+      if (result.isConfirmed) {
+        const res = await callGAS('deleteCustomColumn', { columnName });
+        if (res.success) {
+          Swal.fire('สำเร็จ', 'ลบคอลัมน์เรียบร้อย', 'success');
+          loadCustomColumns();
+        } else {
+          Swal.fire('ผิดพลาด', res.message, 'error');
+        }
+      }
     }
 
     // ==========================================
@@ -924,7 +1441,7 @@
 
     function showScanLoading(id, prayer) {
       document.getElementById('scanResult').innerHTML = `
-        <div class="text-center"><div class="spinner mb-2"></div><p class="text-gray-600">กำลังบันทึก: ${id}</p></div>
+        <div class="text-center"><div class="spinner mb-2"></div><p class="text-gray-600 text-sm">กำลังบันทึก: ${id}</p></div>
       `;
     }
 
@@ -934,25 +1451,25 @@
       
       if (isSuccess) {
         const photo = res.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(res.name || "Student") + "&background=10b981&color=fff&size=128";
-        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in min-h-[200px]";
+        div.className = "flex-1 flex items-center justify-center p-3 md:p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
-            <img src="${photo}" class="w-20 h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
-            <h4 class="font-bold text-green-800 text-lg">${res.name || "ไม่ระบุชื่อ"}</h4>
-            <p class="text-sm text-gray-600">${res.class || ""} | ${res.gender || ""}</p>
-            <span class="inline-block mt-2 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+            <img src="${photo}" class="w-16 h-16 md:w-20 md:h-20 rounded-full mx-auto mb-2 border-2 border-green-500 object-cover">
+            <h4 class="font-bold text-green-800 text-base md:text-lg">${res.name || "ไม่ระบุชื่อ"}</h4>
+            <p class="text-xs md:text-sm text-gray-600">${res.class || ""} | ${res.gender || ""}</p>
+            <span class="inline-block mt-2 bg-green-600 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold">
               ✅ ${res.prayer || ""} สำเร็จ
             </span>
           </div>
         `;
         Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: `${res.name || ""} (${res.class || ""})`, timer: 1000, showConfirmButton: false, toast: true, position: 'top-end' });
       } else {
-        div.className = "flex-1 flex items-center justify-center p-4 border-2 border-red-400 bg-red-50 rounded-lg fade-in min-h-[200px]";
+        div.className = "flex-1 flex items-center justify-center p-3 md:p-4 border-2 border-red-400 bg-red-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
-            <i class="fas fa-times-circle text-4xl text-red-500 mb-2"></i>
-            <h4 class="font-bold text-red-800">ไม่สำเร็จ</h4>
-            <p class="text-sm text-gray-600">${res.message || res.status || "เกิดข้อผิดพลาด"}</p>
+            <i class="fas fa-times-circle text-3xl md:text-4xl text-red-500 mb-2"></i>
+            <h4 class="font-bold text-red-800 text-sm md:text-base">ไม่สำเร็จ</h4>
+            <p class="text-xs md:text-sm text-gray-600">${res.message || res.status || "เกิดข้อผิดพลาด"}</p>
             <p class="text-xs text-gray-400 mt-1">รหัส: ${studentId}</p>
           </div>
         `;
@@ -980,88 +1497,32 @@
       }
     }
 
-    // ==========================================
-    // 📊 STATISTICS
-    // ==========================================
-    let chartClassInstance = null;
-    let chartPrayerInstance = null;
-
-    async function loadStatistics() {
-      const filters = {
-        startDate: document.getElementById('statStartDate').value,
-        endDate: document.getElementById('statEndDate').value
-      };
-      
-      const res = await callGAS('getStats', { filters });
-      if (!res.success) {
-        Swal.fire('ผิดพลาด', res.message, 'error');
-        return;
-      }
-
-      const stats = res.stats;
-      document.getElementById('statTotal').innerText = (stats.total || 0).toLocaleString();
-      document.getElementById('statUnique').innerText = (stats.unique || 0).toLocaleString();
-
-      const ctxClass = document.getElementById('chartClass').getContext('2d');
-      if (chartClassInstance) chartClassInstance.destroy();
-      chartClassInstance = new Chart(ctxClass, {
-        type: 'bar',
-        data: {
-          labels: (stats.byClass || []).map(x => x.name),
-          datasets: [{ label: 'จำนวนครั้ง', data: (stats.byClass || []).map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } } }
-      });
-
-      const ctxPrayer = document.getElementById('chartPrayer').getContext('2d');
-      if (chartPrayerInstance) chartPrayerInstance.destroy();
-      chartPrayerInstance = new Chart(ctxPrayer, {
-        type: 'doughnut',
-        data: {
-          labels: (stats.byPrayer || []).map(x => x.name),
-          datasets: [{ data: (stats.byPrayer || []).map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
-        },
-        options: { responsive: true }
-      });
-    }
-
-    // ==========================================
-    // ⚙️ SETTINGS & BATCH
-    // ==========================================
     async function processBatch() {
       const btn = document.getElementById('btnProcessBatch');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
       const res = await callGAS('processBatch');
-      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync"></i> ประมวลผลคิวทั้งหมด';
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync"></i> <span class="hidden-mobile">ประมวลผลคิวทั้งหมด</span>';
       if (res.success) Swal.fire('สำเร็จ', res.message, 'success');
       else Swal.fire('ผิดพลาด', res.message, 'error');
-    }
-
-    async function clearCache() {
-      const res = await callGAS('clearCache');
-      if (res.success) {
-        Swal.fire('สำเร็จ', res.message, 'success');
-        if (isAdmin) loadStudents();
-      } else {
-        Swal.fire('ผิดพลาด', res.message, 'error');
-      }
-    }
-
-    async function saveSetting(key) {
-      const val = document.getElementById('settingLineToken').value.trim();
-      if (!val) {
-        Swal.fire('ผิดพลาด', 'กรุณากรอก Token', 'error');
-        return;
-      }
-      const res = await callGAS('setConfig', { key: String(key), value: String(val) });
-      if (res.success) Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าเรียบร้อย', 'success');
-      else Swal.fire('ผิดพลาด', res.message || 'บันทึกไม่สำเร็จ', 'error');
     }
 
     // ==========================================
     // 🚀 INITIALIZATION
     // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
+      // Check for saved user
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          updateUIForRole();
+        } catch (e) {
+          localStorage.removeItem('currentUser');
+        }
+      } else {
+        updateUIForRole();
+      }
+
       callGAS('checkStatus').then(res => {
         const statusEl = document.getElementById('connectionStatus');
         if(res.success) {
