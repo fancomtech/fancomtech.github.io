@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>อันตรายจากการใช้ยาและความเชื่อผิดในการใช้ยา</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/sarabun@latest/thai-400-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/sarabun@latest/thai-700-normal.css">
+<style>
+:root {
+  --primary: #2196F3;
+  --primary-dark: #1565C0;
+  --secondary: #4DB6AC;
+  --mint: #A8E6CF;
+  --orange: #FF9800;
+  --orange-light: #FFE0B2;
+  --danger: #E53935;
+  --success: #43A047;
+  --bg: #F5F9FF;
+  --card-bg: #FFFFFF;
+  --text: #263238;
+  --text-light: #546E7A;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.15);
+  --radius: 16px;
+  --transition: 0.3s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Progress Bar */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--mint));
+  z-index: 10000;
+  transition: width 0.3s ease;
+}
+
+/* Navigation */
+#nav {
+  position: fixed;
+  top: 4px;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  padding: 8px 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.3s ease;
+}
+
+#nav.hidden { transform: translateY(-100%); }
+
+.nav-brand {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: 'Sarabun', sans-serif;
+  transition: var(--transition);
+}
+
+.nav-links button:hover, .nav-links button.active {
+  background: var(--primary);
+  color: white;
+}
+
+#nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  #nav-toggle { display: block; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    padding: 8px;
+    box-shadow: var(--shadow);
+  }
+  .nav-links.open { display: flex; }
+  .nav-links button { text-align: left; padding: 8px 12px; font-size: 0.85rem; }
+}
+
+/* Sections */
+section {
+  min-height: 100vh;
+  padding: 80px 16px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: var(--text-light);
+  margin-bottom: 40px;
+  font-size: 1.05rem;
+}
+
+/* Hero Section */
+#hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #E3F2FD 0%, #E8F5E9 50%, #FFF3E0 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+}
+
+.hero-title {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.hero-tagline {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  color: var(--text-light);
+  margin-bottom: 32px;
+}
+
+.hero-objectives {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 24px auto;
+  max-width: 600px;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.hero-objectives h3 {
+  color: var(--primary);
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.hero-objectives li {
+  margin-bottom: 8px;
+  padding-left: 8px;
+  list-style: none;
+  position: relative;
+}
+
+.hero-objectives li::before {
+  content: '🎯';
+  position: absolute;
+  left: -24px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 50px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: 0 4px 15px rgba(33,150,243,0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(33,150,243,0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btn-secondary:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-orange {
+  background: linear-gradient(135deg, var(--orange), #F57C00);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255,152,0,0.3);
+}
+
+.btn-orange:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,152,0,0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success), #2E7D32);
+  color: white;
+}
+
+.btn-success:hover { transform: translateY(-2px); }
+
+/* Floating pills animation */
+.floating-pills {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pill {
+  position: absolute;
+  border-radius: 50px;
+  opacity: 0.6;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-20px) rotate(5deg); }
+  50% { transform: translateY(-10px) rotate(-3deg); }
+  75% { transform: translateY(-25px) rotate(3deg); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(10deg); }
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+
+.card.visible:hover {
+  transform: translateY(-4px);
+}
+
+/* Chapter cards */
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chapter-number {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.chapter-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+/* Illustration containers */
+.illustration {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(135deg, #E3F2FD, #E8F5E9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.illustration svg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+/* Misconception cards */
+.myth-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+
+.myth-card:hover { box-shadow: var(--shadow-hover); }
+
+.myth-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #FFEBEE, #FFF3E0);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.myth-label {
+  background: var(--danger);
+  color: white;
+  padding: 2px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.myth-text {
+  flex: 1;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.myth-toggle {
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+  color: var(--text-light);
+}
+
+.myth-card.open .myth-toggle { transform: rotate(180deg); }
+
+.myth-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+}
+
+.myth-card.open .myth-answer {
+  max-height: 500px;
+  padding: 20px;
+}
+
+.fact-label {
+  background: var(--success);
+  color: white;
+  padding: 2px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* Quiz buttons for myths */
+.myth-quiz {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.myth-quiz button {
+  padding: 8px 20px;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  background: white;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.myth-quiz button.correct {
+  border-color: var(--success);
+  background: #E8F5E9;
+  color: var(--success);
+}
+
+.myth-quiz button.wrong {
+  border-color: var(--danger);
+  background: #FFEBEE;
+  color: var(--danger);
+}
+
+.myth-quiz button:disabled { cursor: default; opacity: 0.7; }
+
+/* Drug label interactive */
+.label-container {
+  position: relative;
+  max-width: 500px;
+  margin: 20px auto;
+  background: white;
+  border: 3px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.label-hotspot {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  animation: pulse 2s infinite;
+  z-index: 5;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 2px 16px rgba(255,152,0,0.5); }
+}
+
+.label-info-popup {
+  display: none;
+  position: absolute;
+  background: white;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-hover);
+  z-index: 10;
+  max-width: 280px;
+  font-size: 0.9rem;
+}
+
+.label-info-popup.show { display: block; }
+
+/* Checklist */
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.checklist-item:hover { transform: translateX(4px); }
+
+.checklist-item.checked {
+  background: #E8F5E9;
+  border-left: 4px solid var(--success);
+}
+
+.checklist-box {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  font-size: 1.2rem;
+}
+
+.checklist-item.checked .checklist-box {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+/* Quiz Section */
+.quiz-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.quiz-question {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.quiz-question h4 {
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  font-size: 1.05rem;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-option {
+  padding: 12px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 0.95rem;
+  text-align: left;
+  background: white;
+}
+
+.quiz-option:hover { border-color: var(--primary); background: #E3F2FD; }
+.quiz-option.selected { border-color: var(--primary); background: #E3F2FD; }
+.quiz-option.correct-answer { border-color: var(--success); background: #E8F5E9; }
+.quiz-option.wrong-answer { border-color: var(--danger); background: #FFEBEE; }
+.quiz-option:disabled { cursor: default; }
+
+.quiz-explanation {
+  margin-top: 12px;
+  padding: 12px;
+  background: #FFF8E1;
+  border-radius: 8px;
+  border-left: 4px solid var(--orange);
+  font-size: 0.9rem;
+  display: none;
+}
+
+.quiz-explanation.show { display: block; }
+
+.quiz-result {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: none;
+}
+
+.quiz-score {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.quiz-grade {
+  font-size: 1.3rem;
+  margin: 12px 0;
+  font-weight: 700;
+}
+
+/* Video section */
+.video-card {
+  background: white;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.video-card iframe {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: none;
+}
+
+.video-info {
+  padding: 16px 20px;
+}
+
+.video-info h4 { color: var(--primary-dark); margin-bottom: 4px; }
+.video-info p { color: var(--text-light); font-size: 0.9rem; }
+.video-fallback {
+  padding: 40px;
+  text-align: center;
+  background: #F5F5F5;
+  color: var(--text-light);
+}
+
+/* Warning box */
+.warning-box {
+  background: #FFF3E0;
+  border: 2px solid var(--orange);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.warning-box .icon { font-size: 1.5rem; flex-shrink: 0; }
+
+/* Emergency box */
+.emergency-box {
+  background: linear-gradient(135deg, #FFEBEE, #FFF3E0);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 20px 0;
+}
+
+.emergency-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--danger);
+  text-align: center;
+  margin: 12px 0;
+}
+
+/* References */
+.ref-list {
+  list-style: none;
+  counter-reset: ref;
+}
+
+.ref-list li {
+  counter-increment: ref;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  position: relative;
+  padding-left: 50px;
+}
+
+.ref-list li::before {
+  content: counter(ref);
+  position: absolute;
+  left: 12px;
+  top: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ref-list a {
+  color: var(--primary);
+  word-break: break-all;
+}
+
+/* Back to top */
+#back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+#back-to-top.visible { opacity: 1; pointer-events: auto; }
+#back-to-top:hover { transform: translateY(-3px); background: var(--primary-dark); }
+
+/* Sound toggle */
+#sound-toggle {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #ddd;
+  font-size: 1.1rem;
+  cursor: pointer;
+  z-index: 999;
+  transition: var(--transition);
+}
+
+/* Grid layouts */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* Danger scenarios */
+.danger-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--danger);
+  transition: var(--transition);
+}
+
+.danger-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+
+.danger-card .number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Footer */
+footer {
+  background: linear-gradient(135deg, var(--primary-dark), #0D47A1);
+  color: white;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+footer a { color: var(--mint); }
+
+/* Scenario grid */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Offline notice */
+.offline-notice {
+  display: none;
+  background: #FFF3E0;
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  margin: 10px;
+  font-size: 0.85rem;
+}
+
+/* Tab system for quiz */
+.quiz-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.quiz-tab {
+  padding: 8px 20px;
+  border: 2px solid var(--primary);
+  border-radius: 25px;
+  background: white;
+  color: var(--primary);
+  font-family: 'Sarabun', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.quiz-tab.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* Scroll animations */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Additional responsive */
+@media (max-width: 480px) {
+  section { padding: 70px 12px 30px; }
+  .card { padding: 16px; }
+  .hero-buttons { flex-direction: column; align-items: center; }
+  .btn { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav id="nav">
+  <div class="nav-brand">
+    <span>💊</span>
+    <span>อันตรายจากการใช้ยา</span>
+  </div>
+  <button id="nav-toggle" aria-label="เมนู">☰</button>
+  <div class="nav-links" id="nav-links">
+    <button onclick="scrollToSection('hero')">หน้าแรก</button>
+    <button onclick="scrollToSection('chapter1')">บทที่ 1</button>
+    <button onclick="scrollToSection('chapter2')">บทที่ 2</button>
+    <button onclick="scrollToSection('chapter3')">บทที่ 3</button>
+    <button onclick="scrollToSection('chapter4')">บทที่ 4</button>
+    <button onclick="scrollToSection('chapter5')">บทที่ 5</button>
+    <button onclick="scrollToSection('chapter6')">บทที่ 6</button>
+    <button onclick="scrollToSection('videos')">วิดีโอ</button>
+    <button onclick="scrollToSection('quiz-section')">แบบทดสอบ</button>
+    <button onclick="scrollToSection('references')">อ้างอิง</button>
+  </div>
+</nav>
+
+<div class="offline-notice" id="offline-notice">
+  ⚠️ คุณกำลังใช้งานแบบออฟไลน์ ฟอนต์และเนื้อหาภายนอกอาจโหลดไม่ได้
+</div>
+
+<!-- HERO SECTION -->
+<section id="hero">
+  <div class="floating-pills" id="floating-pills"></div>
+  <div class="hero-content">
+    <div style="margin-bottom:20px;">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="55" fill="#E3F2FD" stroke="#2196F3" stroke-width="3"/>
+        <rect x="35" y="45" width="50" height="30" rx="8" fill="#4DB6AC" opacity="0.8"/>
+        <circle cx="45" cy="55" r="6" fill="white"/>
+        <circle cx="60" cy="55" r="6" fill="#FF9800"/>
+        <circle cx="75" cy="55" r="6" fill="white"/>
+        <rect x="40" y="65" width="40" height="4" rx="2" fill="white" opacity="0.6"/>
+        <path d="M55 35 L60 25 L65 35" stroke="#E53935" stroke-width="2" fill="none"/>
+        <circle cx="60" cy="22" r="4" fill="#E53935"/>
+        <text x="60" y="95" text-anchor="middle" font-size="10" fill="#1565C0" font-weight="bold">🏥 💊</text>
+      </svg>
+    </div>
+    <h1 class="hero-title">อันตรายจากการใช้ยา<br>และความเชื่อผิดในการใช้ยา</h1>
+    <p class="hero-tagline">รู้เท่าทันยา ใช้อย่างถูกต้อง ปลอดภัยต่อตัวเรา</p>
+    
+    <div class="hero-objectives">
+      <h3>🎯 วัตถุประสงค์การเรียนรู้</h3>
+      <ul>
+        <li>เข้าใจอันตรายจากการใช้ยาอย่างไม่ถูกต้อง</li>
+        <li>แยกแยะความเชื่อผิดออกจากข้อเท็จจริงเกี่ยวกับการใช้ยา</li>
+        <li>นำความรู้ไปใช้ในชีวิตประจำวันได้อย่างปลอดภัย</li>
+      </ul>
+    </div>
+
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="scrollToSection('chapter1')">📖 เริ่มเรียนรู้</button>
+      <button class="btn btn-secondary" onclick="scrollToSection('quiz-section')">📝 ทดสอบความรู้ก่อนเรียน</button>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 1 -->
+<section id="chapter1">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number">1</div>
+      <h2 class="section-title" style="margin:0;">ยาคืออะไร และทำไมต้องใช้อย่างระมัดระวัง</h2>
+    </div>
+    <p class="section-subtitle">เรียนรู้พื้นฐานเกี่ยวกับยาและเหตุผลที่ต้องใช้อย่างถูกต้อง</p>
+
+    <div class="illustration">
+      <svg viewBox="0 0 400 250" fill="none">
+        <!-- Medicine bottle -->
+        <rect x="50" y="80" width="60" height="100" rx="8" fill="#4DB6AC"/>
+        <rect x="55" y="60" width="50" height="25" rx="4" fill="#26A69A"/>
+        <rect x="60" y="100" width="40" height="50" rx="4" fill="white" opacity="0.8"/>
+        <text x="80" y="125" text-anchor="middle" font-size="8" fill="#263238">ยา</text>
+        <text x="80" y="138" text-anchor="middle" font-size="6" fill="#546E7A">100 mg</text>
+        <!-- Pills -->
+        <ellipse cx="170" cy="140" rx="20" ry="12" fill="#FF9800"/>
+        <line x1="170" y1="128" x2="170" y2="152" stroke="white" stroke-width="2"/>
+        <circle cx="210" cy="130" r="14" fill="#E53935" opacity="0.8"/>
+        <circle cx="210" cy="130" r="8" fill="white" opacity="0.3"/>
+        <ellipse cx="250" cy="145" rx="18" ry="10" fill="#2196F3"/>
+        <!-- Capsule -->
+        <rect x="290" y="100" width="50" height="22" rx="11" fill="#9C27B0"/>
+        <rect x="315" y="100" width="25" height="22" rx="0" fill="#E1BEE7"/>
+        <rect x="330" y="100" width="10" height="22" rx="11" fill="#E1BEE7"/>
+        <!-- Student -->
+        <circle cx="200" cy="60" r="20" fill="#FFE0B2"/>
+        <circle cx="193" cy="55" r="3" fill="#263238"/>
+        <circle cx="207" cy="55" r="3" fill="#263238"/>
+        <path d="M195 65 Q200 70 205 65" stroke="#263238" stroke-width="2" fill="none"/>
+        <rect x="185" y="80" width="30" height="35" rx="4" fill="#2196F3"/>
+        <!-- Question marks -->
+        <text x="140" y="70" font-size="20" fill="#FF9800" opacity="0.6">?</text>
+        <text x="260" y="80" font-size="16" fill="#4DB6AC" opacity="0.6">?</text>
+        <!-- Checkmark -->
+        <circle cx="340" cy="60" r="18" fill="#43A047" opacity="0.2"/>
+        <path d="M332 60 L338 66 L350 54" stroke="#43A047" stroke-width="3" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="grid-2">
+      <div class="card fade-in">
+        <h3 style="color:var(--primary);margin-bottom:12px;">💊 ยาคืออะไร?</h3>
+        <p>ยา คือ สารหรือส่วนผสมที่ใช้ในการวินิจฉัย รักษา บรรเทา หรือป้องกันโรค อาการเจ็บป่วย หรือความผิดปกติของร่างกาย</p>
+        <p style="margin-top:12px;"><strong>ประโยชน์ของยา:</strong> เมื่อใช้อย่างเหมาะสม ยาช่วยรักษาโรค บรรเทาอาการ และป้องกันภาวะสุขภาพที่รุนแรง</p>
+      </div>
+      <div class="card fade-in">
+        <h3 style="color:var(--danger);margin-bottom:12px;">⚠️ ทำไมต้องระวัง?</h3>
+        <p>ยามีคุณอนันต์แต่ก็มีโทษมหันต์ หากใช้ไม่ถูกต้อง อาจเกิด:</p>
+        <ul style="margin-top:8px;padding-left:20px;">
+          <li>ผลข้างเคียงที่ไม่พึงประสงค์</li>
+          <li>อาการแพ้ยา</li>
+          <li>ความเป็นพิษต่ออวัยวะ</li>
+          <li>ภาวะแทรกซ้อนที่รุนแรง</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card fade-in" style="margin-top:20px;">
+      <h3 style="color:var(--primary);margin-bottom:16px;">📋 ผลข้างเคียง vs อาการไม่พึงประสงค์ vs การแพ้ยา</h3>
+      <div class="grid-3">
+        <div style="padding:16px;background:#E3F2FD;border-radius:12px;">
+          <strong style="color:var(--primary);">ผลข้างเคียง</strong>
+          <p style="font-size:0.9rem;margin-top:8px;">อาการที่เกิดขึ้นร่วมกับการรักษา เช่น ยาแก้แพ้ทำให้ง่วงนอน เป็นผลที่คาดหมายได้</p>
+        </div>
+        <div style="padding:16px;background:#FFF3E0;border-radius:12px;">
+          <strong style="color:var(--orange);">อาการไม่พึงประสงค์</strong>
+          <p style="font-size:0.9rem;margin-top:8px;">ผลที่ไม่คาดหมายจากการใช้ยา อาจเกิดจากขนาดยา ปฏิกิริยาระหว่างยา หรือปัจจัยอื่น</p>
+        </div>
+        <div style="padding:16px;background:#FFEBEE;border-radius:12px;">
+          <strong style="color:var(--danger);">การแพ้ยา</strong>
+          <p style="font-size:0.9rem;margin-top:8px;">ปฏิกิริยาของระบบภูมิคุ้มกันต่อยา เช่น ลมพิษ หายใจลำบาก อาจรุนแรงถึงชีวิต</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in" style="margin-top:20px;">
+      <h3 style="color:var(--orange);margin-bottom:16px;">🔍 ปัจจัยที่ทำให้เกิดอันตรายจากยา</h3>
+      <div class="grid-2">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FFF8E1;border-radius:8px;">
+          <span style="font-size:1.5rem;">❌</span>
+          <span>ใช้ผิดขนาด (มากหรือน้อยเกินไป)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FFF8E1;border-radius:8px;">
+          <span style="font-size:1.5rem;">❌</span>
+          <span>ใช้ผิดวิธี (ผิดเส้นทางหรือผิดเวลา)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FFF8E1;border-radius:8px;">
+          <span style="font-size:1.5rem;">❌</span>
+          <span>ใช้ยาซ้ำซ้อน (มียาเดียวกันหลายตัว)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FFF8E1;border-radius:8px;">
+          <span style="font-size:1.5rem;">❌</span>
+          <span>ใช้ยาที่ไม่เหมาะกับตนเอง</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 2 -->
+<section id="chapter2">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number" style="background:linear-gradient(135deg,#E53935,#FF5722);">2</div>
+      <h2 class="section-title" style="margin:0;">อันตรายจากการใช้ยาผิดวิธี</h2>
+    </div>
+    <p class="section-subtitle">6 สถานการณ์อันตรายที่ควรหลีกเลี่ยง</p>
+
+    <div class="illustration">
+      <svg viewBox="0 0 400 200" fill="none">
+        <!-- Warning sign -->
+        <polygon points="200,20 230,80 170,80" fill="#FF9800" stroke="#F57C00" stroke-width="2"/>
+        <text x="200" y="68" text-anchor="middle" font-size="24" font-weight="bold" fill="white">!</text>
+        <!-- Danger icons -->
+        <circle cx="60" cy="130" r="30" fill="#FFEBEE"/>
+        <text x="60" y="138" text-anchor="middle" font-size="28">💊</text>
+        <text x="60" y="175" text-anchor="middle" font-size="9" fill="#E53935">เกินขนาด</text>
+        
+        <circle cx="140" cy="130" r="30" fill="#FFEBEE"/>
+        <text x="140" y="138" text-anchor="middle" font-size="28">🔄</text>
+        <text x="140" y="175" text-anchor="middle" font-size="9" fill="#E53935">ผิดชนิด</text>
+        
+        <circle cx="220" cy="130" r="30" fill="#FFEBEE"/>
+        <text x="220" y="138" text-anchor="middle" font-size="28">👥</text>
+        <text x="220" y="175" text-anchor="middle" font-size="9" fill="#E53935">ใช้ของคนอื่น</text>
+        
+        <circle cx="300" cy="130" r="30" fill="#FFEBEE"/>
+        <text x="300" y="138" text-anchor="middle" font-size="28">📅</text>
+        <text x="300" y="175" text-anchor="middle" font-size="9" fill="#E53935">หมดอายุ</text>
+        
+        <circle cx="370" cy="130" r="25" fill="#FFEBEE"/>
+        <text x="370" y="138" text-anchor="middle" font-size="24">⚠️</text>
+      </svg>
+    </div>
+
+    <div class="scenario-grid">
+      <div class="danger-card fade-in">
+        <div class="number">1</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">รับประทานยาเกินขนาด</h4>
+        <p>การกินยามากกว่าที่กำหนดอาจทำให้ตับ ไต หรืออวัยวะสำคัญถูกทำลาย เกิดอาการคลื่นไส้ อาเจียน เวียนศีรษะ หรือในกรณีรุนแรงอาจถึงแก่ชีวิต</p>
+      </div>
+      <div class="danger-card fade-in">
+        <div class="number">2</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">ใช้ยาผิดชนิดหรือผิดวิธี</h4>
+        <p>ใช้ยาทาแทนยากิน ใช้ยาหยอดตาแทนยาหยอดหู หรือนำยาสำหรับสัตว์มาใช้กับคน อาจทำให้เกิดอันตรายร้ายแรง</p>
+      </div>
+      <div class="danger-card fade-in">
+        <div class="number">3</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">ใช้ยาของบุคคลอื่น</h4>
+        <p>แต่ละคนมีประวัติแพ้ยา โรคประจำตัว และสภาพร่างกายแตกต่างกัน ยาที่ปลอดภัยสำหรับคนหนึ่งอาจเป็นอันตรายสำหรับอีกคน</p>
+      </div>
+      <div class="danger-card fade-in">
+        <div class="number">4</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">ใช้ยาหลายชนิดที่มีตัวยาซ้ำกัน</h4>
+        <p>ยาหลายชนิดอาจมีตัวยาสำคัญเดียวกัน การกินพร้อมกันโดยไม่ทราบอาจทำให้ได้รับยาเกินขนาดโดยไม่รู้ตัว เช่น พาราเซตามอลที่ผสมในยาหลายชนิด</p>
+      </div>
+      <div class="danger-card fade-in">
+        <div class="number">5</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">ใช้ยาหมดอายุหรือเก็บรักษาไม่เหมาะสม</h4>
+        <p>ยาที่หมดอายุอาจเสื่อมสภาพ ไม่มีประสิทธิภาพ หรือเปลี่ยนเป็นสารที่เป็นอันตราย ยาที่เก็บในที่ร้อนชื้นก็อาจเสื่อมคุณภาพได้</p>
+      </div>
+      <div class="danger-card fade-in">
+        <div class="number">6</div>
+        <h4 style="color:var(--danger);margin-bottom:8px;">ใช้ยาร่วมกับอาหารหรือเครื่องดื่มโดยไม่ตรวจสอบ</h4>
+        <p>ยาบางชนิดทำปฏิกิริยากับอาหาร เครื่องดื่ม หรือผลิตภัณฑ์อื่น เช่น เกรปฟรุต นม แอลกอฮอล์ อาจเพิ่มหรือลดฤทธิ์ยา หรือทำให้เกิดผลข้างเคียงที่รุนแรง</p>
+      </div>
+    </div>
+
+    <div class="warning-box fade-in" style="margin-top:24px;">
+      <span class="icon">⚠️</span>
+      <div>
+        <strong>ข้อควรจำ:</strong> ผลที่อาจเกิดขึ้นขึ้นอยู่กับชนิดยา ปริมาณ และสภาพร่างกายของแต่ละคน หากสงสัยว่าได้รับยาอย่างไม่ถูกต้อง ควรรีบปรึกษาแพทย์หรือเภสัชกร
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 3 -->
+<section id="chapter3">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number" style="background:linear-gradient(135deg,#FF9800,#F57C00);">3</div>
+      <h2 class="section-title" style="margin:0;">ความเชื่อผิดในการใช้ยา</h2>
+    </div>
+    <p class="section-subtitle">กดเลือก "จริง" หรือ "เท็จ" ก่อนดูคำเฉลย</p>
+
+    <div class="illustration">
+      <svg viewBox="0 0 400 180" fill="none">
+        <!-- VS design -->
+        <rect x="20" y="20" width="170" height="140" rx="12" fill="#FFEBEE"/>
+        <text x="105" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#E53935">❌ ความเชื่อผิด</text>
+        <text x="105" y="85" text-anchor="middle" font-size="10" fill="#546E7A">ยาปฏิชีวนะ</text>
+        <text x="105" y="100" text-anchor="middle" font-size="10" fill="#546E7A">รักษาหวัดได้</text>
+        <text x="105" y="130" text-anchor="middle" font-size="30">🤔</text>
+        
+        <circle cx="200" cy="90" r="25" fill="#FF9800"/>
+        <text x="200" y="97" text-anchor="middle" font-size="16" font-weight="bold" fill="white">VS</text>
+        
+        <rect x="210" y="20" width="170" height="140" rx="12" fill="#E8F5E9"/>
+        <text x="295" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#43A047">✅ ข้อเท็จจริง</text>
+        <text x="295" y="85" text-anchor="middle" font-size="10" fill="#546E7A">รักษาการติดเชื้อ</text>
+        <text x="295" y="100" text-anchor="middle" font-size="10" fill="#546E7A">แบคทีเรียเท่านั้น</text>
+        <text x="295" y="130" text-anchor="middle" font-size="30">💡</text>
+      </svg>
+    </div>
+
+    <div id="myths-container"></div>
+  </div>
+</section>
+
+<!-- CHAPTER 4 -->
+<section id="chapter4">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number" style="background:linear-gradient(135deg,#9C27B0,#7B1FA2);">4</div>
+      <h2 class="section-title" style="margin:0;">อ่านฉลากยาให้เป็น</h2>
+    </div>
+    <p class="section-subtitle">กดที่จุดสีส้มเพื่อเรียนรู้รายละเอียดแต่ละส่วน</p>
+
+    <div class="label-container" id="drug-label">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="background:#E3F2FD;padding:12px;border-radius:8px;">
+          <strong style="color:var(--primary-dark);font-size:1.1rem;">ชื่อยา: พาราเซตามอล (Paracetamol)</strong>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="background:#F5F5F5;padding:12px;border-radius:8px;">
+          <strong>ตัวยาสำคัญ:</strong> Paracetamol 500 mg
+        </div>
+        <div style="background:#F5F5F5;padding:12px;border-radius:8px;">
+          <strong>รูปแบบ:</strong> ยาเม็ด
+        </div>
+      </div>
+
+      <div style="background:#FFF8E1;padding:12px;border-radius:8px;margin-bottom:12px;">
+        <strong>⚠️ ขนาดยาและวิธีใช้:</strong> รับประทานครั้งละ 1-2 เม็ด ทุก 4-6 ชั่วโมง เมื่อจำเป็น ไม่เกิน 8 เม็ดต่อวัน
+      </div>
+
+      <div style="background:#E8F5E9;padding:12px;border-radius:8px;margin-bottom:12px;">
+        <strong>✅ ข้อบ่งใช้:</strong> บรรเทาอาการปวดศีรษะ ปวดฟัน ปวดกล้ามเนื้อ ลดไข้
+      </div>
+
+      <div style="background:#FFEBEE;padding:12px;border-radius:8px;margin-bottom:12px;">
+        <strong>🚫 คำเตือน:</strong> ห้ามใช้ในผู้ที่แพ้ยานี้ ผู้ที่มีโรคตับควรปรึกษาแพทย์ก่อนใช้ ไม่ดื่มแอลกอฮอล์ขณะใช้ยา
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div style="background:#E3F2FD;padding:12px;border-radius:8px;">
+          <strong>📅 วันหมดอายุ:</strong> 05/2026
+        </div>
+        <div style="background:#E3F2FD;padding:12px;border-radius:8px;">
+          <strong>🌡️ วิธีเก็บรักษา:</strong> อุณหภูมิไม่เกิน 30°C เก็บให้พ้นแสง
+        </div>
+      </div>
+
+      <div style="background:#F3E5F5;padding:12px;border-radius:8px;">
+        <strong>👤 ชื่อผู้ใช้ยา:</strong> (ระบุเฉพาะยาที่จ่ายตามใบสั่งแพทย์)
+      </div>
+    </div>
+
+    <div class="warning-box fade-in">
+      <span class="icon">⚠️</span>
+      <div>
+        <strong>สำคัญ:</strong> ไม่ควรเดาวิธีใช้จากสี รูปร่าง หรือขนาดของเม็ดยา และไม่ควรใช้ยาที่ไม่ทราบชื่อหรือไม่มีข้อมูลที่ตรวจสอบได้
+      </div>
+    </div>
+
+    <div class="card fade-in" style="margin-top:20px;">
+      <h3 style="color:var(--primary);margin-bottom:12px;">📝 สิ่งที่ควรดูบนฉลากยา</h3>
+      <div class="grid-2">
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">①</span>
+          <span><strong>ชื่อยาและตัวยาสำคัญ</strong> — ตรวจสอบว่าตรงกับที่แพทย์สั่ง</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">②</span>
+          <span><strong>ขนาดยาและวิธีใช้</strong> — กินเท่าไหร่ กี่ครั้ง ต่อวัน</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">③</span>
+          <span><strong>ข้อบ่งใช้</strong> — ยานี้ใช้รักษาอะไร</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">④</span>
+          <span><strong>คำเตือน</strong> — ข้อห้ามใช้และข้อควรระวัง</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">⑤</span>
+          <span><strong>วันหมดอายุ</strong> — อย่าใช้ยาที่หมดอายุแล้ว</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;padding:8px;">
+          <span style="color:var(--primary);font-size:1.2rem;">⑥</span>
+          <span><strong>วิธีเก็บรักษา</strong> — เก็บให้ถูกต้องเพื่อคงคุณภาพยา</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 5 -->
+<section id="chapter5">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number" style="background:linear-gradient(135deg,#43A047,#2E7D32);">5</div>
+      <h2 class="section-title" style="margin:0;">ใช้ยาอย่างปลอดภัยในชีวิตประจำวัน</h2>
+    </div>
+    <p class="section-subtitle">กดเพื่อทำเครื่องหมายรายการตรวจสอบ 7 ข้อ</p>
+
+    <div class="illustration">
+      <svg viewBox="0 0 400 180" fill="none">
+        <!-- Safe medicine use illustration -->
+        <rect x="100" y="30" width="200" height="130" rx="12" fill="#E8F5E9"/>
+        <!-- Cabinet -->
+        <rect x="130" y="50" width="60" height="80" rx="4" fill="#A5D6A7"/>
+        <rect x="135" y="55" width="50" height="35" rx="2" fill="white"/>
+        <rect x="135" y="95" width="50" height="30" rx="2" fill="white"/>
+        <circle cx="160" cy="72" r="3" fill="#43A047"/>
+        <circle cx="160" cy="110" r="3" fill="#43A047"/>
+        <!-- Lock -->
+        <rect x="180" y="80" width="15" height="12" rx="2" fill="#FF9800"/>
+        <path d="M183 80 L183 75 Q187 70 192 75 L192 80" stroke="#FF9800" stroke-width="2" fill="none"/>
+        <!-- Checkmark list -->
+        <rect x="220" y="50" width="60" height="80" rx="4" fill="white"/>
+        <line x1="230" y1="65" x2="270" y2="65" stroke="#E0E0E0" stroke-width="2"/>
+        <line x1="230" y1="80" x2="270" y2="80" stroke="#E0E0E0" stroke-width="2"/>
+        <line x1="230" y1="95" x2="270" y2="95" stroke="#E0E0E0" stroke-width="2"/>
+        <line x1="230" y1="110" x2="270" y2="110" stroke="#E0E0E0" stroke-width="2"/>
+        <path d="M225 63 L228 66 L233 60" stroke="#43A047" stroke-width="2" fill="none"/>
+        <path d="M225 78 L228 81 L233 75" stroke="#43A047" stroke-width="2" fill="none"/>
+        <path d="M225 93 L228 96 L233 90" stroke="#43A047" stroke-width="2" fill="none"/>
+        <!-- Pharmacist -->
+        <circle cx="60" cy="90" r="20" fill="#FFE0B2"/>
+        <circle cx="54" cy="85" r="2.5" fill="#263238"/>
+        <circle cx="66" cy="85" r="2.5" fill="#263238"/>
+        <path d="M55 95 Q60 100 65 95" stroke="#263238" stroke-width="1.5" fill="none"/>
+        <rect x="45" y="110" width="30" height="40" rx="4" fill="white" stroke="#4DB6AC" stroke-width="2"/>
+        <text x="60" y="135" text-anchor="middle" font-size="8" fill="#4DB6AC">Rx</text>
+      </svg>
+    </div>
+
+    <div id="checklist-container">
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>1. ใช้ยาให้ถูกคน ถูกชนิด ถูกขนาด ถูกวิธี และถูกเวลา</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">ปฏิบัติตามคำแนะนำที่ได้รับจากแพทย์ เภสัชกร หรือเอกสารกำกับยาอย่างเคร่งครัด</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>2. อ่านฉลากและเอกสารกำกับยาก่อนใช้</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">ตรวจสอบชื่อยา ขนาดยา วิธีใช้ คำเตือน และวันหมดอายุก่อนทุกครั้ง</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>3. แจ้งประวัติแพ้ยา โรคประจำตัว และยาที่ใช้อยู่</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">แจ้งแพทย์หรือเภสัชกรทุกครั้งก่อนรับยา รวมถึงอาหารเสริมและผลิตภัณฑ์สมุนไพรที่ใช้</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>4. ไม่แบ่งยาให้ผู้อื่น</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">ยาที่จ่ายให้เรานั้นเหมาะสำหรับเราเท่านั้น การแบ่งยาให้คนอื่นอาจเป็นอันตราย</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>5. ไม่ซื้อยาปฏิชีวนะหรือยาควบคุมมาใช้เอง</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">ยาเหล่านี้ต้องใช้ภายใต้คำแนะนำของแพทย์หรือเภสัชกรเท่านั้น</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>6. เก็บยาให้พ้นมือเด็กและตามเงื่อนไขการเก็บรักษา</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">เก็บในที่แห้ง เย็นพ้นแสงแดด ตรวจสอบอุณหภูมิการเก็บรักษาบนฉลาก</p>
+        </div>
+      </div>
+      <div class="checklist-item" onclick="toggleChecklist(this)">
+        <div class="checklist-box"></div>
+        <div>
+          <strong>7. หากสงสัยว่าเกิดอาการไม่พึงประสงค์ ให้หยุดยาและปรึกษาแพทย์</strong>
+          <p style="font-size:0.9rem;color:var(--text-light);margin-top:4px;">หยุดการใช้ยาที่สงสัยตามความเหมาะสมและรีบขอคำแนะนำจากบุคลากรทางการแพทย์ โดยยาที่จำเป็นต่อชีวิตไม่ควรหยุดเองโดยไม่มีคำแนะนำ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 6 -->
+<section id="chapter6">
+  <div class="fade-in">
+    <div class="chapter-header" style="justify-content:center;">
+      <div class="chapter-number" style="background:linear-gradient(135deg,#E53935,#C62828);">6</div>
+      <h2 class="section-title" style="margin:0;">เมื่อเกิดเหตุฉุกเฉินจากการใช้ยา</h2>
+    </div>
+    <p class="section-subtitle">สิ่งที่ควรทำเมื่อสงสัยว่าเกิดอันตรายจากยา</p>
+
+    <div class="illustration">
+      <svg viewBox="0 0 400 180" fill="none">
+        <!-- Emergency scene -->
+        <rect x="50" y="20" width="300" height="140" rx="12" fill="#FFEBEE"/>
+        <!-- Phone -->
+        <rect x="160" y="40" width="40" height="70" rx="6" fill="#263238"/>
+        <rect x="164" y="48" width="32" height="50" rx="2" fill="#4FC3F7"/>
+        <text x="180" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="white">1669</text>
+        <circle cx="180" cy="103" r="4" fill="#43A047"/>
+        <!-- Ambulance cross -->
+        <rect x="80" y="60" width="40" height="40" rx="4" fill="white"/>
+        <rect x="95" y="65" width="10" height="30" rx="2" fill="#E53935"/>
+        <rect x="85" y="75" width="30" height="10" rx="2" fill="#E53935"/>
+        <!-- Medicine bottle kept as evidence -->
+        <rect x="250" y="55" width="35" height="50" rx="4" fill="#4DB6AC"/>
+        <rect x="255" y="65" width="25" height="25" rx="2" fill="white" opacity="0.8"/>
+        <text x="267" y="82" text-anchor="middle" font-size="7" fill="#263238">หลักฐาน</text>
+        <!-- Arrow -->
+        <path d="M220 85 L245 85" stroke="#FF9800" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+        <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#FF9800"/></marker></defs>
+        <!-- Person helping -->
+        <circle cx="330" cy="70" r="15" fill="#FFE0B2"/>
+        <rect x="320" y="85" width="20" height="30" rx="3" fill="white" stroke="#E53935" stroke-width="2"/>
+        <text x="330" y="105" text-anchor="middle" font-size="8" fill="#E53935">+</text>
+      </svg>
+    </div>
+
+    <div class="emergency-box fade-in">
+      <h3 style="color:var(--danger);text-align:center;margin-bottom:12px;">🚨 เมื่อเกิดเหตุฉุกเฉิน</h3>
+      <div class="emergency-number">📞 1669</div>
+      <p style="text-align:center;margin-bottom:16px;">สายด่วนฉุกเฉินทางการแพทย์ (ในประเทศไทย)</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;background:white;padding:12px;border-radius:8px;">
+          <span style="font-size:1.3rem;">🆘</span>
+          <div>
+            <strong>หากสงสัยว่ากินยาเกินขนาด ใช้ยาผิดชนิด หรือเกิดอาการแพ้รุนแรง</strong>
+            <p style="font-size:0.9rem;color:var(--text-light);">ให้ขอความช่วยเหลือทันที</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;background:white;padding:12px;border-radius:8px;">
+          <span style="font-size:1.3rem;">🫁</span>
+          <div>
+            <strong>หากหายใจลำบาก หน้าหรือลิ้นบวม หมดสติ หรือมีอาการรุนแรง</strong>
+            <p style="font-size:0.9rem;color:var(--text-light);">โทร 1669 ทันที</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;background:white;padding:12px;border-radius:8px;">
+          <span style="font-size:1.3rem;">📦</span>
+          <div>
+            <strong>เก็บบรรจุภัณฑ์ยาและข้อมูลเกี่ยวกับยาไว้</strong>
+            <p style="font-size:0.9rem;color:var(--text-light);">บันทึกชนิดยา ปริมาณ และเวลาที่ใช้ไว้ให้บุคลากรทางการแพทย์</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;background:white;padding:12px;border-radius:8px;">
+          <span style="font-size:1.3rem;">🚫</span>
+          <div>
+            <strong>ห้ามทำให้อาเจียนหรือใช้วิธีแก้พิษเอง</strong>
+            <p style="font-size:0.9rem;color:var(--text-light);">โดยไม่มีคำแนะนำจากผู้เชี่ยวชาญ</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in" style="margin-top:20px;border-left:4px solid var(--primary);">
+      <h3 style="color:var(--primary);margin-bottom:8px;">📞 ศูนย์พิษวิทยารามาธิบดี</h3>
+      <p style="font-size:1.5rem;font-weight:700;color:var(--primary);">โทร. 1367</p>
+      <p style="font-size:0.9rem;color:var(--text-light);margin-top:8px;">เพื่อขอคำปรึกษาเรื่องพิษจากยา</p>
+      <p style="font-size:0.8rem;color:var(--orange);margin-top:8px;">⚠️ กรุณาตรวจสอบช่องทางติดต่อปัจจุบันก่อนนำสื่อไปเผยแพร่</p>
+    </div>
+
+    <div class="warning-box fade-in" style="margin-top:20px;background:#E3F2FD;border-color:var(--primary);">
+      <span class="icon">ℹ️</span>
+      <div>
+        <strong>ข้อความเตือน:</strong> สื่อเพื่อการศึกษานี้ไม่ได้ใช้แทนการวินิจฉัยหรือคำแนะนำเฉพาะบุคคลจากแพทย์หรือเภสัชกร หากมีข้อสงสัยเกี่ยวกับการใช้ยา กรุณาปรึกษาบุคลากรทางการแพทย์
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEOS SECTION -->
+<section id="videos">
+  <div class="fade-in">
+    <h2 class="section-title">🎬 รับชมวิดีโอเพื่อความปลอดภัยในการใช้ยา</h2>
+    <p class="section-subtitle">วิดีโอจากหน่วยงานทางการเพื่อเสริมความรู้</p>
+
+    <div class="grid-2">
+      <div class="video-card fade-in">
+        <div class="video-fallback" id="video1-fallback">
+          <p style="font-size:2rem;margin-bottom:12px;">🎥</p>
+          <p><strong>วิดีโอที่ 1: การใช้ยาอย่างสมเหตุผล</strong></p>
+          <p style="margin-top:8px;font-size:0.9rem;">แหล่งที่มา: สำนักงานคณะกรรมการอาหารและยา (อย.)</p>
+          <p style="margin-top:8px;font-size:0.85rem;color:var(--text-light);">
+            ผู้เรียนจะได้รับรู้หลักการใช้ยาอย่างสมเหตุผล (Rational Drug Use) และความสำคัญของการใช้ยาอย่างถูกต้อง
+          </p>
+          <a href="https://ndi.fda.moph.go.th/drug_use/" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">
+            🔗 ค้นหาวิดีโอจาก อย.
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card fade-in">
+        <div class="video-fallback" id="video2-fallback">
+          <p style="font-size:2rem;margin-bottom:12px;">🎥</p>
+          <p><strong>วิดีโอที่ 2: การอ่านฉลากยาและการใช้ยาอย่างปลอดภัย</strong></p>
+          <p style="margin-top:8px;font-size:0.9rem;">แหล่งที่มา: กองพัฒนาศักยภาพผู้บริโภค อย.</p>
+          <p style="margin-top:8px;font-size:0.85rem;color:var(--text-light);">
+            ผู้เรียนจะเรียนรู้วิธีอ่านฉลากยาอย่างถูกต้อง และเข้าใจข้อมูลสำคัญที่ต้องตรวจสอบก่อนใช้ยาทุกครั้ง
+          </p>
+          <a href="https://dis.fda.moph.go.th/" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">
+            🔗 ค้นหาวิดีโอจาก อย.
+          </a>
+        </div>
+      </div>
+
+      <div class="video-card fade-in">
+        <div class="video-fallback" id="video3-fallback">
+          <p style="font-size:2rem;margin-bottom:12px;">🎥</p>
+          <p><strong>วิดีโอที่ 3: อันตรายจากการใช้ยาปฏิชีวนะอย่างไม่เหมาะสม</strong></p>
+          <p style="margin-top:8px;font-size:0.9rem;">แหล่งที่มา: กรมควบคุมโรค กระทรวงสาธารณสุข</p>
+          <p style="margin-top:8px;font-size:0.85rem;color:var(--text-light);">
+            ผู้เรียนจะเข้าใจอันตรายจากการใช้ยาปฏิชีวนะผิดวิธี และปัญหาเชื้อดื้อยาที่ส่งผลต่อสาธารณสุข
+          </p>
+          <a href="https://www.ddc.moph.go.th/disease_detail.php?d=76" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:12px;font-size:0.85rem;padding:8px 16px;">
+            🔗 ค้นหาวิดีโอจาก กรมควบคุมโรค
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning-box fade-in" style="margin-top:20px;">
+      <span class="icon">💡</span>
+      <div>
+        <strong>หมายเหตุ:</strong> วิดีโออาจไม่สามารถเล่นได้หากไม่มีการเชื่อมต่ออินเทอร์เน็ต หรือหากวิดีโอต้นทางถูกลบ/เปลี่ยนแปลง กรุณาค้นหาจากแหล่งข้อมูลทางการตามลิงก์ที่ให้ไว้
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ SECTION -->
+<section id="quiz-section">
+  <div class="fade-in">
+    <h2 class="section-title">📝 แบบทดสอบความรู้</h2>
+    <p class="section-subtitle">ทดสอบความเข้าใจก่อนและหลังการเรียนรู้</p>
+
+    <div class="quiz-tabs">
+      <button class="quiz-tab active" onclick="switchQuizTab('pre')" id="tab-pre">📋 ทดสอบก่อนเรียน</button>
+      <button class="quiz-tab" onclick="switchQuizTab('post')" id="tab-post">📋 ทดสอบหลังเรียน</button>
+    </div>
+
+    <div class="quiz-container" id="quiz-container"></div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <button class="btn btn-primary" onclick="submitQuiz()" id="submit-quiz-btn">📊 ส่งคำตอบ</button>
+      <button class="btn btn-orange" onclick="resetQuiz()" id="reset-quiz-btn" style="display:none;">🔄 ทำแบบทดสอบใหม่</button>
+    </div>
+
+    <div class="quiz-result" id="quiz-result">
+      <div class="quiz-score" id="quiz-score">0%</div>
+      <div class="quiz-grade" id="quiz-grade"></div>
+      <p id="quiz-summary" style="color:var(--text-light);margin-top:12px;"></p>
+      <button class="btn btn-primary" onclick="resetQuiz()" style="margin-top:20px;">🔄 ทำแบบทดสอบใหม่</button>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCES -->
+<section id="references">
+  <div class="fade-in">
+    <h2 class="section-title">📚 แหล่งข้อมูลอ้างอิงและศึกษาค้นคว้าเพิ่มเติม</h2>
+    <p class="section-subtitle">ข้อมูลจากหน่วยงานที่น่าเชื่อถือ</p>
+
+    <ol class="ref-list">
+      <li>
+        <strong>สำนักงานคณะกรรมการอาหารและยา (อย.)</strong> — ฐานข้อมูลการใช้ยาอย่างสมเหตุผล<br>
+        <a href="https://ndi.fda.moph.go.th/drug_use/" target="_blank" rel="noopener">https://ndi.fda.moph.go.th/drug_use/</a>
+      </li>
+      <li>
+        <strong>สำนักงานคณะกรรมการอาหารและยา (อย.)</strong> — กองพัฒนาศักยภาพผู้บริโภค: สื่อความรู้เรื่องฉลากยา<br>
+        <a href="https://dis.fda.moph.go.th/" target="_blank" rel="noopener">https://dis.fda.moph.go.th/</a>
+      </li>
+      <li>
+        <strong>กรมควบคุมโรค กระทรวงสาธารณสุข</strong> — ความรู้เรื่องพิษจากยารักษาโรค<br>
+        <a href="https://www.ddc.moph.go.th/disease_detail.php?d=76" target="_blank" rel="noopener">https://www.ddc.moph.go.th/disease_detail.php?d=76</a>
+      </li>
+      <li>
+        <strong>องค์การอนามัยโลก (WHO)</strong> — Medication Without Harm<br>
+        <a href="https://www.who.int/initiatives/medication-without-harm" target="_blank" rel="noopener">https://www.who.int/initiatives/medication-without-harm</a>
+      </li>
+      <li>
+        <strong>Centers for Disease Control and Prevention (CDC)</strong> — Medication Safety and Your Health<br>
+        <a href="https://www.cdc.gov/medication-safety/about/index.html" target="_blank" rel="noopener">https://www.cdc.gov/medication-safety/about/index.html</a>
+      </li>
+      <li>
+        <strong>สำนักงานคณะกรรมการอาหารและยา (อย.)</strong> — ข้อมูลและสื่อเฝ้าระวังความปลอดภัยด้านยา<br>
+        <a href="https://drug.fda.moph.go.th/surveillance/" target="_blank" rel="noopener">https://drug.fda.moph.go.th/surveillance/</a>
+      </li>
+    </ol>
+
+    <div class="warning-box fade-in" style="margin-top:20px;">
+      <span class="icon">📅</span>
+      <div>
+        <strong>วันที่เข้าถึงข้อมูล:</strong> มกราคม 2568<br>
+        <strong>หมายเหตุสำหรับครู:</strong> กรุณาตรวจสอบการปรับปรุงข้อมูลและลิงก์ก่อนใช้สอนทุกครั้ง ลิงก์อาจเปลี่ยนแปลงได้ตามการอัปเดตของหน่วยงานต้นทาง
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="max-width:800px;margin:0 auto;">
+    <h3 style="margin-bottom:12px;">💊 อันตรายจากการใช้ยาและความเชื่อผิดในการใช้ยา</h3>
+    <p style="opacity:0.8;margin-bottom:16px;">สื่อการเรียนรู้เพื่อการศึกษา เรื่อง การใช้ยาอย่างปลอดภัย</p>
+    <p style="font-size:0.85rem;opacity:0.7;">
+      สื่อนี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ได้ใช้แทนคำแนะนำทางการแพทย์<br>
+      หากมีข้อสงสัยเกี่ยวกับการใช้ยา กรุณาปรึกษาแพทย์หรือเภสัชกร
+    </p>
+    <p style="font-size:0.8rem;opacity:0.6;margin-top:16px;">
+      © 2568 — สื่อการเรียนรู้แบบ Interactive
+    </p>
+  </div>
+</footer>
+
+<!-- Back to top button -->
+<button id="back-to-top" onclick="scrollToTop()" aria-label="กลับไปด้านบน">↑</button>
+
+<!-- Sound toggle -->
+<button id="sound-toggle" onclick="toggleSound()" aria-label="เปิด/ปิดเสียง">🔊</button>
+
+<script>
+// ============ DATA ============
+const myths = [
+  {
+    myth: "ยาปฏิชีวนะรักษาโรคหวัดได้ทุกกรณี",
+    fact: "ยาปฏิชีวนะใช้รักษาการติดเชื้อแบคทีเรียบางชนิด ไม่รักษาโรคหวัดที่เกิดจากไวรัส",
+    answer: false
+  },
+  {
+    myth: "เมื่ออาการดีขึ้นแล้ว สามารถหยุดยาที่แพทย์สั่งได้เองทุกชนิด",
+    fact: "ต้องปฏิบัติตามคำสั่งของแพทย์หรือเภสัชกร ไม่ปรับหรือหยุดยาเองโดยไม่ตรวจสอบคำแนะนำเฉพาะของยา",
+    answer: false
+  },
+  {
+    myth: "ยาสมุนไพรหรือยาจากธรรมชาติปลอดภัยเสมอ",
+    fact: "ผลิตภัณฑ์จากธรรมชาติอาจมีผลข้างเคียง ปฏิกิริยากับยาอื่น หรือมีสารปนเปื้อน",
+    answer: false
+  },
+  {
+    myth: "หากยาไม่ออกฤทธิ์เร็ว สามารถเพิ่มขนาดยาเองได้",
+    fact: "การเพิ่มขนาดยาเองอาจทำให้เกิดพิษจากยา",
+    answer: false
+  },
+  {
+    myth: "ยาที่เพื่อนใช้แล้วได้ผล สามารถนำมาใช้กับตนเองได้",
+    fact: "ผู้ใช้ยาแต่ละคนมีโรค ประวัติแพ้ยา และข้อห้ามใช้แตกต่างกัน",
+    answer: false
+  },
+  {
+    myth: "ยาแก้อักเสบและยาปฏิชีวนะเป็นยาชนิดเดียวกัน",
+    fact: "คำว่า \"ยาแก้อักเสบ\" อาจถูกใช้เรียกยาหลายกลุ่ม ต้องตรวจสอบชื่อยาและวัตถุประสงค์การใช้ให้ชัดเจน ยาปฏิชีวนะใช้กับการติดเชื้อแบคทีเรียที่เหมาะสม",
+    answer: false
+  },
+  {
+    myth: "ยาที่ซื้อได้โดยไม่ต้องมีใบสั่งแพทย์ไม่มีอันตราย",
+    fact: "ยาที่จำหน่ายทั่วไปก็อาจทำให้เกิดผลข้างเคียง แพ้ยา หรือใช้เกินขนาดได้",
+    answer: false
+  },
+  {
+    myth: "หากลืมกินยา ให้กินสองเท่าในครั้งถัดไปเสมอ",
+    fact: "ไม่ควรเพิ่มยาเป็นสองเท่าโดยอัตโนมัติ ควรตรวจสอบเอกสารกำกับยา หรือสอบถามเภสัชกรตามชนิดยานั้น",
+    answer: false
+  }
+];
+
+const quizQuestions = [
+  {
+    question: "ยาปฏิชีวนะใช้รักษาโรคใด?",
+    options: ["โรคหวัดจากไวรัส", "การติดเชื้อแบคทีเรีย", "โรคไข้หวัดใหญ่", "โรคภูมิแพ้"],
+    correct: 1,
+    explanation: "ยาปฏิชีวนะใช้รักษาการติดเชื้อแบคทีเรียเท่านั้น ไม่สามารถรักษาโรคที่เกิดจากไวรัส เช่น หวัด หรือไข้หวัดใหญ่ ได้"
+  },
+  {
+    question: "หากลืมกินยา ควรทำอย่างไร?",
+    options: ["กินยาเป็น 2 เท่าในครั้งถัดไป", "หยุดยาทันที", "กินยาเมื่อนึกขึ้นได้ หากใกล้เวลามื้อถัดไปให้ข้ามมื้อที่ลืม", "กินยาทุกเม็ดที่ลืมพร้อมกัน"],
+    correct: 2,
+    explanation: "ไม่ควรเพิ่มยาเป็นสองเท่า ควรกินยาเมื่อนึกขึ้นได้ แต่ถ้าใกล้ถึงเวลามื้อถัดไป ให้ข้ามมื้อที่ลืมแล้วกินมื้อถัดไปตามปกติ ตรวจสอบคำแนะนำเฉพาะของยาแต่ละชนิด"
+  },
+  {
+    question: "ข้อใดคืออันตรายจากการใช้ยาเกินขนาด?",
+    options: ["ร่างกายแข็งแรงขึ้น", "อวัยวะสำคัญอาจถูกทำลาย", "ยาออกฤทธิ์ดีขึ้น", "ไม่มีอันตรายหากเป็นยาสมุนไพร"],
+    correct: 1,
+    explanation: "การใช้ยาเกินขนาดอาจทำให้ตับ ไต หรืออวัยวะสำคัญถูกทำลาย เกิดอาการคลื่นไส้ อาเจียน หรือในกรณีรุนแรงอาจถึงแก่ชีวิต"
+  },
+  {
+    question: "ทำไมไม่ควรใช้ยาของบุคคลอื่น?",
+    options: ["เพราะยาจะมีราคาแพง", "เพราะแต่ละคนมีประวัติแพ้ยาและสภาพร่างกายแตกต่างกัน", "เพราะยาจะหมดอายุก่อน", "เพราะยาจะเสื่อมประสิทธิภาพ"],
+    correct: 1,
+    explanation: "แต่ละคนมีโรคประจำตัว ประวัติแพ้ยา และสภาพร่างกายที่แตกต่างกัน ยาที่ปลอดภัยสำหรับคนหนึ่งอาจเป็นอันตรายสำหรับอีกคน"
+  },
+  {
+    question: "ข้อมูลใดที่ควรตรวจสอบบนฉลากยาก่อนใช้?",
+    options: ["เฉพาะชื่อยา", "เฉพาะราคา", "ชื่อยา ขนาดยา วิธีใช้ วันหมดอายุ และคำเตือน", "เฉพาะสีของยา"],
+    correct: 2,
+    explanation: "ควรตรวจสอบข้อมูลครบถ้วน ได้แก่ ชื่อยา ตัวยาสำคัญ ขนาดยา วิธีใช้ ข้อบ่งใช้ คำเตือน วันหมดอายุ และวิธีเก็บรักษา"
+  },
+  {
+    question: "อาการแพ้ยาที่รุนแรงควรทำอย่างไร?",
+    options: ["รอให้อาการหายเอง", "กินยาแก้แพ้แล้วนอนพัก", "โทร 1669 หรือไปโรงพยาบาลทันที", "กินยาเพิ่มเพื่อต้านอาการ"],
+    correct: 2,
+    explanation: "หากมีอาการแพ้รุนแรง เช่น หายใจลำบาก หน้าหรือลิ้นบวม หมดสติ ต้องขอความช่วยเหลือทันทีโดยโทร 1669"
+  },
+  {
+    question: "ยาสมุนไพรหรือยาจากธรรมชาติปลอดภัยเสมอ จริงหรือเท็จ?",
+    options: ["จริง เพราะมาจากธรรมชาติ", "จริง เพราะไม่มีสารเคมี", "เท็จ เพราะอาจมีผลข้างเคียงและสารปนเปื้อน", "เท็จ เพราะไม่มีประสิทธิภาพเลย"],
+    correct: 2,
+    explanation: "ผลิตภัณฑ์จากธรรมชาติอาจมีผลข้างเคียง ปฏิกิริยากับยาอื่น หรือมีสารปนเปื้อน จึงไม่ควรใช้โดยไม่ระมัดระวัง"
+  },
+  {
+    question: "ควรเก็บยาอย่างไรให้ปลอดภัย?",
+    options: ["เก็บไว้ในตู้กับข้าว", "เก็บให้พ้นมือเด็กและตามเงื่อนไขการเก็บรักษา", "เก็บในตู้เย็นทุกชนิด", "เก็บไว้ในห้องน้ำเพื่อสะดวก"],
+    correct: 1,
+    explanation: "ควรเก็บยาให้พ้นมือเด็กและปฏิบัติตามเงื่อนไขการเก็บรักษาที่ระบุบนฉลาก เช่น อุณหภูมิ แสงสว่าง และความชื้น"
+  },
+  {
+    question: "การใช้ยาร่วมกับแอลกอฮอล์อาจเกิดอะไรขึ้น?",
+    options: ["ยาออกฤทธิ์ดีขึ้น", "ไม่มีผลอะไร", "อาจเพิ่มผลข้างเคียงหรือความเป็นพิษ", "ช่วยให้หลับสบาย"],
+    correct: 2,
+    explanation: "แอลกอฮอล์อาจทำปฏิกิริยากับยา เพิ่มผลข้างเคียง หรือเพิ่มความเป็นพิษต่อตับ โดยเฉพาะยาพาราเซตามอล"
+  },
+  {
+    question: "ศูนย์พิษวิทยารามาธิบดี โทรเบอร์ใด?",
+    options: ["191", "1669", "1367", "1155"],
+    correct: 2,
+    explanation: "ศูนย์พิษวิทยารามาธิบดี โทร. 1367 สำหรับปรึกษาเรื่องพิษจากยา (กรุณาตรวจสอบช่องทางติดต่อปัจจุบันก่อนใช้)"
+  },
+  {
+    question: "ข้อใดเป็นความเชื่อที่ผิดเกี่ยวกับการใช้ยา?",
+    options: ["อ่านฉลากยาก่อนใช้", "แจ้งแพทย์เรื่องยาที่แพ้", "ยาที่เพื่อนใช้ได้ผลดีก็ใช้ได้กับเรา", "เก็บยาให้พ้นมือเด็ก"],
+    correct: 2,
+    explanation: "การนำยาที่เพื่อนมาใช้เป็นความเชื่อที่ผิด เพราะแต่ละคนมีโรค ประวัติแพ้ยา และข้อห้ามใช้ที่แตกต่างกัน"
+  },
+  {
+    question: "หากสงสัยว่ากินยาเกินขนาด ควรทำสิ่งใดเป็นอันดับแรก?",
+    options: ["ทำให้อาเจียนทันที", "ดื่มน้ำตามเยอะๆ", "ขอความช่วยเหลือและเก็บบรรจุภัณฑ์ยาไว้", "นอนพักสักครู่"],
+    correct: 2,
+    explanation: "ควรขอความช่วยเหลือทันที เก็บบรรจุภัณฑ์ยาและข้อมูลเกี่ยวกับชนิดยา ปริมาณ เวลาที่ใช้ไว้ ห้ามทำให้อาเจียนเองโดยไม่มีคำแนะนำจากผู้เชี่ยวชาญ"
+  }
+];
+
+// ============ STATE ============
+let currentQuizType = 'pre';
+let quizAnswered = {};
+let quizSubmitted = false;
+let soundEnabled = true;
+let shuffledQuestions = [];
+
+// ============ INITIALIZATION ============
+document.addEventListener('DOMContentLoaded', function() {
+  createFloatingPills();
+  renderMyths();
+  initQuiz();
+  setupScrollAnimations();
+  setupProgressBar();
+  setupBackToTop();
+  checkOffline();
+});
+
+// ============ FLOATING PILLS ============
+function createFloatingPills() {
+  const container = document.getElementById('floating-pills');
+  const colors = ['#2196F3', '#4DB6AC', '#FF9800', '#E53935', '#9C27B0', '#43A047'];
+  
+  for (let i = 0; i < 15; i++) {
+    const pill = document.createElement('div');
+    pill.className = 'pill';
+    const size = 15 + Math.random() * 30;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    pill.style.cssText = `
+      width: ${size}px;
+      height: ${size * (Math.random() > 0.5 ? 1.6 : 1)}px;
+      background: ${color};
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      animation: ${Math.random() > 0.5 ? 'float' : 'floatSlow'} ${3 + Math.random() * 4}s ease-in-out infinite;
+      animation-delay: ${Math.random() * 2}s;
+      border-radius: ${size}px;
+      opacity: ${0.2 + Math.random() * 0.3};
+    `;
+    container.appendChild(pill);
+  }
+}
+
+// ============ MYTHS ============
+function renderMyths() {
+  const container = document.getElementById('myths-container');
+  container.innerHTML = '';
+  
+  myths.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'myth-card fade-in';
+    card.innerHTML = `
+      <div class="myth-header" onclick="toggleMyth(${index})">
+        <span class="myth-label">ความเชื่อที่ ${index + 1}</span>
+        <span class="myth-text">${item.myth}</span>
+        <span class="myth-toggle">▼</span>
+      </div>
+      <div class="myth-answer" id="myth-answer-${index}">
+        <div class="myth-quiz" id="myth-quiz-${index}">
+          <button onclick="answerMyth(${index}, true)" id="myth-true-${index}">✅ จริง</button>
+          <button onclick="answerMyth(${index}, false)" id="myth-false-${index}">❌ เท็จ</button>
+        </div>
+        <div id="myth-result-${index}" style="display:none;margin-top:16px;">
+          <span class="fact-label">✅ ข้อเท็จจริง</span>
+          <p style="margin-top:8px;">${item.fact}</p>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleMyth(index) {
+  const card = document.querySelectorAll('.myth-card')[index];
+  card.classList.toggle('open');
+}
+
+function answerMyth(index, answer) {
+  const trueBtn = document.getElementById(`myth-true-${index}`);
+  const falseBtn = document.getElementById(`myth-false-${index}`);
+  const result = document.getElementById(`myth-result-${index}`);
+  
+  trueBtn.disabled = true;
+  falseBtn.disabled = true;
+  
+  // All myths are false (misconceptions)
+  if (answer === myths[index].answer) {
+    if (answer === false) falseBtn.classList.add('correct');
+    else trueBtn.classList.add('correct');
+  } else {
+    if (answer === false) falseBtn.classList.add('wrong');
+    else trueBtn.classList.add('wrong');
+    // Highlight correct answer
+    if (myths[index].answer === false) falseBtn.classList.add('correct');
+    else trueBtn.classList.add('correct');
+  }
+  
+  result.style.display = 'block';
+  playSound('click');
+}
+
+// ============ CHECKLIST ============
+function toggleChecklist(el) {
+  el.classList.toggle('checked');
+  const box = el.querySelector('.checklist-box');
+  box.textContent = el.classList.contains('checked') ? '✓' : '';
+  playSound('click');
+}
+
+// ============ QUIZ ============
+function initQuiz() {
+  shuffledQuestions = shuffleArray([...quizQuestions]);
+  renderQuiz();
+}
+
+function shuffleArray(arr) {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function switchQuizTab(type) {
+  currentQuizType = type;
+  document.getElementById('tab-pre').classList.toggle('active', type === 'pre');
+  document.getElementById('tab-post').classList.toggle('active', type === 'post');
+  resetQuiz();
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizAnswered = {};
+  quizSubmitted = false;
+  document.getElementById('quiz-result').style.display = 'none';
+  document.getElementById('submit-quiz-btn').style.display = '';
+  document.getElementById('reset-quiz-btn').style.display = 'none';
+
+  // Show 10 questions
+  const questionsToShow = shuffledQuestions.slice(0, 10);
+  
+  questionsToShow.forEach((q, qIndex) => {
+    const shuffledOptions = q.options.map((opt, i) => ({text: opt, originalIndex: i}));
+    // Shuffle options
+    for (let i = shuffledOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+    }
+
+    const div = document.createElement('div');
+    div.className = 'quiz-question fade-in';
+    div.id = `question-${qIndex}`;
+    
+    let optionsHtml = '';
+    shuffledOptions.forEach((opt, oIndex) => {
+      optionsHtml += `<button class="quiz-option" data-question="${qIndex}" data-option="${oIndex}" data-correct="${opt.originalIndex === q.correct}" onclick="selectOption(${qIndex}, ${oIndex}, this)">${opt.text}</button>`;
+    });
+
+    div.innerHTML = `
+      <h4>ข้อที่ ${qIndex + 1}. ${q.question}</h4>
+      <div class="quiz-options">${optionsHtml}</div>
+      <div class="quiz-explanation" id="explanation-${qIndex}">${q.explanation}</div>
+    `;
+    container.appendChild(div);
+  });
+
+  // Trigger animations
+  setTimeout(() => {
+    document.querySelectorAll('.quiz-question.fade-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
+  }, 100);
+}
+
+function selectOption(qIndex, oIndex, btn) {
+  if (quizSubmitted) return;
+  
+  // Deselect others in same question
+  document.querySelectorAll(`[data-question="${qIndex}"]`).forEach(b => {
+    b.classList.remove('selected');
+  });
+  btn.classList.add('selected');
+  quizAnswered[qIndex] = oIndex;
+  playSound('click');
+}
+
+function submitQuiz() {
+  const totalQuestions = 10;
+  const answered = Object.keys(quizAnswered).length;
+  
+  if (answered < totalQuestions) {
+    if (!confirm(`คุณตอบแล้ว ${answered}/${totalQuestions} ข้อ ต้องการส่งคำตอบเลยหรือไม่?`)) {
+      return;
+    }
+  }
+
+  quizSubmitted = true;
+  let correct = 0;
+  const questionsToShow = shuffledQuestions.slice(0, 10);
+
+  questionsToShow.forEach((q, qIndex) => {
+    const buttons = document.querySelectorAll(`[data-question="${qIndex}"]`);
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      const isCorrect = btn.dataset.correct === 'true';
+      const isSelected = parseInt(btn.dataset.option) === quizAnswered[qIndex];
+      
+      if (isCorrect) {
+        btn.classList.add('correct-answer');
+      }
+      if (isSelected && !isCorrect) {
+        btn.classList.add('wrong-answer');
+      }
+      if (isSelected && isCorrect) {
+        correct++;
+      }
+    });
+
+    // Show explanation
+    document.getElementById(`explanation-${qIndex}`).classList.add('show');
+  });
+
+  // Show result
+  const percentage = Math.round((correct / totalQuestions) * 100);
+  const resultDiv = document.getElementById('quiz-result');
+  resultDiv.style.display = 'block';
+  document.getElementById('quiz-score').textContent = `${percentage}%`;
+  document.getElementById('quiz-score').textContent = `${correct}/${totalQuestions} (${percentage}%)`;
+  
+  let grade = '';
+  let gradeColor = '';
+  if (percentage >= 80) {
+    grade = '🌟 ดีเยี่ยม!';
+    gradeColor = 'var(--success)';
+  } else if (percentage >= 60) {
+    grade = '👍 ดี';
+    gradeColor = 'var(--primary)';
+  } else {
+    grade = '📖 ควรทบทวนเพิ่มเติม';
+    gradeColor = 'var(--orange)';
+  }
+  
+  const gradeEl = document.getElementById('quiz-grade');
+  gradeEl.textContent = grade;
+  gradeEl.style.color = gradeColor;
+  
+  document.getElementById('quiz-summary').textContent = 
+    `คุณตอบถูก ${correct} ข้อจาก ${totalQuestions} ข้อ (${currentQuizType === 'pre' ? 'แบบทดสอบก่อนเรียน' : 'แบบทดสอบหลังเรียน'})`;
+
+  document.getElementById('submit-quiz-btn').style.display = 'none';
+  document.getElementById('reset-quiz-btn').style.display = '';
+  
+  playSound('complete');
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetQuiz() {
+  shuffledQuestions = shuffleArray([...quizQuestions]);
+  renderQuiz();
+}
+
+// ============ SCROLL ANIMATIONS ============
+function setupScrollAnimations() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.fade-in, .card').forEach(el => {
+    observer.observe(el);
+  });
+}
+
+// ============ PROGRESS BAR ============
+function setupProgressBar() {
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / docHeight) * 100;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+  });
+}
+
+// ============ BACK TO TOP ============
+function setupBackToTop() {
+  const btn = document.getElementById('back-to-top');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 500);
+  });
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+    // Close mobile nav
+    document.getElementById('nav-links').classList.remove('open');
+  }
+}
+
+// ============ NAV TOGGLE ============
+document.getElementById('nav-toggle').addEventListener('click', () => {
+  document.getElementById('nav-links').classList.toggle('open');
+});
+
+// ============ SOUND ============
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  // Simple audio feedback using Web Audio API
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'click') {
+      osc.frequency.value = 600;
+      gain.gain.value = 0.1;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    } else if (type === 'complete') {
+      osc.frequency.value = 800;
+      gain.gain.value = 0.1;
+      osc.start();
+      osc.frequency.setValueAtTime(1000, ctx.currentTime + 0.1);
+      osc.stop(ctx.currentTime + 0.2);
+    }
+  } catch(e) {}
+}
+
+// ============ OFFLINE CHECK ============
+function checkOffline() {
+  if (!navigator.onLine) {
+    document.getElementById('offline-notice').style.display = 'block';
+  }
+  window.addEventListener('online', () => {
+    document.getElementById('offline-notice').style.display = 'none';
+  });
+  window.addEventListener('offline', () => {
+    document.getElementById('offline-notice').style.display = 'block';
+  });
+}
+</script>
+</body>
+</html>
