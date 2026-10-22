@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อันตรายจากการใช้ยาและความเชื่อผิดในการใช้ยา</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        mint: {
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                        },
+                        brandBlue: {
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        brandOrange: {
+                            400: '#fb923c',
+                            500: '#f97316',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'float-delayed': 'float 3s ease-in-out 1.5s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        
+        /* Smooth reveal for sections */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Reduced motion setting */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+            .reveal {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* Reduced motion utility class */
+        .reduce-motion * {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        /* Progress Bar */
+        #progress-bar {
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        /* Flip Card */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        
+        /* Hide scrollbar for clean look in some containers */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Hotspot pulsing dot */
+        .hotspot-ring {
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden relative">
+
+    <nav class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
+        <div id="progress-container" class="h-1.5 w-full bg-gray-200">
+            <div id="progress-bar" class="h-full bg-mint-500 rounded-r-full"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
+                    <i class="fa-solid fa-pills text-brandBlue-600 text-2xl"></i>
+                    <span class="font-bold text-brandBlue-900 text-lg md:text-xl hidden md:block">รู้เท่าทันยา ปลอดภัยชัวร์</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleMotion()" id="motion-btn" class="text-gray-500 hover:text-brandBlue-600 transition-colors text-sm" aria-label="เปิด/ปิด แอนิเมชัน">
+                        <i class="fa-solid fa-person-running"></i> <span class="hidden md:inline">ลดการเคลื่อนไหว</span>
+                    </button>
+                    <button onclick="showQuiz()" class="bg-brandOrange-500 hover:bg-brandOrange-400 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md transition-transform transform hover:scale-105">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> ทำแบบทดสอบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="pt-16 pb-20">
+        
+        <section id="hero" class="relative bg-gradient-to-br from-brandBlue-50 to-mint-50 pt-20 pb-24 md:pt-32 md:pb-32 overflow-hidden border-b-8 border-brandBlue-500">
+            <!-- Decorative Background Elements -->
+            <div class="absolute top-10 left-10 text-mint-300 opacity-50 animate-float text-6xl"><i class="fa-solid fa-capsules"></i></div>
+            <div class="absolute bottom-20 right-10 text-brandBlue-300 opacity-50 animate-float-delayed text-7xl"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+            <div class="absolute top-40 right-1/4 text-brandOrange-300 opacity-40 animate-pulse text-5xl"><i class="fa-solid fa-heart-pulse"></i></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                    <div class="inline-block bg-mint-100 text-mint-500 font-bold px-4 py-1 rounded-full text-sm mb-4 border border-mint-200">
+                        สื่อการเรียนรู้สุขศึกษา Interactive
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-brandBlue-900 leading-tight mb-4">
+                        อันตรายจากการใช้ยา <br>
+                        <span class="text-brandOrange-500">และความเชื่อผิด</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-lg mx-auto md:mx-0">
+                        รู้เท่าทันยา ใช้อย่างถูกต้อง ปลอดภัยต่อตัวเรา เรียนรู้เพื่อปกป้องตัวคุณและคนที่คุณรัก
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <button onclick="scrollToSection('chapter1')" class="bg-brandBlue-600 hover:bg-brandBlue-500 text-white px-8 py-3 rounded-full font-semibold shadow-lg transition-transform transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            เริ่มเรียนรู้ <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="showQuiz()" class="bg-white hover:bg-gray-50 text-brandBlue-600 border-2 border-brandBlue-600 px-8 py-3 rounded-full font-semibold shadow-md transition-transform transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            ทดสอบความรู้ก่อนเรียน <i class="fa-solid fa-list-check"></i>
+                        </button>
+                    </div>
+
+                    <div class="mt-10 bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white max-w-md mx-auto md:mx-0 text-left">
+                        <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-bullseye text-brandOrange-500 mr-2"></i> วัตถุประสงค์การเรียนรู้</h3>
+                        <ul class="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                            <li>เข้าใจอันตรายจากการใช้ยาผิดวิธีและผลกระทบ</li>
+                            <li>แยกแยะความเชื่อที่ผิดกับข้อเท็จจริงเกี่ยวกับการใช้ยาได้</li>
+                            <li>สามารถอ่านฉลากยาและนำความรู้ไปใช้อย่างปลอดภัย</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="md:w-1/2 flex justify-center relative">
+                    <!-- CSS 3D-like Illustration Placeholder -->
+                    <div class="relative w-72 h-72 md:w-96 md:h-96 animate-float">
+                        <img src="https://placehold.co/600x600/e0f2fe/1e3a8a?text=Illustration\nPharmacist+and+Student" alt="ภาพการ์ตูนเภสัชกรให้คำแนะนำนักเรียน" class="w-full h-full object-cover rounded-full shadow-2xl border-8 border-white" onerror="this.src='https://placehold.co/600x600/e0f2fe/1e3a8a?text=Image+Not+Found'">
+                        <!-- Floating Badges -->
+                        <div class="absolute -top-4 -right-4 bg-brandOrange-500 text-white w-16 h-16 rounded-full flex items-center justify-center font-bold shadow-lg animate-bounce" style="animation-duration: 3s;">Safe!</div>
+                        <div class="absolute bottom-4 -left-4 bg-mint-400 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg shadow-mint-200"><i class="fa-solid fa-shield-halved"></i></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter1" class="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+            <div class="text-center mb-12">
+                <span class="text-brandOrange-500 font-bold tracking-wider uppercase text-sm">บทที่ 1</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-brandBlue-900 mt-2">ยาคืออะไร ทำไมต้องระวัง?</h2>
+                <div class="w-24 h-1 bg-mint-400 mx-auto mt-4 rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-shadow">
+                        <div class="flex-shrink-0 w-12 h-12 bg-mint-100 text-mint-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-briefcase-medical"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">ยาคืออะไร?</h3>
+                            <p class="text-gray-600 mt-1">ยาคือสารที่ใช้ในการวินิจฉัย บำบัด บรรเทา รักษา หรือป้องกันโรค ยามีประโยชน์มากเมื่อใช้อย่างถูกต้อง แต่ก็มี <b>"ดาบสองคม"</b> หากใช้ผิดวิธี</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-shadow">
+                        <div class="flex-shrink-0 w-12 h-12 bg-brandOrange-100 text-brandOrange-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">ผลข้างเคียง VS การแพ้ยา</h3>
+                            <ul class="text-gray-600 mt-1 space-y-2 text-sm">
+                                <li><span class="font-semibold text-gray-700">ผลข้างเคียง:</span> อาการที่คาดว่าอาจเกิดขึ้นได้ เช่น กินยาแก้แพ้แล้วง่วงนอน (ไม่ได้แปลว่าแพ้)</li>
+                                <li><span class="font-semibold text-brandOrange-500">การแพ้ยา:</span> ปฏิกิริยาผิดปกติของภูมิคุ้มกัน เช่น ผื่นขึ้น ตาบวม หายใจไม่ออก (อันตรายถึงชีวิต ต้องหยุดยาและพบแพทย์ทันที!)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-brandBlue-50 p-8 rounded-3xl relative overflow-hidden">
+                    <i class="fa-solid fa-circle-exclamation absolute -bottom-10 -right-10 text-9xl text-brandBlue-100"></i>
+                    <h3 class="font-bold text-xl text-brandBlue-900 mb-4 relative z-10">ปัจจัยที่ทำให้เกิดอันตรายจากยา</h3>
+                    <ul class="space-y-3 relative z-10">
+                        <li class="flex items-start gap-2 text-gray-700"><i class="fa-regular fa-circle-xmark text-brandOrange-500 mt-1"></i> ใช้ยาผิดขนาด (น้อยไปไม่หาย มากไปเกิดพิษ)</li>
+                        <li class="flex items-start gap-2 text-gray-700"><i class="fa-regular fa-circle-xmark text-brandOrange-500 mt-1"></i> ใช้ผิดวิธี (เช่น ยาทาเอามากิน)</li>
+                        <li class="flex items-start gap-2 text-gray-700"><i class="fa-regular fa-circle-xmark text-brandOrange-500 mt-1"></i> ใช้ยาซ้ำซ้อน (กินยาหลายตัวที่มีตัวยาเดียวกัน)</li>
+                        <li class="flex items-start gap-2 text-gray-700"><i class="fa-regular fa-circle-xmark text-brandOrange-500 mt-1"></i> ใช้ยาที่ไม่เหมาะกับตนเอง (ใช้ยาคนอื่น)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter2" class="py-16 md:py-24 bg-white reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <span class="text-brandOrange-500 font-bold tracking-wider uppercase text-sm">บทที่ 2</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-brandBlue-900 mt-2">6 สถานการณ์อันตรายจากการใช้ยาผิดวิธี</h2>
+                    <p class="text-gray-600 mt-4 max-w-2xl mx-auto">พฤติกรรมเหล่านี้อาจทำให้เกิดอาการคลื่นไส้ เวียนศีรษะ อวัยวะได้รับอันตราย หรือรุนแรงถึงขั้นต้องเข้ารับการรักษาด่วน</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Scenario 1 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-red-100 flex items-center justify-center text-red-500 text-5xl">
+                            <i class="fa-solid fa-skull-crossbones group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">1. รับประทานยาเกินขนาด</h3>
+                            <p class="text-sm text-gray-600">คิดว่ากินเยอะจะหายเร็ว ทำให้ตับหรือไตทำงานหนัก เกิดภาวะเป็นพิษ อาจช็อกหรือเสียชีวิตได้</p>
+                        </div>
+                    </div>
+                    <!-- Scenario 2 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-brandOrange-100 flex items-center justify-center text-brandOrange-500 text-5xl">
+                            <i class="fa-solid fa-ban group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">2. ใช้ยาผิดชนิด/ผิดวิธี</h3>
+                            <p class="text-sm text-gray-600">เช่น เอายาหยอดหูไปหยอดตา หรือกลืนยาอม ทำให้ตัวยาไม่ออกฤทธิ์ตรงจุด และอาจเกิดการระคายเคืองรุนแรง</p>
+                        </div>
+                    </div>
+                    <!-- Scenario 3 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-purple-100 flex items-center justify-center text-purple-500 text-5xl">
+                            <i class="fa-solid fa-people-arrows group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">3. ใช้ยาของบุคคลอื่น</h3>
+                            <p class="text-sm text-gray-600">"เพื่อนกินแล้วดี เลยขอกินบ้าง" ร่างกายและโรคประจำตัวแต่ละคนไม่เหมือนกัน อาจแพ้ยารุนแรงได้</p>
+                        </div>
+                    </div>
+                    <!-- Scenario 4 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-yellow-100 flex items-center justify-center text-yellow-500 text-5xl">
+                            <i class="fa-solid fa-clone group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">4. ใช้ยาซ้ำซ้อน</h3>
+                            <p class="text-sm text-gray-600">กินยาแก้หวัด (ที่มีพาราฯ) ร่วมกับยาพาราเซตามอล ทำให้ได้รับยาเกินขนาดโดยไม่รู้ตัว ตับอักเสบได้</p>
+                        </div>
+                    </div>
+                    <!-- Scenario 5 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-gray-200 flex items-center justify-center text-gray-500 text-5xl">
+                            <i class="fa-solid fa-calendar-xmark group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">5. ใช้ยาหมดอายุ/เสื่อมสภาพ</h3>
+                            <p class="text-sm text-gray-600">ยาเปลี่ยนสี เม็ดแตก หรือหมดอายุ ตัวยาอาจกลายเป็นสารพิษ ทำให้เกิดอันตรายแทนการรักษา</p>
+                        </div>
+                    </div>
+                    <!-- Scenario 6 -->
+                    <div class="group bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                        <div class="h-40 bg-mint-100 flex items-center justify-center text-mint-500 text-5xl">
+                            <i class="fa-solid fa-martini-glass-empty group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">6. กินยาร่วมกับอาหาร/เครื่องดื่มบางชนิด</h3>
+                            <p class="text-sm text-gray-600">กินยาพร้อมนม น้ำผลไม้ หรือแอลกอฮอล์ อาจขัดขวางการดูดซึมยา หรือเพิ่มผลข้างเคียงของยาให้รุนแรงขึ้น</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter3" class="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-blue-50 reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <span class="text-brandOrange-500 font-bold tracking-wider uppercase text-sm">บทที่ 3</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-brandBlue-900 mt-2">ความเชื่อผิด VS ข้อเท็จจริง</h2>
+                    <p class="text-gray-600 mt-4">ลองทายดูว่า ความเชื่อเหล่านี้ <span class="text-green-600 font-bold">จริง</span> หรือ <span class="text-red-500 font-bold">เท็จ</span> ? กดเลือกคำตอบเพื่อดูข้อเท็จจริง</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="myths-container">
+                    <!-- Cards will be generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter4" class="py-16 md:py-24 bg-white reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <span class="text-brandOrange-500 font-bold tracking-wider uppercase text-sm">บทที่ 4</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-brandBlue-900 mt-2">อ่านฉลากยาให้เป็น</h2>
+                    <p class="text-gray-600 mt-4 max-w-2xl mx-auto">คลิกที่จุดกะพริบบนฉลากยา เพื่อดูว่าข้อมูลแต่ละส่วนสำคัญอย่างไร <br><span class="text-brandOrange-500 text-sm">ห้ามเดาวิธีใช้จากสีหรือรูปร่างเด็ดขาด!</span></p>
+                </div>
+
+                <div class="flex flex-col lg:flex-row items-center gap-10">
+                    <!-- Interactive Bottle -->
+                    <div class="w-full lg:w-1/2 flex justify-center">
+                        <div class="relative w-80 h-96 bg-amber-700 rounded-3xl shadow-2xl flex flex-col items-center pt-8 border-4 border-amber-800" style="border-radius: 40px 40px 20px 20px;">
+                            <!-- Cap -->
+                            <div class="absolute -top-12 w-48 h-16 bg-gray-100 rounded-t-xl border-4 border-gray-300 shadow-md"></div>
+                            
+                            <!-- Label Area -->
+                            <div class="w-[90%] h-[80%] bg-white rounded-xl shadow-inner p-4 relative font-sans text-xs border border-gray-200 flex flex-col">
+                                <!-- Hotspot points -->
+                                <button onclick="showLabelInfo('name')" class="absolute top-4 left-4 w-6 h-6 z-20 group" aria-label="ชื่อยา">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-brandBlue-400 opacity-75 hotspot-ring"></span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-brandBlue-600 text-white items-center justify-center text-xs">1</span>
+                                </button>
+                                
+                                <div class="text-center border-b pb-2 mb-2 pt-2">
+                                    <h4 class="font-bold text-lg text-brandBlue-900">พาราเซตามอล</h4>
+                                    <p class="text-gray-500">Paracetamol 500 mg</p>
+                                </div>
+
+                                <button onclick="showLabelInfo('indication')" class="absolute top-[35%] right-4 w-6 h-6 z-20" aria-label="ข้อบ่งใช้">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-mint-400 opacity-75 hotspot-ring"></span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-mint-600 text-white items-center justify-center text-xs">2</span>
+                                </button>
+                                <p class="mb-2"><strong class="text-brandBlue-800">สรรพคุณ:</strong> ลดไข้ บรรเทาอาการปวด</p>
+
+                                <button onclick="showLabelInfo('dosage')" class="absolute top-[48%] left-[40%] w-6 h-6 z-20" aria-label="ขนาดยาและวิธีใช้">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-brandOrange-400 opacity-75 hotspot-ring"></span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-brandOrange-500 text-white items-center justify-center text-xs">3</span>
+                                </button>
+                                <p class="mb-2"><strong class="text-brandBlue-800">วิธีใช้:</strong> ผู้ใหญ่รับประทานครั้งละ 1-2 เม็ด ทุก 4-6 ชั่วโมง เมื่อมีอาการ</p>
+
+                                <button onclick="showLabelInfo('warning')" class="absolute bottom-[25%] left-4 w-6 h-6 z-20" aria-label="คำเตือน">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 hotspot-ring"></span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-red-600 text-white items-center justify-center text-xs">4</span>
+                                </button>
+                                <div class="bg-red-50 text-red-700 p-1 rounded text-[10px] mb-2 border border-red-200">
+                                    <strong>คำเตือน:</strong> ไม่ควรใช้เกินวันละ 8 เม็ด อาจเป็นพิษต่อตับ
+                                </div>
+
+                                <div class="flex justify-between mt-auto border-t pt-2 text-[10px]">
+                                    <div class="relative">
+                                        <button onclick="showLabelInfo('patient')" class="absolute -top-4 -left-2 w-6 h-6 z-20" aria-label="ชื่อผู้ป่วย">
+                                            <span class="absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75 hotspot-ring"></span>
+                                            <span class="relative inline-flex rounded-full h-6 w-6 bg-purple-600 text-white items-center justify-center text-xs">5</span>
+                                        </button>
+                                        ชื่อ: คุณรักสุขภาพ
+                                    </div>
+                                    <div class="relative text-right">
+                                        <button onclick="showLabelInfo('expiry')" class="absolute -top-4 -right-2 w-6 h-6 z-20" aria-label="วันหมดอายุ">
+                                            <span class="absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75 hotspot-ring"></span>
+                                            <span class="relative inline-flex rounded-full h-6 w-6 bg-gray-600 text-white items-center justify-center text-xs">6</span>
+                                        </button>
+                                        EXP: 01/2028<br>
+                                        เก็บในที่แห้ง อุณหภูมิต่ำกว่า 30°C
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div class="w-full lg:w-1/2">
+                        <div id="label-info-panel" class="bg-blue-50 border-l-4 border-brandBlue-500 p-8 rounded-r-2xl shadow-sm h-full flex flex-col justify-center min-h-[300px] transition-all duration-300">
+                            <div class="text-center text-gray-400 flex flex-col items-center">
+                                <i class="fa-solid fa-hand-pointer text-5xl mb-4 animate-bounce"></i>
+                                <p class="text-lg">คลิกที่ตัวเลขบนฉลากยาเพื่อดูคำอธิบาย</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter5" class="py-16 md:py-24 bg-mint-50 reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <span class="text-mint-600 font-bold tracking-wider uppercase text-sm">บทที่ 5</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-brandBlue-900 mt-2">7 กฎเหล็ก ใช้ยาปลอดภัยในชีวิตประจำวัน</h2>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-lg p-8 md:p-12 max-w-4xl mx-auto border border-mint-100">
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">1</div>
+                            <p class="text-lg text-gray-700">ใช้ยาให้ <b>ถูกคน ถูกชนิด ถูกขนาด ถูกวิธี และถูกเวลา</b> ตามคำแนะนำ</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">2</div>
+                            <p class="text-lg text-gray-700"><b>อ่านฉลาก</b>และเอกสารกำกับยาก่อนใช้ทุกครั้ง</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">3</div>
+                            <p class="text-lg text-gray-700"><b>แจ้งประวัติแพ้ยา</b> โรคประจำตัว และยา/อาหารเสริมที่ใช้อยู่แก่แพทย์หรือเภสัชกรเสมอ</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">4</div>
+                            <p class="text-lg text-gray-700"><b>ไม่แบ่งยาให้ผู้อื่น</b> แม้จะมีอาการคล้ายกันก็ตาม</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">5</div>
+                            <p class="text-lg text-gray-700"><b>ไม่ซื้อยาปฏิชีวนะ</b>หรือยาควบคุมมาใช้เองโดยไม่มีคำแนะนำจากผู้เชี่ยวชาญ</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">6</div>
+                            <p class="text-lg text-gray-700"><b>เก็บยาให้พ้นมือเด็ก</b> และเก็บตามเงื่อนไข (เช่น ตู้เย็น, พ้นแสง)</p>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-mint-100 text-mint-600 flex items-center justify-center font-bold">7</div>
+                            <p class="text-lg text-gray-700">หากสงสัยว่าเกิดอาการแพ้ <b>ให้หยุดยาที่สงสัย</b>และรีบปรึกษาแพทย์ (ยกเว้นยาจำเป็นต่อชีวิต ห้ามหยุดเอง)</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="chapter6" class="py-16 md:py-24 bg-red-50 reveal border-t-4 border-red-500">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="md:w-1/2">
+                        <div class="text-brandOrange-500 font-bold tracking-wider uppercase text-sm mb-2"><i class="fa-solid fa-truck-medical"></i> บทที่ 6: เหตุฉุกเฉิน</div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-red-700 mb-6">เมื่อเกิดเหตุฉุกเฉินจากการใช้ยา ควรทำอย่างไร?</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
+                                <h4 class="font-bold text-gray-800"><i class="fa-solid fa-phone text-red-500 mr-2"></i> โทร 1669 ทันที!</h4>
+                                <p class="text-gray-600 text-sm mt-1">หากมีอาการรุนแรง: หายใจลำบาก หน้าบวม ลิ้นบวม หมดสติ หรือชัก</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-brandOrange-500">
+                                <h4 class="font-bold text-gray-800"><i class="fa-solid fa-phone text-brandOrange-500 mr-2"></i> ศูนย์พิษวิทยารามาธิบดี โทร 1367</h4>
+                                <p class="text-gray-600 text-sm mt-1">หากกินยาผิด กินเกินขนาด ต้องการคำปรึกษาด่วนตลอด 24 ชม.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-brandBlue-500">
+                                <h4 class="font-bold text-gray-800"><i class="fa-solid fa-box-archive text-brandBlue-500 mr-2"></i> เก็บหลักฐาน</h4>
+                                <p class="text-gray-600 text-sm mt-1">นำบรรจุภัณฑ์ยา ฉลาก หรือตัวยาที่เหลือ ไปให้แพทย์ดูด้วยเสมอ</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-gray-500">
+                                <h4 class="font-bold text-gray-800"><i class="fa-solid fa-ban text-gray-500 mr-2"></i> ห้ามทำให้อาเจียนเอง</h4>
+                                <p class="text-gray-600 text-sm mt-1">ห้ามล้วงคอหรือกินยาแก้พิษเองเด็ดขาด หากแพทย์ไม่สั่ง</p>
+                            </div>
+                        </div>
+                        <p class="mt-6 text-xs text-gray-400 italic">*สื่อเพื่อการศึกษานี้ไม่ใช้แทนการวินิจฉัยหรือคำแนะนำเฉพาะบุคคลจากแพทย์หรือเภสัชกร</p>
+                    </div>
+                    <div class="md:w-1/2 flex justify-center">
+                        <div class="w-64 h-64 md:w-80 md:h-80 bg-red-100 rounded-full flex items-center justify-center relative animate-pulse-slow border-8 border-white shadow-xl">
+                            <i class="fa-solid fa-star-of-life text-8xl text-red-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="videos" class="py-16 md:py-24 bg-gray-900 text-white reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mt-2"><i class="fa-brands fa-youtube text-red-500"></i> วิดีโอเพื่อความปลอดภัยในการใช้ยา</h2>
+                    <p class="text-gray-400 mt-4">สื่อเรียนรู้เพิ่มเติมจากแหล่งข้อมูลที่น่าเชื่อถือ (อย. และ กระทรวงสาธารณสุข)</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Video 1 Placeholder -->
+                    <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-700 flex flex-col">
+                        <div class="aspect-w-16 aspect-h-9 bg-gray-700 flex items-center justify-center relative p-6 text-center">
+                            <i class="fa-solid fa-play text-4xl text-gray-500 mb-2 opacity-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                            <div class="z-10 mt-10">
+                                <p class="text-sm text-gray-300 mb-4">คลิกเพื่อค้นหาวิดีโอทางการจาก อย.</p>
+                                <a href="https://www.youtube.com/results?search_query=การใช้ยาอย่างสมเหตุผล+อย" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold inline-block">ค้นหาวิดีโอบน YouTube</a>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-grow">
+                            <h3 class="font-bold text-lg mb-1">การใช้ยาอย่างสมเหตุผล (RDU)</h3>
+                            <p class="text-xs text-brandOrange-400 mb-2">แหล่งที่มา: อย. / กระทรวงสาธารณสุข</p>
+                            <p class="text-sm text-gray-400">เรียนรู้หลักการใช้ยาให้คุ้มค่า ปลอดภัย และไม่เกิดการดื้อยา</p>
+                        </div>
+                    </div>
+
+                    <!-- Video 2 Placeholder -->
+                    <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-700 flex flex-col">
+                        <div class="aspect-w-16 aspect-h-9 bg-gray-700 flex items-center justify-center relative p-6 text-center">
+                            <i class="fa-solid fa-play text-4xl text-gray-500 mb-2 opacity-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                            <div class="z-10 mt-10">
+                                <p class="text-sm text-gray-300 mb-4">คลิกเพื่อค้นหาวิดีโอทางการจาก อย.</p>
+                                <a href="https://www.youtube.com/results?search_query=การอ่านฉลากยา+อย" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold inline-block">ค้นหาวิดีโอบน YouTube</a>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-grow">
+                            <h3 class="font-bold text-lg mb-1">การอ่านฉลากยาและการใช้ยาอย่างปลอดภัย</h3>
+                            <p class="text-xs text-brandOrange-400 mb-2">แหล่งที่มา: กองพัฒนาศักยภาพผู้บริโภค อย.</p>
+                            <p class="text-sm text-gray-400">วิธีดูวันหมดอายุ ข้อควรระวัง และทำความเข้าใจฉลากยาเบื้องต้น</p>
+                        </div>
+                    </div>
+
+                    <!-- Video 3 Placeholder -->
+                    <div class="bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-700 flex flex-col">
+                        <div class="aspect-w-16 aspect-h-9 bg-gray-700 flex items-center justify-center relative p-6 text-center">
+                            <i class="fa-solid fa-play text-4xl text-gray-500 mb-2 opacity-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                            <div class="z-10 mt-10">
+                                <p class="text-sm text-gray-300 mb-4">คลิกเพื่อค้นหาวิดีโอทางการจาก อย.</p>
+                                <a href="https://www.youtube.com/results?search_query=อันตรายจากยาปฏิชีวนะ+อย" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold inline-block">ค้นหาวิดีโอบน YouTube</a>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-grow">
+                            <h3 class="font-bold text-lg mb-1">อันตรายจากการใช้ยาปฏิชีวนะผิดวิธี</h3>
+                            <p class="text-xs text-brandOrange-400 mb-2">แหล่งที่มา: อย. / กรมควบคุมโรค</p>
+                            <p class="text-sm text-gray-400">เจ็บคอ เป็นหวัด ทำไมถึงไม่ต้องกินยาแก้อักเสบ(ยาฆ่าเชื้อ)เสมอไป</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="references" class="py-12 bg-white reveal">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-sm">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg"><i class="fa-solid fa-book-open text-brandBlue-500 mr-2"></i> แหล่งข้อมูลอ้างอิงและศึกษาค้นคว้าเพิ่มเติม</h3>
+                <ul class="space-y-3 text-gray-600 break-words">
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>สำนักงานคณะกรรมการอาหารและยา (อย.) ฐานข้อมูลการใช้ยาอย่างสมเหตุผล</b> <br><a href="https://ndi.fda.moph.go.th/drug_use/" target="_blank" class="text-brandBlue-600 hover:underline">https://ndi.fda.moph.go.th/drug_use/</a></li>
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>กองพัฒนาศักยภาพผู้บริโภค อย.: สื่อความรู้เรื่องฉลากยา</b> <br><a href="https://dis.fda.moph.go.th/" target="_blank" class="text-brandBlue-600 hover:underline">https://dis.fda.moph.go.th/</a></li>
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>กรมควบคุมโรค กระทรวงสาธารณสุข: ความรู้เรื่องพิษจากยารักษาโรค</b> <br><a href="https://www.ddc.moph.go.th/disease_detail.php?d=76" target="_blank" class="text-brandBlue-600 hover:underline">https://www.ddc.moph.go.th/disease_detail.php?d=76</a></li>
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>องค์การอนามัยโลก (WHO): Medication Without Harm</b> <br><a href="https://www.who.int/initiatives/medication-without-harm" target="_blank" class="text-brandBlue-600 hover:underline">https://www.who.int/initiatives/medication-without-harm</a></li>
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>Centers for Disease Control and Prevention (CDC): Medication Safety</b> <br><a href="https://www.cdc.gov/medication-safety/about/index.html" target="_blank" class="text-brandBlue-600 hover:underline">https://www.cdc.gov/medication-safety/about/index.html</a></li>
+                    <li><i class="fa-solid fa-link text-gray-400 mr-1"></i> <b>อย.: ข้อมูลและสื่อเฝ้าระวังความปลอดภัยด้านยา</b> <br><a href="https://drug.fda.moph.go.th/surveillance/" target="_blank" class="text-brandBlue-600 hover:underline">https://drug.fda.moph.go.th/surveillance/</a></li>
+                </ul>
+                <p class="mt-6 text-xs text-gray-500 italic bg-gray-100 p-3 rounded">
+                    * วันที่เข้าถึงข้อมูล: <span id="current-date"></span> <br>
+                    * หมายเหตุสำหรับครูผู้สอน: กรุณาตรวจสอบการปรับปรุงข้อมูลและลิงก์จากหน่วยงานทางการก่อนนำไปใช้สอนทุกครั้ง
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <section id="quiz-section" class="hidden min-h-screen pt-20 pb-20 bg-gray-50 relative z-40">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-brandBlue-900"><i class="fa-solid fa-clipboard-question text-brandOrange-500"></i> แบบทดสอบความรู้</h2>
+                <button onclick="goHome()" class="text-gray-500 hover:text-brandBlue-600 flex items-center gap-1">
+                    <i class="fa-solid fa-xmark text-xl"></i> ปิด
+                </button>
+            </div>
+
+            <div id="quiz-container" class="bg-white rounded-3xl shadow-lg p-6 md:p-10 border border-gray-100">
+                <!-- Quiz dynamically injected here -->
+            </div>
+
+            <div id="quiz-result" class="hidden bg-white rounded-3xl shadow-lg p-6 md:p-10 text-center mt-6 border-t-8 border-mint-500">
+                <!-- Results dynamically injected here -->
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-brandBlue-900 text-brandBlue-200 py-8 text-center text-sm">
+        <div class="max-w-7xl mx-auto px-4">
+            <p><i class="fa-solid fa-pills mr-2"></i> สื่อการเรียนรู้ Interactive เรื่อง อันตรายจากการใช้ยาและความเชื่อผิดในการใช้ยา</p>
+            <p class="mt-2 text-brandBlue-400">พัฒนาสำหรับระดับประถมศึกษาตอนปลาย มัธยมศึกษาตอนต้น และ สกร.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Set Date
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Myths Data
+        const mythsData = [
+            {
+                myth: "ยาปฏิชีวนะรักษาโรคหวัดได้ทุกกรณี",
+                fact: "ยาปฏิชีวนะใช้รักษาการติดเชื้อแบคทีเรียบางชนิด ไม่รักษาโรคหวัดที่เกิดจากไวรัส (ส่วนใหญ่หวัดเกิดจากไวรัส)",
+                isTrue: false
+            },
+            {
+                myth: "เมื่ออาการดีขึ้นแล้ว สามารถหยุดยาที่แพทย์สั่งได้เองทุกชนิด",
+                fact: "ต้องปฏิบัติตามคำสั่งแพทย์ โดยเฉพาะยาปฏิชีวนะ หรือยารักษาโรคเรื้อรัง ไม่ควรปรับหรือหยุดยาเอง",
+                isTrue: false
+            },
+            {
+                myth: "ยาสมุนไพรหรือยาจากธรรมชาติปลอดภัยเสมอ ไม่มีผลข้างเคียง",
+                fact: "ผลิตภัณฑ์จากธรรมชาติก็อาจมีผลข้างเคียง ตีกับยาแผนปัจจุบัน หรือมีสารสเตียรอยด์ปนเปื้อนได้",
+                isTrue: false
+            },
+            {
+                myth: "หากยาไม่ออกฤทธิ์เร็ว สามารถเพิ่มขนาดยาเองได้เพื่อความรวดเร็ว",
+                fact: "การเพิ่มขนาดยาเองไม่ได้ทำให้หายเร็วขึ้น แต่อาจทำให้ตับหรือไตพัง และเกิดพิษจากยาจนอันตรายถึงชีวิต",
+                isTrue: false
+            },
+            {
+                myth: "ยาที่เพื่อนใช้แล้วหาย เราขอยืมมากินบ้างได้",
+                fact: "ผู้ใช้ยาแต่ละคนมีโรคประจำตัว ประวัติแพ้ยา และสภาพร่างกายต่างกัน ยาที่ปลอดภัยสำหรับเพื่อนอาจอันตรายสำหรับเรา",
+                isTrue: false
+            },
+            {
+                myth: "ยาแก้อักเสบ และ ยาปฏิชีวนะ(ยาฆ่าเชื้อ) เป็นยาชนิดเดียวกัน",
+                fact: "ไม่ใช่! ยาแก้อักเสบใช้ลดปวดบวมแดง (เช่น ไอบูโพรเฟน) ส่วนยาปฏิชีวนะใช้ฆ่าเชื้อแบคทีเรีย (เช่น อะม็อกซีซิลลิน)",
+                isTrue: false
+            },
+            {
+                myth: "ยาที่ซื้อได้ตามร้านสะดวกซื้อหรือร้านยาทั่วไป ไม่มีอันตราย",
+                fact: "ยาสามัญประจำบ้านก็ทำให้เกิดผลข้างเคียง แพ้ยา หรือเป็นพิษได้หากใช้เกินขนาด เช่น พาราเซตามอล",
+                isTrue: false
+            },
+            {
+                myth: "หากลืมกินยา ให้รวบยอดกินสองเท่าในมื้อถัดไปเสมอ",
+                fact: "ไม่ควรเพิ่มยาเป็นสองเท่าโดยอัตโนมัติ ให้กินมื้อถัดไปตามปกติ หรือตรวจสอบเอกสารกำกับยาก่อนเสมอ",
+                isTrue: false
+            }
+        ];
+
+        // Quiz Data
+        const originalQuizQuestions = [
+            {
+                q: "การรับประทานยาพาราเซตามอลเกินขนาดอย่างต่อเนื่อง ส่งผลเสียต่ออวัยวะใดมากที่สุด?",
+                options: ["หัวใจ", "ปอด", "ตับ", "สมอง"],
+                answerText: "ตับ",
+                explanation: "พาราเซตามอลหากใช้เกินขนาด (เช่น เกิน 8 เม็ดต่อวันสำหรับผู้ใหญ่) จะทำให้เกิดภาวะตับอักเสบและเป็นพิษต่อตับได้"
+            },
+            {
+                q: "ข้อใดเป็นความเข้าใจที่ถูกต้องเกี่ยวกับ 'ยาปฏิชีวนะ' (หรือที่มักเรียกผิดว่ายาแก้อักเสบ)?",
+                options: ["รักษาโรคหวัดที่เกิดจากไวรัสได้ผลดี", "ต้องกินให้หมดตามที่แพทย์สั่งอย่างเคร่งครัด", "กินป้องกันไว้ก่อนแม้จะยังไม่ป่วย", "สามารถแบ่งให้คนในครอบครัวกินได้หากมีอาการคล้ายกัน"],
+                answerText: "ต้องกินให้หมดตามที่แพทย์สั่งอย่างเคร่งครัด",
+                explanation: "ยาปฏิชีวนะใช้ฆ่าเชื้อแบคทีเรีย ต้องกินให้ครบโดสตามที่แพทย์สั่งเพื่อป้องกันเชื้อดื้อยา และไม่สามารถรักษาหวัดจากไวรัสได้"
+            },
+            {
+                q: "ข้อมูลใดบนฉลากยาที่ไม่สามารถใช้ยืนยันชนิดของยาได้อย่างถูกต้องแม่นยำ?",
+                options: ["ชื่อตัวยาสำคัญ", "ข้อบ่งใช้", "สีและรูปร่างของเม็ดยา", "วันหมดอายุ"],
+                answerText: "สีและรูปร่างของเม็ดยา",
+                explanation: "ยาต่างชนิดกันอาจมีสีและรูปร่างคล้ายกันได้ จึงห้ามเดาชนิดยาจากสีหรือรูปร่างเด็ดขาด ต้องอ่านชื่อยาที่ฉลากเสมอ"
+            },
+            {
+                q: "หากเพื่อนสนิทมีอาการปวดท้องคล้ายกับที่คุณเคยเป็น คุณควรทำอย่างไร?",
+                options: ["แบ่งยาแก้ปวดท้องของตนเองให้เพื่อน", "แนะนำให้เพื่อนไปพบแพทย์หรือปรึกษาเภสัชกร", "ให้เพื่อนกินยาสมุนไพรที่ไม่ระบุที่มาเพราะมาจากธรรมชาติ", "ให้เพื่อนทนปวดไปก่อนเดี๋ยวก็หายเอง"],
+                answerText: "แนะนำให้เพื่อนไปพบแพทย์หรือปรึกษาเภสัชกร",
+                explanation: "ไม่ควรแบ่งยาให้ผู้อื่น เพราะสาเหตุของอาการปวดอาจต่างกัน และเพื่อนอาจมีประวัติแพ้ยานั้น"
+            },
+            {
+                q: "ข้อใดคือความแตกต่างระหว่าง 'ผลข้างเคียง' และ 'การแพ้ยา'?",
+                options: ["ผลข้างเคียงอันตรายถึงชีวิตเสมอ แต่การแพ้ยาไม่อันตราย", "กินยาแล้วง่วงนอนคือการแพ้ยา", "ผื่นคัน ตาบวม หายใจไม่ออก เป็นสัญญาณของการแพ้ยาที่ต้องหยุดยาทันที", "ผลข้างเคียงและการแพ้ยาคือสิ่งเดียวกัน"],
+                answerText: "ผื่นคัน ตาบวม หายใจไม่ออก เป็นสัญญาณของการแพ้ยาที่ต้องหยุดยาทันที",
+                explanation: "อาการง่วงนอนจากยาแก้แพ้คือ 'ผลข้างเคียง' ที่คาดการณ์ได้ แต่ผื่น ตาบวม หายใจไม่ออก คือ 'การแพ้ยา' ที่อันตรายมาก"
+            },
+            {
+                q: "การเก็บรักษายาที่ถูกต้อง ควรปฏิบัติตามข้อใด?",
+                options: ["เก็บยาทุกชนิดไว้ในตู้เย็นเสมอ", "แกะยาออกจากแผงฟอยล์มาใส่ขวดรวมกันเพื่อความสะดวก", "เก็บยาไว้ในที่ชื้นเช่นห้องน้ำ เพื่อให้หยิบง่าย", "เก็บในที่แห้ง พ้นแสงแดด และพ้นมือเด็ก (เว้นแต่ยาที่ระบุให้แช่เย็น)"],
+                answerText: "เก็บในที่แห้ง พ้นแสงแดด และพ้นมือเด็ก (เว้นแต่ยาที่ระบุให้แช่เย็น)",
+                explanation: "ความชื้นและแสงแดดทำให้ยาเสื่อมสภาพ และไม่ใช่ยาทุกชนิดที่ต้องแช่เย็น ให้เก็บตามที่ฉลากระบุ"
+            },
+            {
+                q: "เครื่องดื่มชนิดใดที่ไม่ควรใช้ดื่มพร้อมกับการรับประทานยาโดยทั่วไป?",
+                options: ["น้ำเปล่าอุณหภูมิห้อง", "น้ำเปล่าอุ่นๆ", "นม น้ำผลไม้ และเครื่องดื่มแอลกอฮอล์", "น้ำกรองบริสุทธิ์"],
+                answerText: "นม น้ำผลไม้ และเครื่องดื่มแอลกอฮอล์",
+                explanation: "นมและน้ำผลไม้(เช่น น้ำเกรปฟรุต) อาจลดการดูดซึมหรือตีกับยาบางชนิด ส่วนแอลกอฮอล์เพิ่มผลข้างเคียงของยาหลายชนิด น้ำเปล่าดีที่สุด"
+            },
+            {
+                q: "หากพบผู้ป่วยมีอาการแพ้ยารุนแรง หายใจไม่ออก และหน้าบวม ควรโทรแจ้งหมายเลขใด?",
+                options: ["1155", "191", "1669", "1193"],
+                answerText: "1669",
+                explanation: "1669 คือสายด่วนสถาบันการแพทย์ฉุกเฉินแห่งชาติ สำหรับกรณีเจ็บป่วยฉุกเฉินที่อันตรายถึงชีวิต"
+            },
+            {
+                q: "หากลืมรับประทานยาหลังอาหารเช้า นึกขึ้นได้ตอนเที่ยง ควรทำอย่างไรโดยทั่วไป?",
+                options: ["กินยามื้อเช้าและมื้อเที่ยงพร้อมกันเป็นสองเท่า", "ข้ามยามื้อเช้าไปเลย แล้วกินแค่มื้อเที่ยงปกติ (ไม่เพิ่มยา)", "หยุดกินยาไปเลยทั้งวัน", "กินยาของเพื่อนแทนไปก่อน"],
+                answerText: "ข้ามยามื้อเช้าไปเลย แล้วกินแค่มื้อเที่ยงปกติ (ไม่เพิ่มยา)",
+                explanation: "ไม่ควรเพิ่มขนาดยาเป็นสองเท่าเพื่อชดเชยมื้อที่ลืม เพราะอาจเกิดอันตรายจากการได้รับยาเกินขนาด ให้กินมื้อถัดไปตามปกติ"
+            },
+            {
+                q: "ก่อนใช้ยาทุกครั้ง สิ่งสำคัญที่สุดที่ต้องทำคืออะไร?",
+                options: ["ดมกลิ่นยาว่ายังหอมอยู่ไหม", "อ่านฉลากยา วิธีใช้ และวันหมดอายุ", "ถามเพื่อนว่าเคยกินยานี้ไหม", "ชิมดูว่ายามีรสขมหรือไม่"],
+                answerText: "อ่านฉลากยา วิธีใช้ และวันหมดอายุ",
+                explanation: "การอ่านฉลากยาอย่างละเอียดก่อนใช้ทุกครั้ง เป็นกฎเหล็กสำคัญที่สุดเพื่อป้องกันการใช้ยาผิดพลาด"
+            }
+        ];
+
+        // Label Explanations
+        const labelInfo = {
+            name: { title: "ชื่อยาและตัวยาสำคัญ", desc: "จุดสำคัญที่สุดที่บอกว่าเรากำลังกินยาอะไร ห้ามดูแค่สีหรือรูปร่างเด็ดขาด เพราะยาต่างชนิดอาจหน้าตาเหมือนกันได้" },
+            indication: { title: "ข้อบ่งใช้ / สรรพคุณ", desc: "บอกว่ายานี้ใช้รักษาอาการอะไร หากไม่ตรงกับอาการที่เราเป็น ไม่ควรใช้" },
+            dosage: { title: "ขนาดยาและวิธีใช้", desc: "ต้องกินครั้งละกี่เม็ด กินวันละกี่ครั้ง กินก่อนหรือหลังอาหาร ต้องปฏิบัติตามอย่างเคร่งครัด" },
+            warning: { title: "คำเตือนและข้อควรระวัง", desc: "สำคัญมาก! บอกถึงผลข้างเคียง ข้อห้ามใช้สำหรับคนท้อง ผู้มีโรคประจำตัว หรือขีดจำกัดสูงสุดต่อวัน" },
+            patient: { title: "ชื่อผู้ป่วย", desc: "ยาสั่งจ่ายเฉพาะบุคคล ห้ามนำยาของคนอื่นมากินเด็ดขาด แม้จะมีอาการเหมือนกัน" },
+            expiry: { title: "วันหมดอายุและการเก็บรักษา", desc: "EXP หรือ Expiry Date คือวันหมดอายุ ยาหมดอายุอาจเสื่อมสภาพหรือกลายเป็นพิษ ควรทิ้งทันที" }
+        };
+
+        
+        // Scroll Progress & Reveal
+        window.addEventListener('scroll', () => {
+            // Progress Bar
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+
+            // Reveal Elements
+            const reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveals[i].getBoundingClientRect().top;
+                const elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add('active');
+                }
+            }
+        });
+
+        // Motion Toggle
+        let motionReduced = false;
+        function toggleMotion() {
+            motionReduced = !motionReduced;
+            const btn = document.getElementById('motion-btn');
+            if (motionReduced) {
+                document.body.classList.add('reduce-motion');
+                btn.innerHTML = '<i class="fa-solid fa-person"></i> <span class="hidden md:inline">เปิดการเคลื่อนไหว</span>';
+                btn.classList.add('text-brandOrange-500');
+            } else {
+                document.body.classList.remove('reduce-motion');
+                btn.innerHTML = '<i class="fa-solid fa-person-running"></i> <span class="hidden md:inline">ลดการเคลื่อนไหว</span>';
+                btn.classList.remove('text-brandOrange-500');
+            }
+        }
+
+        // Navigation
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function goHome() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showQuiz() {
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+            window.scrollTo(0, 0);
+            initQuiz();
+        }
+
+        function renderMyths() {
+            const container = document.getElementById('myths-container');
+            container.innerHTML = '';
+            mythsData.forEach((item, index) => {
+                const html = `
+                    <div class="perspective-1000 h-64 cursor-pointer group" id="myth-card-${index}">
+                        <div class="relative w-full h-full transition-transform duration-500 transform-style-3d shadow-md rounded-2xl" id="myth-inner-${index}">
+                            
+                            <!-- Front -->
+                            <div class="absolute w-full h-full bg-white rounded-2xl p-6 backface-hidden border border-gray-200 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-xs text-gray-400 mb-2">ความเชื่อที่ ${index + 1}</div>
+                                    <h4 class="font-bold text-gray-800 text-lg">"${item.myth}"</h4>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="checkMyth(${index}, true, event)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-bold text-sm transition-colors border border-green-200">จริง</button>
+                                    <button onclick="checkMyth(${index}, false, event)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 py-2 rounded font-bold text-sm transition-colors border border-red-200">เท็จ</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Back -->
+                            <div class="absolute w-full h-full bg-brandBlue-50 rounded-2xl p-6 backface-hidden rotate-y-180 border border-brandBlue-200 flex flex-col justify-center text-center overflow-y-auto custom-scrollbar">
+                                <div class="text-3xl mb-2 text-red-500"><i class="fa-solid fa-xmark-circle"></i></div>
+                                <h4 class="font-bold text-brandBlue-900 mb-2">ความเชื่อนี้ "เท็จ"</h4>
+                                <p class="text-sm text-gray-700">${item.fact}</p>
+                                <button onclick="resetMyth(${index}, event)" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline">กลับ</button>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function checkMyth(index, userChoice, event) {
+            event.stopPropagation();
+            const innerCard = document.getElementById(`myth-inner-${index}`);
+            // All myths in this dataset are technically "False" (ความเชื่อผิด)
+            // Regardless of user choice, flip it to show the fact. 
+            // In a real game we might add score, but here it's educational reveal.
+            innerCard.style.transform = 'rotateY(180deg)';
+        }
+
+        function resetMyth(index, event) {
+            event.stopPropagation();
+            const innerCard = document.getElementById(`myth-inner-${index}`);
+            innerCard.style.transform = 'rotateY(0deg)';
+        }
+
+        // Label Interactive
+        function showLabelInfo(key) {
+            const info = labelInfo[key];
+            const panel = document.getElementById('label-info-panel');
+            panel.innerHTML = `
+                <div class="animate-pulse-slow">
+                    <h3 class="text-2xl font-bold text-brandBlue-900 mb-4 border-b-2 border-mint-400 pb-2 inline-block">${info.title}</h3>
+                    <p class="text-gray-700 text-lg leading-relaxed">${info.desc}</p>
+                </div>
+            `;
+            // Add subtle highlight animation to panel
+            panel.classList.remove('bg-blue-50');
+            panel.classList.add('bg-mint-50');
+            setTimeout(() => {
+                panel.classList.remove('bg-mint-50');
+                panel.classList.add('bg-blue-50');
+            }, 500);
+        }
+
+        let currentQuiz = [];
+        
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function initQuiz() {
+            // Deep copy and shuffle questions
+            currentQuiz = JSON.parse(JSON.stringify(originalQuizQuestions));
+            shuffleArray(currentQuiz);
+            
+            // Shuffle options for each question
+            currentQuiz.forEach(q => {
+                shuffleArray(q.options);
+            });
+
+            document.getElementById('quiz-result').classList.add('hidden');
+            renderQuizForm();
+        }
+
+        function renderQuizForm() {
+            const container = document.getElementById('quiz-container');
+            let html = '<div class="space-y-8">';
+            
+            currentQuiz.forEach((q, qIndex) => {
+                html += `
+                    <div class="quiz-item p-6 bg-gray-50 rounded-2xl border border-gray-200" id="q-block-${qIndex}">
+                        <h4 class="font-bold text-lg text-gray-800 mb-4">${qIndex + 1}. ${q.q}</h4>
+                        <div class="space-y-3">
+                `;
+                
+                q.options.forEach((opt, oIndex) => {
+                    html += `
+                        <label class="flex items-center p-3 rounded-lg bg-white border border-gray-300 cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="radio" name="q${qIndex}" value="${opt}" class="w-4 h-4 text-brandBlue-600 border-gray-300 focus:ring-brandBlue-500">
+                            <span class="ml-3 text-gray-700">${opt}</span>
+                        </label>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                        <div id="exp-${qIndex}" class="hidden mt-4 p-4 rounded-lg text-sm bg-blue-100 text-blue-900 border border-blue-200">
+                            <strong>คำอธิบาย:</strong> ${q.explanation}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+                <div class="mt-8 text-center">
+                    <button onclick="submitQuiz()" class="bg-brandBlue-600 hover:bg-brandBlue-500 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105 text-lg">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำตอบ
+                    </button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            let answered = 0;
+            
+            currentQuiz.forEach((q, qIndex) => {
+                const selected = document.querySelector(`input[name="q${qIndex}"]:checked`);
+                const block = document.getElementById(`q-block-${qIndex}`);
+                const exp = document.getElementById(`exp-${qIndex}`);
+                
+                // Reset styling
+                block.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
+                
+                if (selected) {
+                    answered++;
+                    exp.classList.remove('hidden'); // Show explanation
+                    
+                    // Highlight selected radio parent
+                    const labels = block.querySelectorAll('label');
+                    labels.forEach(l => l.classList.remove('ring-2', 'ring-green-500', 'ring-red-500'));
+                    
+                    if (selected.value === q.answerText) {
+                        score++;
+                        block.classList.add('border-green-500', 'bg-green-50');
+                        selected.parentElement.classList.add('ring-2', 'ring-green-500');
+                    } else {
+                        block.classList.add('border-red-500', 'bg-red-50');
+                        selected.parentElement.classList.add('ring-2', 'ring-red-500');
+                        
+                        // Highlight correct answer
+                        labels.forEach(l => {
+                            if(l.querySelector('input').value === q.answerText) {
+                                l.classList.add('bg-green-100', 'border-green-500');
+                            }
+                        });
+                    }
+                }
+            });
+
+            if (answered < currentQuiz.length) {
+                alert(`คุณทำข้อสอบไปเพียง ${answered} ข้อ จากทั้งหมด ${currentQuiz.length} ข้อ กรุณาทำให้ครบเพื่อผลลัพธ์ที่แม่นยำ`);
+                // Scroll to first unanswered (basic implementation)
+                return;
+            }
+
+            // Show results
+            const percent = (score / currentQuiz.length) * 100;
+            let message = "";
+            let colorClass = "";
+            let icon = "";
+
+            if (percent >= 80) {
+                message = "ยอดเยี่ยมมาก! คุณมีความรู้ความเข้าใจเรื่องการใช้ยาอย่างปลอดภัยเป็นอย่างดี";
+                colorClass = "text-green-600";
+                icon = "fa-medal";
+            } else if (percent >= 50) {
+                message = "ดี! แต่อาจจะต้องทบทวนเนื้อหาบางส่วนเพิ่มเติมเพื่อให้ใช้ยาได้อย่างปลอดภัย 100%";
+                colorClass = "text-brandOrange-500";
+                icon = "fa-thumbs-up";
+            } else {
+                message = "ควรทบทวนเนื้อหาอีกครั้ง ความรู้เรื่องยาสำคัญมากต่อความปลอดภัยของคุณ";
+                colorClass = "text-red-500";
+                icon = "fa-book-medical";
+            }
+
+            const resContainer = document.getElementById('quiz-result');
+            resContainer.innerHTML = `
+                <i class="fa-solid ${icon} text-6xl ${colorClass} mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">คุณทำได้ ${score} / ${currentQuiz.length} คะแนน</h3>
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-4 max-w-md mx-auto overflow-hidden">
+                    <div class="bg-brandBlue-600 h-4 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                </div>
+                <p class="${colorClass} font-bold text-lg mb-6">${message}</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="initQuiz()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-full font-bold transition-colors">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> ทำอีกครั้ง
+                    </button>
+                    <button onclick="goHome()" class="bg-mint-500 hover:bg-mint-600 text-white px-6 py-2 rounded-full font-bold transition-colors shadow-md">
+                        <i class="fa-solid fa-book mr-1"></i> กลับไปทบทวนบทเรียน
+                    </button>
+                </div>
+            `;
+            resContainer.classList.remove('hidden');
+            resContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Disable inputs after submit
+            document.querySelectorAll('#quiz-container input').forEach(inp => inp.disabled = true);
+            // Hide submit button
+            document.querySelector('#quiz-container button').classList.add('hidden');
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            renderMyths();
+            // Trigger initial scroll to show hero properly
+            window.dispatchEvent(new Event('scroll'));
+        };
+
+    </script>
+</body>
+</html>
