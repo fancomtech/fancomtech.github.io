@@ -307,11 +307,60 @@
     </div>
   </div>
 
+    <!-- ========================================== -->
+  <!-- MODALS -->
+  <!-- ========================================== -->
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-sm p-6 fade-in">
+      <div class="text-center mb-4">
+        <i class="fas fa-user-circle text-5xl text-green-600 mb-2"></i>
+        <h3 class="text-xl font-bold text-green-800">เข้าสู่ระบบ</h3>
+        <p class="text-xs text-gray-500 mt-1">ระบบสแกนละหมาด Pro</p>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้</label>
+          <input type="text" id="loginUser" class="w-full p-2 border rounded-lg" placeholder="กรอกชื่อผู้ใช้" autocomplete="off">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+          <input type="password" id="loginPass" class="w-full p-2 border rounded-lg" placeholder="กรอกรหัสผ่าน" autocomplete="off">
+        </div>
+        <button onclick="submitLogin()" id="btnLogin" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+          <i class="fas fa-sign-in-alt mr-1"></i> เข้าสู่ระบบ
+        </button>
+        <button onclick="closeLoginModal()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Info Modal -->
+  <div id="userInfoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="glass-card w-full max-w-sm p-6 fade-in">
+      <div class="text-center mb-4">
+        <img id="userProfilePhoto" src="" class="w-24 h-24 rounded-full mx-auto mb-2 border-4 border-green-500 object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=10b981&color=fff&size=128'">
+        <h3 class="text-xl font-bold text-green-800" id="userProfileName"></h3>
+        <p class="text-sm text-gray-500" id="userProfileRole"></p>
+      </div>
+      <div id="userInfoContent" class="space-y-2 text-sm bg-gray-50 p-3 rounded-lg"></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="editCurrentUser()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+          <i class="fas fa-edit mr-1"></i> แก้ไขโปรไฟล์
+        </button>
+        <button onclick="logout()" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+          <i class="fas fa-sign-out-alt mr-1"></i> ออกจากระบบ
+        </button>
+      </div>
+      <button onclick="closeUserInfo()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 mt-2">ปิด</button>
+    </div>
+  </div>
+
   <!-- Student Modal -->
   <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="glass-card w-full max-w-md p-6 fade-in max-h-[90vh] overflow-y-auto">
       <h3 class="text-xl font-bold text-green-800 mb-4" id="studentModalTitle">เพิ่มนักเรียน</h3>
-      <input type="hidden" id="editStudentId">
       <div class="space-y-3">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">รหัสนักเรียน *</label>
@@ -345,22 +394,13 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">URL รูปถ่าย (ถ้ามี)</label>
-          <input type="text" id="stuPhoto" class="w-full p-2 border rounded-lg text-sm" placeholder="https://... หรือ เว้นว่างไว้">
+          <input type="text" id="stuPhoto" class="w-full p-2 border rounded-lg text-sm" placeholder="https://...">
+          <img id="stuPhotoPreview" class="w-20 h-20 rounded-lg mt-2 object-cover border hidden" src="">
         </div>
       </div>
       <div class="flex gap-3 mt-6">
         <button onclick="closeStudentModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ยกเลิก</button>
         <button onclick="saveStudentData()" id="btnSaveStudent" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">บันทึก</button>
-      </div>
-      <div id="qrCodeSection" class="mt-4 hidden">
-        <hr class="my-3">
-        <h4 class="font-bold text-green-800 mb-2">QR Code</h4>
-        <div id="qrCodeContainer" class="text-center">
-          <img id="studentQRCode" class="qr-code-img mx-auto mb-2" src="" alt="QR Code">
-          <button onclick="generateQRCode()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm">
-            <i class="fas fa-qrcode mr-1"></i> สร้าง/อัปเดต QR Code
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -387,17 +427,25 @@
     </div>
   </div>
 
-  <!-- QR Code Modal -->
+  <!-- QR Code Modal (แก้ไขแล้ว) -->
   <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="glass-card w-full max-w-md p-6 fade-in text-center">
       <h3 class="text-xl font-bold text-green-800 mb-4"><i class="fas fa-qrcode mr-2"></i>QR Code นักเรียน</h3>
       <div id="qrModalContent" class="mb-4">
-        <img id="modalQRCode" class="qr-code-img mx-auto mb-3" src="" alt="QR Code">
-        <p id="modalQRInfo" class="text-sm text-gray-600"></p>
+        <div id="qrLoading" class="py-8">
+          <div class="spinner mx-auto mb-2"></div>
+          <p class="text-sm text-gray-600">กำลังสร้าง QR Code...</p>
+        </div>
+        <div id="qrDisplay" class="hidden">
+          <div class="bg-white p-4 rounded-lg inline-block mb-3">
+            <img id="modalQRCode" class="w-48 h-48 mx-auto" src="" alt="QR Code">
+          </div>
+          <p id="modalQRInfo" class="text-sm text-gray-600"></p>
+        </div>
       </div>
       <div class="flex gap-3">
         <button onclick="closeQRModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">ปิด</button>
-        <button onclick="downloadQRCode()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+        <button onclick="downloadQRCode()" id="btnDownloadQR" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 hidden">
           <i class="fas fa-download mr-1"></i> ดาวน์โหลด
         </button>
       </div>
@@ -406,10 +454,14 @@
 
   <!-- User Modal -->
   <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="glass-card w-full max-w-md p-6 fade-in">
+    <div class="glass-card w-full max-w-md p-6 fade-in max-h-[90vh] overflow-y-auto">
       <h3 class="text-xl font-bold text-green-800 mb-4" id="userModalTitle">เพิ่มผู้ใช้</h3>
-      <input type="hidden" id="editUsername">
       <div class="space-y-3">
+        <div class="text-center">
+          <img id="usrPhotoPreview" src="https://ui-avatars.com/api/?name=User&background=10b981&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-2 border-4 border-green-500 object-cover">
+          <label class="block text-sm font-medium text-gray-700 mb-1">รูปโปรไฟล์</label>
+          <input type="text" id="usrPhoto" class="w-full p-2 border rounded-lg text-sm" placeholder="URL รูปถ่าย" onchange="previewUserPhoto()">
+        </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้ *</label>
           <input type="text" id="usrUsername" class="w-full p-2 border rounded-lg" required>
@@ -433,7 +485,7 @@
         </div>
         <div id="classField">
           <label class="block text-sm font-medium text-gray-700 mb-1">ชั้นที่รับผิดชอบ</label>
-          <input type="text" id="usrClass" class="w-full p-2 border rounded-lg" placeholder="เช่น ม.1/1 (สำหรับครูประจำชั้น)">
+          <input type="text" id="usrClass" class="w-full p-2 border rounded-lg" placeholder="เช่น ม.1/1">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
@@ -465,11 +517,10 @@
   <div id="columnModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="glass-card w-full max-w-md p-6 fade-in">
       <h3 class="text-xl font-bold text-green-800 mb-4" id="columnModalTitle">เพิ่มคอลัมน์</h3>
-      <input type="hidden" id="editColumnName">
       <div class="space-y-3">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อคอลัมน์ *</label>
-          <input type="text" id="colName" class="w-full p-2 border rounded-lg" placeholder="เช่น มกราคม, กุมภาพันธ์" required>
+          <input type="text" id="colName" class="w-full p-2 border rounded-lg" placeholder="เช่น มกราคม" required>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">ประเภท *</label>
@@ -511,8 +562,13 @@
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT -->
+  <!-- ========================================== -->
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwZHSjDtTXwEBZh3h2URPyYyu3n-Zs4vtuuqnEAF6SyD_wa0Z6RN30V1UL-YMEuhI6T/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+    
+    // State
     let currentUser = null;
     let allStudents = [];
     let scanHistory = [];
@@ -520,86 +576,79 @@
     let customColumns = [];
     let currentQRCodeUrl = "";
     let currentEditStudentId = "";
+    let currentEditUsername = "";
+    
+    // Pagination State
+    let pagination = {
+      students: { page: 1, perPage: 10 },
+      history: { page: 1, perPage: 10 },
+      users: { page: 1, perPage: 10 }
+    };
 
     // ==========================================
-    //  API HELPER
+    // API HELPER
     // ==========================================
     async function callGAS(action, payload = {}) {
       const startTime = Date.now();
       try {
-        console.log(` Calling GAS: ${action}`, payload);
-        
         const response = await fetch(GAS_API_URL, {
           method: "POST",
           body: JSON.stringify({ action, ...payload }),
           redirect: "follow"
         });
         
-        console.log(`📥 Response status: ${response.status}`);
-        
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           const text = await response.text();
-          console.error("❌ Response ไม่ใช่ JSON:", text.substring(0, 200));
           throw new Error(`Response ไม่ใช่ JSON: ${text.substring(0, 100)}`);
         }
         
         const result = await response.json();
-        const duration = Date.now() - startTime;
-        console.log(`✅ Success: ${action} (${duration}ms)`, result);
         return result;
       } catch (error) {
-        const duration = Date.now() - startTime;
-        console.error(`❌ Error: ${action}`, error);
-        
-        let errorMsg = error.message;
-        if (errorMsg.includes("Failed to fetch")) {
-          errorMsg = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้";
-        }
-        
-        return { success: false, message: errorMsg };
+        console.error(`Error: ${action}`, error);
+        return { success: false, message: error.message || "เกิดข้อผิดพลาด" };
       }
     }
 
     // ==========================================
-    // 🔐 AUTHENTICATION
+    // AUTHENTICATION
     // ==========================================
-    function showAdminLogin() {
-      document.getElementById('adminLoginModal').classList.remove('hidden');
-      document.getElementById('adminLoginModal').classList.add('flex');
-      document.getElementById('adminUser').focus();
+    function showLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('loginModal').classList.add('flex');
+      document.getElementById('loginUser').focus();
     }
 
-    function closeAdminLogin() {
-      document.getElementById('adminLoginModal').classList.add('hidden');
-      document.getElementById('adminLoginModal').classList.remove('flex');
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').classList.remove('flex');
     }
 
-    async function submitAdminLogin() {
-      const username = document.getElementById('adminUser').value.trim();
-      const password = document.getElementById('adminPass').value.trim();
+    async function submitLogin() {
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value.trim();
       
       if (!username || !password) {
         Swal.fire('ผิดพลาด', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'error');
         return;
       }
 
-      const btn = document.getElementById('btnAdminLogin');
+      const btn = document.getElementById('btnLogin');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> กำลังเข้าสู่ระบบ...';
 
       const res = await callGAS('login', { credentials: { username, password } });
       
       btn.disabled = false;
-      btn.innerHTML = 'เข้าสู่ระบบ';
+      btn.innerHTML = '<i class="fas fa-sign-in-alt mr-1"></i> เข้าสู่ระบบ';
 
       if (res.success) {
         currentUser = res.user;
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        closeAdminLogin();
+        closeLoginModal();
         Swal.fire('สำเร็จ', `ยินดีต้อนรับ ${currentUser.name}`, 'success');
         updateUIForRole();
-        loadStudents();
       } else {
         Swal.fire('ผิดพลาด', res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
       }
@@ -607,7 +656,7 @@
 
     function showUserInfo() {
       if (!currentUser) {
-        showAdminLogin();
+        showLoginModal();
         return;
       }
       
@@ -618,14 +667,14 @@
         'member': 'สมาชิก'
       };
       
+      document.getElementById('userProfileName').textContent = currentUser.name;
+      document.getElementById('userProfileRole').textContent = roleNames[currentUser.role] || currentUser.role;
+      document.getElementById('userProfilePhoto').src = currentUser.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10b981&color=fff&size=128`;
+      
       document.getElementById('userInfoContent').innerHTML = `
-        <div class="bg-green-50 p-3 rounded-lg">
-          <p><strong>ชื่อผู้ใช้:</strong> ${currentUser.username}</p>
-          <p><strong>ชื่อ-นามสกุล:</strong> ${currentUser.name}</p>
-          <p><strong>บทบาท:</strong> ${roleNames[currentUser.role] || currentUser.role}</p>
-          ${currentUser.class ? `<p><strong>ชั้นที่รับผิดชอบ:</strong> ${currentUser.class}</p>` : ''}
-          <p><strong>สิทธิ์:</strong> ${currentUser.permissions || 'ทั้งหมด'}</p>
-        </div>
+        <p><strong>ชื่อผู้ใช้:</strong> ${currentUser.username}</p>
+        ${currentUser.class ? `<p><strong>ชั้นที่รับผิดชอบ:</strong> ${currentUser.class}</p>` : ''}
+        <p><strong>สิทธิ์:</strong> ${currentUser.permissions || 'ทั้งหมด'}</p>
       `;
       
       document.getElementById('userInfoModal').classList.remove('hidden');
@@ -637,6 +686,11 @@
       document.getElementById('userInfoModal').classList.remove('flex');
     }
 
+    function editCurrentUser() {
+      closeUserInfo();
+      openUserModal(currentUser.username);
+    }
+
     function logout() {
       currentUser = null;
       localStorage.removeItem('currentUser');
@@ -646,18 +700,25 @@
     }
 
     function updateUIForRole() {
+      const loginBtn = document.getElementById('loginBtn');
+      const userInfoBtn = document.getElementById('userInfoBtn');
+      
       if (!currentUser) {
-        // ซ่อนแท็บตั้งค่าถ้ายังไม่ได้ login
+        loginBtn.style.display = 'block';
+        userInfoBtn.style.display = 'none';
         document.getElementById('tab-settings').style.display = 'none';
+        document.getElementById('tab-stats').style.display = 'none';
         return;
       }
       
+      loginBtn.style.display = 'none';
+      userInfoBtn.style.display = 'block';
       document.getElementById('tab-settings').style.display = 'flex';
+      document.getElementById('tab-stats').style.display = 'flex';
       
       const role = currentUser.role;
       const permissions = currentUser.permissions || 'all';
       
-      // ซ่อน/แสดง sub-tabs ตามบทบาท
       const subtabs = {
         'students': role === 'admin' || permissions.includes('students'),
         'history': role === 'admin' || role === 'homeroom' || role === 'duty' || permissions.includes('history'),
@@ -672,7 +733,7 @@
     }
 
     // ==========================================
-    // 🎨 UI & TABS
+    // UI & TABS
     // ==========================================
     function switchTab(tabName) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
@@ -682,10 +743,13 @@
       
       if (tabName === 'settings') {
         if (!currentUser) {
-          showAdminLogin();
+          showLoginModal();
         } else {
           switchSubTab('students');
         }
+      }
+      if (tabName === 'stats') {
+        loadStatistics();
       }
     }
 
@@ -695,10 +759,21 @@
       document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active', 'bg-green-100'));
       document.getElementById(`subtab-${subTabName}`).classList.add('active', 'bg-green-100');
       
-      if (subTabName === 'students') loadStudents();
-      if (subTabName === 'history') loadAllScanHistory();
-      if (subTabName === 'users') loadUsers();
-      if (subTabName === 'columns') loadCustomColumns();
+      if (subTabName === 'students') {
+        pagination.students.page = 1;
+        loadStudents();
+      }
+      if (subTabName === 'history') {
+        pagination.history.page = 1;
+        loadAllScanHistory();
+      }
+      if (subTabName === 'users') {
+        pagination.users.page = 1;
+        loadUsers();
+      }
+      if (subTabName === 'columns') {
+        loadCustomColumns();
+      }
     }
 
     function toggleFullscreen() {
@@ -707,13 +782,71 @@
     }
 
     // ==========================================
-    // 👨‍🎓 STUDENT CRUD
+    // PAGINATION HELPER
+    // ==========================================
+    function createPaginationControls(containerId, totalItems, currentPage, perPage, callback) {
+      const container = document.getElementById(containerId);
+      const totalPages = Math.ceil(totalItems / perPage);
+      
+      let html = `
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4 pt-4 border-t">
+          <div class="flex items-center gap-2 text-sm">
+            <span>แสดง</span>
+            <select onchange="${callback}(${currentPage}, this.value)" class="border rounded px-2 py-1">
+              ${[5, 10, 15, 20, 25, 50, 100].map(n => 
+                `<option value="${n}" ${n === perPage ? 'selected' : ''}>${n}</option>`
+              ).join('')}
+              <option value="all" ${perPage === 'all' ? 'selected' : ''}>ทั้งหมด</option>
+            </select>
+            <span>รายการ</span>
+          </div>
+          <div class="text-sm text-gray-600">
+            หน้า ${currentPage} จาก ${totalPages || 1} (รวม ${totalItems} รายการ)
+          </div>
+          <div class="flex gap-1">
+            <button onclick="${callback}(1, ${perPage})" class="px-3 py-1 border rounded ${currentPage === 1 ? 'bg-gray-200' : 'hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>
+              <i class="fas fa-angle-double-left"></i>
+            </button>
+            <button onclick="${callback}(${currentPage - 1}, ${perPage})" class="px-3 py-1 border rounded ${currentPage === 1 ? 'bg-gray-200' : 'hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>
+              <i class="fas fa-angle-left"></i>
+            </button>
+      `;
+      
+      // แสดงหน้าใกล้เคียง
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, currentPage + 2);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button onclick="${callback}(${i}, ${perPage})" class="px-3 py-1 border rounded ${i === currentPage ? 'bg-green-600 text-white' : 'hover:bg-gray-100'}">${i}</button>`;
+      }
+      
+      html += `
+            <button onclick="${callback}(${currentPage + 1}, ${perPage})" class="px-3 py-1 border rounded ${currentPage === totalPages ? 'bg-gray-200' : 'hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>
+              <i class="fas fa-angle-right"></i>
+            </button>
+            <button onclick="${callback}(${totalPages}, ${perPage})" class="px-3 py-1 border rounded ${currentPage === totalPages ? 'bg-gray-200' : 'hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>
+              <i class="fas fa-angle-double-right"></i>
+            </button>
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+
+    function getPaginatedData(data, page, perPage) {
+      if (perPage === 'all') return data;
+      const start = (page - 1) * perPage;
+      return data.slice(start, start + perPage);
+    }
+
+    // ==========================================
+    // STUDENT CRUD
     // ==========================================
     async function loadStudents() {
       const tbody = document.getElementById('studentTableBody');
       const countDiv = document.getElementById('studentCount');
       tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
-      countDiv.textContent = '';
       
       const payload = {};
       if (currentUser) {
@@ -725,21 +858,7 @@
       if (res.success) {
         allStudents = res.data || [];
         countDiv.textContent = `พบนักเรียน ${allStudents.length} คน`;
-        if (allStudents.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="7" class="p-4 text-center">
-                <div class="text-yellow-600">
-                  <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                  <div>⚠️ ไม่พบข้อมูลนักเรียน</div>
-                  ${currentUser?.role === 'admin' ? `<button onclick="openImportModal()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-file-import mr-1"></i> นำเข้าข้อมูล</button>` : ''}
-                </div>
-              </td>
-            </tr>
-          `;
-        } else {
-          renderStudentTable();
-        }
+        renderStudentTable();
       } else {
         tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">โหลดข้อมูลล้มเหลว: ${res.message || ""}</td></tr>`;
       }
@@ -754,44 +873,51 @@
       );
       const tbody = document.getElementById('studentTableBody');
       
-      if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
-        return;
-      }
-
-      const canEdit = currentUser?.role === 'admin';
+      const paginated = getPaginatedData(filtered, pagination.students.page, pagination.students.perPage);
       
-      tbody.innerHTML = filtered.map(s => `
-        <tr class="hover:bg-gray-50 transition">
-          <td class="p-2 md:p-3 font-mono text-xs md:text-sm">${s.id}</td>
-          <td class="p-2 md:p-3 font-mono text-xs hide-mobile">${s.rfid || '-'}</td>
-          <td class="p-2 md:p-3">
-            ${s.photo ? `<img src="${s.photo}" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff'">` : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border">`}
-          </td>
-          <td class="p-2 md:p-3 font-medium text-xs md:text-sm">${s.name}</td>
-          <td class="p-2 md:p-3 text-xs hide-mobile">${s.gender}</td>
-          <td class="p-2 md:p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
-          <td class="p-2 md:p-3 text-center">
-            ${canEdit ? `
-              <button onclick="openStudentModal('${s.id}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
-              <button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>
-              <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
-            ` : `<button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>`}
-          </td>
-        </tr>
-      `).join('');
+      if (paginated.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+      } else {
+        const canEdit = currentUser?.role === 'admin';
+        tbody.innerHTML = paginated.map(s => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="p-2 md:p-3 font-mono text-xs md:text-sm">${s.id}</td>
+            <td class="p-2 md:p-3 font-mono text-xs hide-mobile">${s.rfid || '-'}</td>
+            <td class="p-2 md:p-3">
+              <img src="${s.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff`}" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=10b981&color=fff'">
+            </td>
+            <td class="p-2 md:p-3 font-medium text-xs md:text-sm">${s.name}</td>
+            <td class="p-2 md:p-3 text-xs hide-mobile">${s.gender}</td>
+            <td class="p-2 md:p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+            <td class="p-2 md:p-3 text-center">
+              ${canEdit ? `
+                <button onclick="openStudentModal('${s.id}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
+                <button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>
+                <button onclick="deleteStudent('${s.id}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
+              ` : `<button onclick="showQRCode('${s.id}')" class="text-purple-600 hover:text-purple-800 mx-1" title="QR Code"><i class="fas fa-qrcode"></i></button>`}
+            </td>
+          </tr>
+        `).join('');
+      }
+      
+      createPaginationControls('studentPagination', filtered.length, pagination.students.page, pagination.students.perPage, 'changeStudentPagination');
+    }
+
+    function changeStudentPagination(page, perPage) {
+      pagination.students.page = parseInt(page) || 1;
+      pagination.students.perPage = perPage === 'all' ? 'all' : parseInt(perPage);
+      renderStudentTable();
     }
 
     function openStudentModal(id = null) {
       if (currentUser?.role !== 'admin') {
-        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้นที่แก้ไขข้อมูลได้', 'error');
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
         return;
       }
       
       currentEditStudentId = id || "";
       document.getElementById('studentModal').classList.remove('hidden');
       document.getElementById('studentModal').classList.add('flex');
-      document.getElementById('qrCodeSection').classList.add('hidden');
       
       if (id) {
         const s = allStudents.find(x => x.id === id);
@@ -803,11 +929,7 @@
         document.getElementById('stuGender').value = s.gender;
         document.getElementById('stuClass').value = s.class;
         document.getElementById('stuPhoto').value = s.photo || "";
-        
-        if (s.qrCode) {
-          document.getElementById('qrCodeSection').classList.remove('hidden');
-          document.getElementById('studentQRCode').src = s.qrCode;
-        }
+        previewStudentPhoto();
       } else {
         document.getElementById('studentModalTitle').innerText = 'เพิ่มนักเรียนใหม่';
         document.getElementById('stuId').value = '';
@@ -817,6 +939,7 @@
         document.getElementById('stuGender').value = 'ชาย';
         document.getElementById('stuClass').value = '';
         document.getElementById('stuPhoto').value = '';
+        document.getElementById('stuPhotoPreview').classList.add('hidden');
       }
     }
 
@@ -825,6 +948,19 @@
       document.getElementById('studentModal').classList.remove('flex');
       currentEditStudentId = "";
     }
+
+    function previewStudentPhoto() {
+      const url = document.getElementById('stuPhoto').value.trim();
+      const preview = document.getElementById('stuPhotoPreview');
+      if (url) {
+        preview.src = url;
+        preview.classList.remove('hidden');
+      } else {
+        preview.classList.add('hidden');
+      }
+    }
+
+    document.getElementById('stuPhoto').addEventListener('input', previewStudentPhoto);
 
     async function saveStudentData() {
       const btn = document.getElementById('btnSaveStudent');
@@ -841,7 +977,7 @@
       };
 
       if (!data.id || !data.name || !data.class) {
-        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน (รหัสนักเรียน, ชื่อ, ระดับชั้น)', 'error');
+        Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
         btn.disabled = false; btn.innerHTML = 'บันทึก';
         return;
       }
@@ -860,13 +996,13 @@
 
     async function deleteStudent(id) {
       if (currentUser?.role !== 'admin') {
-        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้นที่ลบข้อมูลได้', 'error');
+        Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
         return;
       }
       
       const result = await Swal.fire({ 
         title: 'ยืนยันการลบ?', 
-        text: `รหัสนักเรียน ${id} จะถูกลบออกจากระบบ`, 
+        text: `รหัสนักเรียน ${id} จะถูกลบ`, 
         icon: 'warning', 
         showCancelButton: true, 
         confirmButtonText: 'ลบ', 
@@ -886,13 +1022,7 @@
     function captureRFID() {
       Swal.fire({
         title: 'แตะบัตร RFID',
-        html: `
-          <div class="text-center">
-            <i class="fas fa-id-card text-6xl text-blue-500 mb-4"></i>
-            <p class="text-sm text-gray-600">กรุณาแตะบัตร RFID ที่เครื่องอ่าน</p>
-            <input type="text" id="rfidCaptureInput" class="mt-4 w-full p-2 border rounded" autofocus>
-          </div>
-        `,
+        html: `<div class="text-center"><i class="fas fa-id-card text-6xl text-blue-500 mb-4"></i><p class="text-sm text-gray-600">กรุณาแตะบัตร RFID</p><input type="text" id="rfidCaptureInput" class="mt-4 w-full p-2 border rounded" autofocus></div>`,
         showConfirmButton: false,
         allowOutsideClick: false,
         didOpen: () => {
@@ -912,6 +1042,9 @@
       });
     }
 
+    // ==========================================
+    // QR CODE (แก้ไขแล้ว)
+    // ==========================================
     async function showQRCode(studentId) {
       const student = allStudents.find(s => s.id === studentId);
       if (!student) {
@@ -921,24 +1054,34 @@
 
       document.getElementById('qrModal').classList.remove('hidden');
       document.getElementById('qrModal').classList.add('flex');
+      document.getElementById('qrLoading').classList.remove('hidden');
+      document.getElementById('qrDisplay').classList.add('hidden');
+      document.getElementById('btnDownloadQR').classList.add('hidden');
       
-      if (student.qrCode) {
-        document.getElementById('modalQRCode').src = student.qrCode;
-        currentQRCodeUrl = student.qrCode;
-      } else {
-        document.getElementById('modalQRCode').src = '';
-        document.getElementById('modalQRInfo').innerHTML = '<div class="spinner"></div> กำลังสร้าง QR Code...';
-        
-        const res = await callGAS('generateQR', { studentId });
-        if (res.success) {
-          document.getElementById('modalQRCode').src = res.qrCodeUrl;
-          currentQRCodeUrl = res.qrCodeUrl;
-          loadStudents();
-        } else {
-          document.getElementById('modalQRInfo').innerHTML = `<p class="text-red-600">❌ ${res.message}</p>`;
-        }
+      // ถ้ามี QR Code อยู่แล้ว แสดงเลย
+      if (student.qrCode && student.qrCode.startsWith('http')) {
+        displayQRCode(student.qrCode, student);
+        return;
       }
       
+      // สร้าง QR Code ใหม่
+      const res = await callGAS('generateQR', { studentId });
+      if (res.success) {
+        displayQRCode(res.qrCodeUrl, student);
+        loadStudents();
+      } else {
+        document.getElementById('qrLoading').classList.add('hidden');
+        document.getElementById('qrDisplay').classList.remove('hidden');
+        document.getElementById('modalQRInfo').innerHTML = `<p class="text-red-600">❌ ${res.message}</p>`;
+      }
+    }
+
+    function displayQRCode(qrUrl, student) {
+      currentQRCodeUrl = qrUrl;
+      document.getElementById('qrLoading').classList.add('hidden');
+      document.getElementById('qrDisplay').classList.remove('hidden');
+      document.getElementById('btnDownloadQR').classList.remove('hidden');
+      document.getElementById('modalQRCode').src = qrUrl;
       document.getElementById('modalQRInfo').innerHTML = `
         <p class="font-bold">${student.name}</p>
         <p class="text-xs">รหัส: ${student.id} | ชั้น: ${student.class}</p>
@@ -953,32 +1096,34 @@
 
     function downloadQRCode() {
       if (!currentQRCodeUrl) {
-        Swal.fire('ผิดพลาด', 'ไม่มี QR Code ให้ดาวน์โหลด', 'error');
+        Swal.fire('ผิดพลาด', 'ไม่มี QR Code', 'error');
         return;
       }
       
-      const link = document.createElement('a');
-      link.href = currentQRCodeUrl;
-      link.download = 'qrcode.png';
-      link.click();
+      // ดาวน์โหลดผ่าน canvas เพื่อข้าม CORS
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const link = document.createElement('a');
+        link.download = 'qrcode.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+      img.onerror = function() {
+        // ถ้า CORS ไม่อนุญาต ให้เปิดในแท็บใหม่
+        window.open(currentQRCodeUrl, '_blank');
+      };
+      img.src = currentQRCodeUrl;
     }
 
-    async function generateQRCode() {
-      if (!currentEditStudentId) {
-        Swal.fire('ผิดพลาด', 'กรุณาบันทึกข้อมูลนักเรียนก่อน', 'error');
-        return;
-      }
-
-      const res = await callGAS('generateQR', { studentId: currentEditStudentId });
-      if (res.success) {
-        document.getElementById('studentQRCode').src = res.qrCodeUrl;
-        Swal.fire('สำเร็จ', 'สร้าง QR Code สำเร็จ', 'success');
-        loadStudents();
-      } else {
-        Swal.fire('ผิดพลาด', res.message, 'error');
-      }
-    }
-
+    // ==========================================
+    // IMPORT/EXPORT
+    // ==========================================
     function openImportModal() {
       if (currentUser?.role !== 'admin') {
         Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
@@ -1044,13 +1189,13 @@
     }
 
     // ==========================================
-    // 📊 SCAN HISTORY
+    // SCAN HISTORY
     // ==========================================
     async function loadAllScanHistory() {
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
       
-      const payload = { limit: 200 };
+      const payload = { limit: 1000 };
       if (currentUser) {
         payload.role = currentUser.role;
         payload.class = currentUser.class;
@@ -1073,26 +1218,35 @@
       );
       const tbody = document.getElementById('historyTableBody');
       
-      if (filtered.length === 0) {
+      const paginated = getPaginatedData(filtered, pagination.history.page, pagination.history.perPage);
+      
+      if (paginated.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
-        return;
+      } else {
+        tbody.innerHTML = paginated.map((h, idx) => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="p-2 md:p-3 text-xs">${(pagination.history.page - 1) * (pagination.history.perPage === 'all' ? filtered.length : pagination.history.perPage) + idx + 1}</td>
+            <td class="p-2 md:p-3 font-mono text-xs">${h.studentId}</td>
+            <td class="p-2 md:p-3 font-medium text-xs">${h.studentName}</td>
+            <td class="p-2 md:p-3 hide-mobile"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${h.studentClass}</span></td>
+            <td class="p-2 md:p-3 text-xs">${h.date}</td>
+            <td class="p-2 md:p-3 text-xs hide-mobile">${h.prayer}</td>
+            <td class="p-2 md:p-3 text-xs">${h.time}</td>
+          </tr>
+        `).join('');
       }
+      
+      createPaginationControls('historyPagination', filtered.length, pagination.history.page, pagination.history.perPage, 'changeHistoryPagination');
+    }
 
-      tbody.innerHTML = filtered.map((h, idx) => `
-        <tr class="hover:bg-gray-50 transition">
-          <td class="p-2 md:p-3 text-xs">${idx + 1}</td>
-          <td class="p-2 md:p-3 font-mono text-xs">${h.studentId}</td>
-          <td class="p-2 md:p-3 font-medium text-xs">${h.studentName}</td>
-          <td class="p-2 md:p-3 hide-mobile"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${h.studentClass}</span></td>
-          <td class="p-2 md:p-3 text-xs">${h.date}</td>
-          <td class="p-2 md:p-3 text-xs hide-mobile">${h.prayer}</td>
-          <td class="p-2 md:p-3 text-xs">${h.time}</td>
-        </tr>
-      `).join('');
+    function changeHistoryPagination(page, perPage) {
+      pagination.history.page = parseInt(page) || 1;
+      pagination.history.perPage = perPage === 'all' ? 'all' : parseInt(perPage);
+      renderHistoryTable();
     }
 
     // ==========================================
-    // 👥 USER MANAGEMENT
+    // USER MANAGEMENT
     // ==========================================
     async function loadUsers() {
       if (currentUser?.role !== 'admin') {
@@ -1121,55 +1275,69 @@
         'member': 'สมาชิก'
       };
       
-      if (allUsers.length === 0) {
+      const paginated = getPaginatedData(allUsers, pagination.users.page, pagination.users.perPage);
+      
+      if (paginated.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
-        return;
+      } else {
+        tbody.innerHTML = paginated.map(u => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="p-2 md:p-3">
+              <div class="flex items-center gap-2">
+                <img src="${u.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=10b981&color=fff`}" class="w-8 h-8 rounded-full object-cover border" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=10b981&color=fff'">
+                <span class="font-mono text-xs">${u.username}</span>
+              </div>
+            </td>
+            <td class="p-2 md:p-3 text-xs">${u.name}</td>
+            <td class="p-2 md:p-3 text-xs hide-mobile"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${roleNames[u.role] || u.role}</span></td>
+            <td class="p-2 md:p-3 text-xs hide-mobile">${u.class || '-'}</td>
+            <td class="p-2 md:p-3"><span class="${u.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded text-xs">${u.status === 'active' ? 'ใช้งาน' : 'ระงับ'}</span></td>
+            <td class="p-2 md:p-3 text-center">
+              <button onclick="openUserModal('${u.username}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
+              ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>` : ''}
+            </td>
+          </tr>
+        `).join('');
       }
+      
+      createPaginationControls('userPagination', allUsers.length, pagination.users.page, pagination.users.perPage, 'changeUserPagination');
+    }
 
-      tbody.innerHTML = allUsers.map(u => `
-        <tr class="hover:bg-gray-50 transition">
-          <td class="p-2 md:p-3 font-mono text-xs">${u.username}</td>
-          <td class="p-2 md:p-3 text-xs">${u.name}</td>
-          <td class="p-2 md:p-3 text-xs hide-mobile"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${roleNames[u.role] || u.role}</span></td>
-          <td class="p-2 md:p-3 text-xs hide-mobile">${u.class || '-'}</td>
-          <td class="p-2 md:p-3"><span class="${u.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded text-xs">${u.status === 'active' ? 'ใช้งาน' : 'ระงับ'}</span></td>
-          <td class="p-2 md:p-3 text-center">
-            <button onclick="openUserModal('${u.username}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
-            ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>` : ''}
-          </td>
-        </tr>
-      `).join('');
+    function changeUserPagination(page, perPage) {
+      pagination.users.page = parseInt(page) || 1;
+      pagination.users.perPage = perPage === 'all' ? 'all' : parseInt(perPage);
+      renderUserTable();
     }
 
     function openUserModal(username = null) {
-      if (currentUser?.role !== 'admin') {
+      if (currentUser?.role !== 'admin' && username !== currentUser?.username) {
         Swal.fire('ผิดพลาด', 'เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
         return;
       }
       
+      currentEditUsername = username || "";
       document.getElementById('userModal').classList.remove('hidden');
       document.getElementById('userModal').classList.add('flex');
       
       if (username) {
         const u = allUsers.find(x => x.username === username);
         document.getElementById('userModalTitle').innerText = 'แก้ไขผู้ใช้';
-        document.getElementById('editUsername').value = u.username;
         document.getElementById('usrUsername').value = u.username;
-        document.getElementById('usrUsername').disabled = true;
+        document.getElementById('usrUsername').disabled = (u.username === 'admin' || currentUser?.role !== 'admin');
         document.getElementById('usrPassword').value = u.password;
         document.getElementById('usrName').value = u.name;
         document.getElementById('usrRole').value = u.role;
         document.getElementById('usrClass').value = u.class || "";
         document.getElementById('usrStatus').value = u.status;
+        document.getElementById('usrPhoto').value = u.photo || "";
+        previewUserPhoto();
         
-        // Set permissions
         const perms = u.permissions ? u.permissions.split(',') : [];
         document.querySelectorAll('.perm-check').forEach(cb => {
           cb.checked = perms.includes(cb.value) || u.permissions === 'all';
         });
       } else {
         document.getElementById('userModalTitle').innerText = 'เพิ่มผู้ใช้ใหม่';
-        document.getElementById('editUsername').value = '';
         document.getElementById('usrUsername').value = '';
         document.getElementById('usrUsername').disabled = false;
         document.getElementById('usrPassword').value = '';
@@ -1177,6 +1345,8 @@
         document.getElementById('usrRole').value = 'member';
         document.getElementById('usrClass').value = '';
         document.getElementById('usrStatus').value = 'active';
+        document.getElementById('usrPhoto').value = '';
+        previewUserPhoto();
         document.querySelectorAll('.perm-check').forEach(cb => cb.checked = false);
       }
       
@@ -1186,17 +1356,27 @@
     function closeUserModal() {
       document.getElementById('userModal').classList.add('hidden');
       document.getElementById('userModal').classList.remove('flex');
+      currentEditUsername = "";
     }
+
+    function previewUserPhoto() {
+      const url = document.getElementById('usrPhoto').value.trim();
+      const preview = document.getElementById('usrPhotoPreview');
+      if (url) {
+        preview.src = url;
+      } else {
+        const name = document.getElementById('usrName').value || 'User';
+        preview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff&size=128`;
+      }
+    }
+
+    document.getElementById('usrPhoto').addEventListener('input', previewUserPhoto);
+    document.getElementById('usrName').addEventListener('input', previewUserPhoto);
 
     function onRoleChange() {
       const role = document.getElementById('usrRole').value;
       const classField = document.getElementById('classField');
-      
-      if (role === 'homeroom' || role === 'duty') {
-        classField.style.display = 'block';
-      } else {
-        classField.style.display = 'none';
-      }
+      classField.style.display = (role === 'homeroom' || role === 'duty') ? 'block' : 'none';
     }
 
     async function saveUserData() {
@@ -1213,10 +1393,11 @@
         role: document.getElementById('usrRole').value,
         class: document.getElementById('usrClass').value.trim(),
         status: document.getElementById('usrStatus').value,
-        permissions: permissions || 'all'
+        permissions: permissions || 'all',
+        photo: document.getElementById('usrPhoto').value.trim()
       };
 
-      if (!data.username || !data.password || !data.name) {
+      if (!data.username || !data.name) {
         Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
         btn.disabled = false; btn.innerHTML = 'บันทึก';
         return;
@@ -1229,6 +1410,14 @@
         Swal.fire('สำเร็จ', res.message, 'success');
         closeUserModal();
         loadUsers();
+        // อัปเดต currentUser ถ้าแก้ไขตัวเอง
+        if (currentEditUsername === currentUser?.username) {
+          currentUser.name = data.name;
+          currentUser.role = data.role;
+          currentUser.class = data.class;
+          currentUser.photo = data.photo;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
       } else {
         Swal.fire('ผิดพลาด', res.message, 'error');
       }
@@ -1242,7 +1431,7 @@
       
       const result = await Swal.fire({ 
         title: 'ยืนยันการลบ?', 
-        text: `ผู้ใช้ ${username} จะถูกลบออกจากระบบ`, 
+        text: `ผู้ใช้ ${username} จะถูกลบ`, 
         icon: 'warning', 
         showCancelButton: true, 
         confirmButtonText: 'ลบ', 
@@ -1260,7 +1449,7 @@
     }
 
     // ==========================================
-    // 📋 CUSTOM COLUMNS
+    // CUSTOM COLUMNS
     // ==========================================
     async function loadCustomColumns() {
       if (currentUser?.role !== 'admin') {
@@ -1282,12 +1471,7 @@
 
     function renderColumnTable() {
       const tbody = document.getElementById('columnTableBody');
-      const typeNames = {
-        'score': 'คะแนน',
-        'total': 'ผลรวม',
-        'text': 'ข้อความ',
-        'date': 'วันที่'
-      };
+      const typeNames = { 'score': 'คะแนน', 'total': 'ผลรวม', 'text': 'ข้อความ', 'date': 'วันที่' };
       
       if (customColumns.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
@@ -1302,8 +1486,8 @@
           <td class="p-2 md:p-3 text-xs font-mono">${c.formula || '-'}</td>
           <td class="p-2 md:p-3 text-xs hide-mobile">${c.order}</td>
           <td class="p-2 md:p-3 text-center">
-            <button onclick="openColumnModal('${c.name}')" class="text-blue-600 hover:text-blue-800 mx-1" title="แก้ไข"><i class="fas fa-edit"></i></button>
-            <button onclick="deleteCustomColumn('${c.name}')" class="text-red-600 hover:text-red-800 mx-1" title="ลบ"><i class="fas fa-trash"></i></button>
+            <button onclick="openColumnModal('${c.name}')" class="text-blue-600 hover:text-blue-800 mx-1"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteCustomColumn('${c.name}')" class="text-red-600 hover:text-red-800 mx-1"><i class="fas fa-trash"></i></button>
           </td>
         </tr>
       `).join('');
@@ -1321,7 +1505,6 @@
       if (columnName) {
         const c = customColumns.find(x => x.name === columnName);
         document.getElementById('columnModalTitle').innerText = 'แก้ไขคอลัมน์';
-        document.getElementById('editColumnName').value = c.name;
         document.getElementById('colName').value = c.name;
         document.getElementById('colName').disabled = true;
         document.getElementById('colType').value = c.type;
@@ -1331,7 +1514,6 @@
         document.getElementById('colRole').value = c.role;
       } else {
         document.getElementById('columnModalTitle').innerText = 'เพิ่มคอลัมน์ใหม่';
-        document.getElementById('editColumnName').value = '';
         document.getElementById('colName').value = '';
         document.getElementById('colName').disabled = false;
         document.getElementById('colType').value = 'score';
@@ -1387,7 +1569,7 @@
       
       const result = await Swal.fire({ 
         title: 'ยืนยันการลบ?', 
-        text: `คอลัมน์ ${columnName} จะถูกลบออก`, 
+        text: `คอลัมน์ ${columnName} จะถูกลบ`, 
         icon: 'warning', 
         showCancelButton: true, 
         confirmButtonText: 'ลบ', 
@@ -1405,7 +1587,127 @@
     }
 
     // ==========================================
-    // 📷 SCANNER & RFID
+    // STATISTICS
+    // ==========================================
+    let chartClassInstance = null;
+    let chartPrayerInstance = null;
+
+    async function loadStatistics() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('statStartDate').value = today;
+      document.getElementById('statEndDate').value = today;
+      
+      const tbody = document.getElementById('statTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center"><div class="spinner"></div> กำลังโหลด...</td></tr>';
+      
+      const res = await callGAS('getStats', { filters: { startDate: today, endDate: today } });
+      if (!res.success) {
+        Swal.fire('ผิดพลาด', res.message, 'error');
+        return;
+      }
+
+      const stats = res.stats;
+      document.getElementById('statTotal').innerText = (stats.total || 0).toLocaleString();
+      document.getElementById('statUnique').innerText = (stats.unique || 0).toLocaleString();
+
+      // Chart Class
+      const ctxClass = document.getElementById('chartClass').getContext('2d');
+      if (chartClassInstance) chartClassInstance.destroy();
+      chartClassInstance = new Chart(ctxClass, {
+        type: 'bar',
+        data: {
+          labels: (stats.byClass || []).map(x => x.name),
+          datasets: [{ label: 'จำนวนครั้ง', data: (stats.byClass || []).map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Chart Prayer
+      const ctxPrayer = document.getElementById('chartPrayer').getContext('2d');
+      if (chartPrayerInstance) chartPrayerInstance.destroy();
+      chartPrayerInstance = new Chart(ctxPrayer, {
+        type: 'doughnut',
+        data: {
+          labels: (stats.byPrayer || []).map(x => x.name),
+          datasets: [{ data: (stats.byPrayer || []).map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
+        },
+        options: { responsive: true }
+      });
+
+      // Student Stats Table
+      const topStudents = (stats.byStudent || []).slice(0, 50);
+      if (topStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">ยังไม่มีข้อมูล</td></tr>';
+      } else {
+        tbody.innerHTML = topStudents.map((s, idx) => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="p-2 md:p-3 font-bold ${idx < 3 ? 'text-yellow-600' : 'text-gray-600'}">#${idx + 1}</td>
+            <td class="p-2 md:p-3 font-mono text-xs">${s.id}</td>
+            <td class="p-2 md:p-3 font-medium text-xs">${s.name}</td>
+            <td class="p-2 md:p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+            <td class="p-2 md:p-3 text-center font-bold text-green-600">${s.count}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    async function refreshStatistics() {
+      const startDate = document.getElementById('statStartDate').value;
+      const endDate = document.getElementById('statEndDate').value;
+      
+      if (!startDate || !endDate) {
+        Swal.fire('ผิดพลาด', 'กรุณาเลือกวันที่', 'error');
+        return;
+      }
+      
+      const res = await callGAS('getStats', { filters: { startDate, endDate } });
+      if (res.success) {
+        const stats = res.stats;
+        document.getElementById('statTotal').innerText = (stats.total || 0).toLocaleString();
+        document.getElementById('statUnique').innerText = (stats.unique || 0).toLocaleString();
+        
+        const ctxClass = document.getElementById('chartClass').getContext('2d');
+        if (chartClassInstance) chartClassInstance.destroy();
+        chartClassInstance = new Chart(ctxClass, {
+          type: 'bar',
+          data: {
+            labels: (stats.byClass || []).map(x => x.name),
+            datasets: [{ label: 'จำนวนครั้ง', data: (stats.byClass || []).map(x => x.value), backgroundColor: '#10b981', borderRadius: 4 }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        const ctxPrayer = document.getElementById('chartPrayer').getContext('2d');
+        if (chartPrayerInstance) chartPrayerInstance.destroy();
+        chartPrayerInstance = new Chart(ctxPrayer, {
+          type: 'doughnut',
+          data: {
+            labels: (stats.byPrayer || []).map(x => x.name),
+            datasets: [{ data: (stats.byPrayer || []).map(x => x.value), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }]
+          },
+          options: { responsive: true }
+        });
+
+        const topStudents = (stats.byStudent || []).slice(0, 50);
+        const tbody = document.getElementById('statTableBody');
+        if (topStudents.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">ยังไม่มีข้อมูล</td></tr>';
+        } else {
+          tbody.innerHTML = topStudents.map((s, idx) => `
+            <tr class="hover:bg-gray-50 transition">
+              <td class="p-2 md:p-3 font-bold ${idx < 3 ? 'text-yellow-600' : 'text-gray-600'}">#${idx + 1}</td>
+              <td class="p-2 md:p-3 font-mono text-xs">${s.id}</td>
+              <td class="p-2 md:p-3 font-medium text-xs">${s.name}</td>
+              <td class="p-2 md:p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">${s.class}</span></td>
+              <td class="p-2 md:p-3 text-center font-bold text-green-600">${s.count}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    // ==========================================
+    // SCANNER & RFID
     // ==========================================
     let isProcessing = false;
     let lastScanTime = 0;
@@ -1450,7 +1752,7 @@
       const studentId = res.id || "ไม่ระบุ";
       
       if (isSuccess) {
-        const photo = res.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(res.name || "Student") + "&background=10b981&color=fff&size=128";
+        const photo = res.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(res.name || 'Student')}&background=10b981&color=fff&size=128`;
         div.className = "flex-1 flex items-center justify-center p-3 md:p-4 border-2 border-green-400 bg-green-50 rounded-lg fade-in min-h-[200px]";
         div.innerHTML = `
           <div class="text-center">
@@ -1493,7 +1795,6 @@
       if (code) {
         handleScan(code);
         document.getElementById('manualCode').value = '';
-        document.getElementById('manualCode').focus();
       }
     }
 
@@ -1507,7 +1808,7 @@
     }
 
     // ==========================================
-    // 🚀 INITIALIZATION
+    // INITIALIZATION
     // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       // Check for saved user
@@ -1515,13 +1816,12 @@
       if (savedUser) {
         try {
           currentUser = JSON.parse(savedUser);
-          updateUIForRole();
         } catch (e) {
           localStorage.removeItem('currentUser');
         }
-      } else {
-        updateUIForRole();
       }
+      
+      updateUIForRole();
 
       callGAS('checkStatus').then(res => {
         const statusEl = document.getElementById('connectionStatus');
@@ -1532,14 +1832,20 @@
         }
       });
 
+      // QR Scanner - ไม่ auto-focus manualCode เพื่อไม่ให้รบกวนการพิมพ์ login
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 250, height: 250 } }, handleScan, () => {}).catch(err => {
         console.log("QR Scanner not started:", err);
       });
       
-      document.getElementById('manualCode').focus();
+      // Auto-focus manualCode เฉพาะเมื่ออยู่หน้าสแกนและไม่ได้เปิด modal
       document.addEventListener('click', (e) => {
-        if (document.getElementById('view-scan').classList.contains('hidden') === false && !e.target.closest('button') && !e.target.closest('select')) {
+        const isModalOpen = document.querySelector('.fixed.inset-0:not(.hidden)');
+        if (document.getElementById('view-scan').classList.contains('hidden') === false && 
+            !isModalOpen && 
+            !e.target.closest('button') && 
+            !e.target.closest('select') &&
+            !e.target.closest('input')) {
           document.getElementById('manualCode').focus();
         }
       });
