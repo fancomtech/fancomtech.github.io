@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบสแกนละหมาด</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
+    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .scan-box { border: 3px solid #10b981; border-radius: 1rem; overflow: hidden; position: relative; background: #000; }
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; padding: 0.75rem 0; z-index: 50; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #6b7280; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; }
+    .nav-item.active { color: #10b981; font-weight: 600; }
+    .nav-item i { font-size: 1.25rem; margin-bottom: 0.25rem; }
+    .modal { background: rgba(0,0,0,0.6); z-index: 100; }
+    .student-card { animation: slideUp 0.3s ease-out; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    .toggle-switch { position: relative; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 26px; }
+    .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .toggle-slider { background-color: #10b981; }
+    input:checked + .toggle-slider:before { transform: translateX(24px); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+    th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+    .pagination-btn { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 0.375rem; font-size: 0.875rem; }
+    .pagination-btn.active { background: #10b981; color: white; border-color: #10b981; }
+    .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="app-container flex flex-col">
+    <!-- Header -->
+    <header class="bg-green-600 text-white p-4 text-center sticky top-0 z-40 shadow-md">
+      <h1 class="text-xl font-bold"><i class="fas fa-mosque mr-2"></i>ระบบสแกนละหมาด</h1>
+      <p class="text-xs text-green-100 mt-1" id="currentPrayerDisplay">กำลังโหลด...</p>
+      <div id="systemStatus" class="text-xs mt-1"><span class="bg-green-500 px-2 py-1 rounded-full">ระบบเปิด</span></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 pb-24 overflow-y-auto">
+      
+      <!-- หน้าสแกน -->
+      <div id="scanPage" class="page-section active">
+        <div class="scan-box mb-4">
+          <div id="reader" class="w-full"></div>
+        </div>
+
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="manualCode" placeholder="กรอกรหัสนักเรียน..." class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" onkeypress="if(event.key==='Enter') submitManualCode()">
+          <button onclick="submitManualCode()" class="bg-green-600 text-white px-4 py-3 rounded-lg font-bold active:scale-95 transition">
+            <i class="fas fa-check"></i>
+          </button>
+        </div>
+
+        <!-- การสแกนล่าสุด -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-history mr-2 text-blue-500"></i>สแกนล่าสุด (5 รายการ)</h3>
+          <div id="recentScansList" class="space-y-2">
+            <div class="text-center text-gray-500 text-sm">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- หน้ารายงาน -->
+      <div id="reportPage" class="page-section">
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 class="font-bold text-gray-700 mb-4"><i class="fas fa-chart-bar mr-2 text-purple-500"></i>สถิติและรายงาน</h3>
+          
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">วันที่เริ่ม</label>
+              <input type="date" id="reportStartDate" class="w-full p-2 border rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 block mb-1">วันที่สิ้นสุด</label>
+              <input type="date" id="reportEndDate" class="w-full p-2 border rounded-lg text-sm">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-xs text-gray-500 block mb-1">เลือกกะ (กด Ctrl ค้างเพื่อเลือกหลายอัน)</label>
+            <select id="reportPrayerSelect" multiple class="w-full p-2 border rounded-lg h-24 text-sm">
+              <option value="Subhi" selected>Subhi</option>
+              <option value="Dhur" selected>Dhur</option>
+              <option value="Asri" selected>Asri</option>
+              <option value="Maqrhib" selected>Maqrhib</option>
+              <option value="Isha" selected>Isha</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2 mb-4">
+            <button onclick="loadReportData()" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold">
+              <i class="fas fa-search mr-1"></i> แสดงผล
+            </button>
+            <button onclick="checkAuthAndExport()" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold">
+              <i class="fas fa-file-csv mr-1"></i> ส่งออก
+            </button>
+          </div>
+
+          <!-- สรุปสถิติ -->
+          <div id="statsSummary" class="grid grid-cols-2 gap-3 mb-4 hidden">
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-3 text-center">
+              <div class="text-2xl font-bold" id="totalScansStat">0</div>
+              <div class="text-xs opacity-90">รายการทั้งหมด</div>
+            </div>
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-3 text-center">
+              <div class="text-2xl font-bold" id="currentPageStat">1</div>
+              <div class="text-xs opacity-90">หน้าปัจจุบัน</div>
+            </div>
+          </div>
+
+          <!-- ตารางข้อมูล -->
+          <div class="overflow-x-auto mb-4 border rounded-lg">
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>กะ</th>
+                  <th>เวลา</th>
+                  <th>ชื่อ</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody">
+                <tr><td colspan="4" class="text-center text-gray-500 py-4">ไม่มีข้อมูล</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div id="pagination" class="flex justify-between items-center mb-4 hidden">
+            <button onclick="changePage(-1)" class="pagination-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+            <div class="flex gap-1" id="pageNumbers"></div>
+            <button onclick="changePage(1)" class="pagination-btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-xs text-gray-500 block mb-1">จำนวนรายการต่อหน้า</label>
+            <select id="pageSizeSelect" onchange="changePageSize()" class="w-full p-2 border rounded-lg">
+              <option value="10">10 รายการ</option>
+              <option value="20">20 รายการ</option>
+              <option value="30">30 รายการ</option>
+              <option value="50">50 รายการ</option>
+              <option value="100">100 รายการ</option>
+              <option value="9999">ทั้งหมด</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- หน้าตั้งค่า -->
+      <div id="settingsPage" class="page-section">
+        <!-- Admin Login Section -->
+        <div id="adminLoginSection" class="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fas fa-lock mr-2 text-red-500"></i>เข้าสู่ระบบผู้ดูแล</h3>
+          <input type="text" id="adminUsername" placeholder="ชื่อผู้ใช้" class="w-full p-3 border rounded-lg mb-3 outline-none focus:ring-2 focus:ring-green-500">
+          <input type="password" id="adminPassword" placeholder="รหัสผ่าน" class="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-green-500" onkeypress="if(event.key==='Enter') adminLogin()">
+          <button onclick="adminLogin()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold">
+            <i class="fas fa-sign-in-alt mr-1"></i> เข้าสู่ระบบ
+          </button>
+        </div>
+
+        <!-- Admin Controls (Hidden until logged in) -->
+        <div id="adminControls" class="hidden space-y-4">
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-gray-700"><i class="fas fa-cog mr-2 text-gray-600"></i>การตั้งค่าระบบ</h3>
+              <button onclick="adminLogout()" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold">ออกจากระบบ</button>
+            </div>
+            
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div><div class="font-medium text-gray-700">เปิด/ปิดระบบ</div><div class="text-xs text-gray-500">เมื่อปิด จะไม่สามารถสแกนได้</div></div>
+                <label class="toggle-switch"><input type="checkbox" id="systemToggle" onchange="toggleSystemStatus()"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div><div class="font-medium text-gray-700">ปิด Modal อัตโนมัติ</div><div class="text-xs text-gray-500">ปิดหน้าต่างผลลัพธ์ใน 3 วินาที</div></div>
+                <label class="toggle-switch"><input type="checkbox" id="autoCloseToggle" onchange="saveSetting('autoCloseModal')"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div><div class="font-medium text-gray-700">เสียงแจ้งเตือน</div><div class="text-xs text-gray-500">เปิดเสียงเมื่อสแกนสำเร็จ</div></div>
+                <label class="toggle-switch"><input type="checkbox" id="soundToggle" onchange="saveSetting('soundEnabled')"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="font-bold text-gray-700 mb-4"><i class="fas fa-clock mr-2 text-blue-500"></i>ตั้งเวลาวักตู (เริ่มต้น - สิ้นสุด)</h3>
+            <div id="prayerTimesForm" class="space-y-3 mb-4"></div>
+            <button onclick="savePrayerTimesFromSettings()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">
+              <i class="fas fa-save mr-1"></i> บันทึกเวลาละหมาด
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="showPage('scan', this)">
+        <i class="fas fa-qrcode"></i><span>สแกน</span>
+      </div>
+      <div class="nav-item" onclick="showPage('report', this)">
+        <i class="fas fa-chart-bar"></i><span>รายงาน</span>
+      </div>
+      <div class="nav-item" onclick="showPage('settings', this)">
+        <i class="fas fa-cog"></i><span>ตั้งค่า</span>
+      </div>
+    </nav>
+
+    <!-- Student Success Modal -->
+    <div id="studentModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
+      <div class="student-card bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl">
+        <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-green-500 shadow-lg bg-gray-100">
+          <img id="studentPhoto" src="" alt="Student" class="w-full h-full object-cover">
+        </div>
+        <h2 id="studentName" class="text-xl font-bold text-gray-800 mb-1">ชื่อ-นามสกุล</h2>
+        <p id="studentClass" class="text-gray-500 mb-4">ชั้นเรียน</p>
+        <div class="bg-green-50 text-green-700 p-3 rounded-lg mb-4">
+          <i class="fas fa-check-circle mr-1"></i> <span id="scanStatusText">บันทึกเรียบร้อย</span>
+        </div>
+        <button onclick="closeStudentModal()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold active:scale-95 transition">
+          ปิด
+        </button>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
+      <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center"><i class="fas fa-file-export mr-1 text-green-600"></i> ส่งออก CSV</h3>
+        <div class="space-y-3 mb-4">
+          <div><label class="text-xs text-gray-500">วันที่เริ่ม</label><input type="date" id="exportStartDate" class="w-full p-2 border rounded-lg"></div>
+          <div><label class="text-xs text-gray-500">วันที่สิ้นสุด</label><input type="date" id="exportEndDate" class="w-full p-2 border rounded-lg"></div>
+          <div>
+            <label class="text-xs text-gray-500">เลือกกะ</label>
+            <select id="exportPrayerSelect" multiple class="w-full p-2 border rounded-lg h-24 text-sm">
+              <option value="Subhi" selected>Subhi</option><option value="Dhur" selected>Dhur</option>
+              <option value="Asri" selected>Asri</option><option value="Maqrhib" selected>Maqrhib</option><option value="Isha" selected>Isha</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="closeExportModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold">ยกเลิก</button>
+          <button onclick="exportCSV()" class="flex-1 bg-green-600 text-white py-3 rounded-lg font-bold"><i class="fas fa-download mr-1"></i> ดาวน์โหลด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ สำคัญ: เปลี่ยน URL นี้เป็น URL ของคุณที่ Deploy จาก Google Apps Script
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby-XCfmZT3fYWgUabyHlFYu3MZNz6DLWhDnGMfOYzNXU7xVEO6sVpHPC0J61iiyAo_t/exec";
+
+    let prayerTimes = [];
+    let html5QrCode = null;
+    let isCameraRunning = false;
+    let lastScanTime = 0;
+    let currentReportPage = 1;
+    let currentReportPageSize = 10;
+    let isAdminLoggedIn = false;
+    let systemSettings = {};
+    let autoCloseTimer = null;
+
+    async function callAPI(payload) {
+      try {
+        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
+        return await response.json();
+      } catch (error) {
+        console.error("API Error:", error);
+        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
+      }
+    }
+
+    window.onload = async function() {
+      const settingsRes = await callAPI({ action: 'getSystemSettings' });
+      if (settingsRes.success) {
+        systemSettings = settingsRes.data;
+        applySystemSettings();
+      }
+
+      const prayerRes = await callAPI({ action: 'getPrayerTimes' });
+      if (prayerRes.success) {
+        prayerTimes = prayerRes.data;
+        updateCurrentPrayerDisplay();
+        renderPrayerTimesForm();
+      }
+
+      loadRecentScans();
+      initCamera();
+      setInterval(updateCurrentPrayerDisplay, 60000);
+      setInterval(loadRecentScans, 30000);
+    };
+
+    function applySystemSettings() {
+      document.getElementById('systemToggle').checked = systemSettings.systemEnabled !== false;
+      document.getElementById('autoCloseToggle').checked = systemSettings.autoCloseModal !== false;
+      document.getElementById('soundToggle').checked = systemSettings.soundEnabled === true;
+      updateSystemStatusDisplay();
+    }
+
+    function updateSystemStatusDisplay() {
+      const statusEl = document.getElementById('systemStatus');
+      const isEnabled = document.getElementById('systemToggle').checked;
+      statusEl.innerHTML = isEnabled 
+        ? '<span class="bg-green-500 px-2 py-1 rounded-full text-xs">ระบบเปิด</span>'
+        : '<span class="bg-red-500 px-2 py-1 rounded-full text-xs">ระบบปิด</span>';
+    }
+
+    function updateCurrentPrayerDisplay() {
+      const now = new Date();
+      const hhmm = parseInt(`${now.getHours()}${now.getMinutes().toString().padStart(2, '0')}`);
+      const current = prayerTimes.find(p => hhmm >= p.start && hhmm <= p.end)?.name || "Isha";
+      document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${current}`;
+    }
+
+    function getCurrentPrayer() {
+      const now = new Date();
+      const hhmm = parseInt(`${now.getHours()}${now.getMinutes().toString().padStart(2, '0')}`);
+      return prayerTimes.find(p => hhmm >= p.start && hhmm <= p.end)?.name || "Isha";
+    }
+
+    function initCamera() {
+      html5QrCode = new Html5Qrcode("reader");
+      startCamera();
+    }
+
+    function startCamera() {
+      if (isCameraRunning) return;
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
+        .then(() => { isCameraRunning = true; })
+        .catch(err => console.warn("Camera error:", err));
+    }
+
+    function onScanSuccess(decodedText) {
+      const now = Date.now();
+      if (now - lastScanTime < 2000) return;
+      lastScanTime = now;
+      handleScan(decodedText.trim());
+    }
+
+    async function handleScan(studentId) {
+      if (!studentId) return;
+      if (!document.getElementById('systemToggle').checked) {
+        Swal.fire({ icon: 'error', title: 'ระบบปิด', text: 'ระบบกำลังปิดอยู่ ไม่สามารถสแกนได้', timer: 2000, showConfirmButton: false });
+        return;
+      }
+      
+      Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const prayer = getCurrentPrayer();
+      const res = await callAPI({ action: 'logScan', studentId, prayer });
+      Swal.close();
+
+      if (res.success) {
+        showStudentModal(res);
+        loadRecentScans();
+      } else if (res.status === "duplicate") {
+        Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
+      } else if (res.status === "not_found") {
+        Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: `ไม่พบรหัสนักเรียน: ${studentId}`, timer: 2000, showConfirmButton: false });
+      } else {
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message });
+      }
+    }
+
+    function showStudentModal(data) {
+      document.getElementById("studentPhoto").src = data.photoUrl;
+      document.getElementById("studentName").innerText = data.name;
+      document.getElementById("studentClass").innerText = `ชั้น ${data.class}`;
+      document.getElementById("scanStatusText").innerText = "บันทึกเข้าระบบเรียบร้อย";
+      document.getElementById("studentModal").classList.remove("hidden");
+      
+      if (systemSettings.soundEnabled) {
+        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(()=>{});
+      }
+
+      if (systemSettings.autoCloseModal !== false) {
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(() => { closeStudentModal(); }, 3000);
+      }
+    }
+
+    function closeStudentModal() {
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+      document.getElementById("studentModal").classList.add("hidden");
+    }
+
+    function submitManualCode() {
+      const code = document.getElementById("manualCode").value.trim();
+      if (code) { handleScan(code); document.getElementById("manualCode").value = ""; }
+    }
+
+    async function loadRecentScans() {
+      const res = await callAPI({ action: 'getRecentScans', limit: 5 });
+      if (res.success) {
+        const container = document.getElementById('recentScansList');
+        if (res.data.length === 0) {
+          container.innerHTML = '<div class="text-center text-gray-500 text-sm">ยังไม่มีรายการสแกน</div>';
+          return;
+        }
+        container.innerHTML = res.data.map(scan => `
+          <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fas fa-check text-xs"></i></div>
+              <div>
+                <div class="text-sm font-medium text-gray-700">${scan.name || scan.id}</div>
+                <div class="text-xs text-gray-500">${scan.class} | ${scan.prayer}</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-500 text-right"><div>${scan.time}</div><div>${scan.date}</div></div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function showPage(pageName, el) {
+      document.querySelectorAll('.page-section').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+      document.getElementById(pageName + 'Page').classList.add('active');
+      if (el) el.classList.add('active');
+      if (pageName === 'report') loadReportData();
+    }
+
+    async function loadReportData() {
+      Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const startDate = document.getElementById('reportStartDate').value;
+      const endDate = document.getElementById('reportEndDate').value;
+      const prayers = Array.from(document.getElementById('reportPrayerSelect').selectedOptions).map(o => o.value);
+      
+      const res = await callAPI({ action: 'getPrayerStats', filters: { startDate, endDate, prayers, page: currentReportPage, pageSize: currentReportPageSize } });
+      Swal.close();
+      
+      if (res.success) {
+        renderReportTable(res.data);
+        renderPagination(res.total, res.totalPages, res.page);
+        renderStatsSummary(res.stats);
+      }
+    }
+
+    function renderReportTable(data) {
+      const tbody = document.getElementById('reportTableBody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">ไม่มีข้อมูล</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(row => `
+        <tr>
+          <td>${row.date}</td>
+          <td><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">${row.prayer}</span></td>
+          <td>${row.time}</td>
+          <td class="font-medium">${row.name || row.id}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStatsSummary(stats) {
+      document.getElementById('statsSummary').classList.remove('hidden');
+      document.getElementById('totalScansStat').innerText = stats.totalScans || 0;
+      document.getElementById('currentPageStat').innerText = currentReportPage;
+    }
+
+    function renderPagination(total, totalPages, currentPage) {
+      const paginationEl = document.getElementById('pagination');
+      if (totalPages <= 1) { paginationEl.classList.add('hidden'); return; }
+      paginationEl.classList.remove('hidden');
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === totalPages;
+      
+      let pagesHtml = '';
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+          pagesHtml += `<button onclick="goToPage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+          pagesHtml += '<span class="px-2 text-gray-500">...</span>';
+        }
+      }
+      document.getElementById('pageNumbers').innerHTML = pagesHtml;
+    }
+
+    function changePage(direction) { currentReportPage += direction; loadReportData(); }
+    function goToPage(page) { currentReportPage = page; loadReportData(); }
+    function changePageSize() { currentReportPageSize = parseInt(document.getElementById('pageSizeSelect').value); currentReportPage = 1; loadReportData(); }
+
+    function renderPrayerTimesForm() {
+      const form = document.getElementById('prayerTimesForm');
+      form.innerHTML = prayerTimes.map((p, i) => `
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <div class="font-medium text-gray-700 mb-2">${p.name}</div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="text-xs text-gray-500 block mb-1">เริ่ม (น.)</label><input type="number" id="prayerStart-${i}" value="${p.start}" min="0" max="2359" class="w-full p-2 border rounded-lg text-center"></div>
+            <div><label class="text-xs text-gray-500 block mb-1">สิ้นสุด (น.)</label><input type="number" id="prayerEnd-${i}" value="${p.end}" min="0" max="2359" class="w-full p-2 border rounded-lg text-center"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function savePrayerTimesFromSettings() {
+      const updatedTimes = prayerTimes.map((p, i) => ({ 
+        name: p.name, 
+        start: parseInt(document.getElementById(`prayerStart-${i}`).value) || p.start,
+        end: parseInt(document.getElementById(`prayerEnd-${i}`).value) || p.end
+      }));
+      Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const res = await callAPI({ action: 'savePrayerTimes', times: updatedTimes });
+      Swal.close();
+      if (res.success) {
+        prayerTimes = updatedTimes;
+        Swal.fire('✅ สำเร็จ', 'บันทึกเวลาเรียบร้อย', 'success');
+        updateCurrentPrayerDisplay();
+      }
+    }
+
+    async function toggleSystemStatus() {
+      const enabled = document.getElementById('systemToggle').checked;
+      const res = await callAPI({ action: 'toggleSystem', enabled });
+      if (res.success) {
+        updateSystemStatusDisplay();
+        Swal.fire({ icon: enabled ? 'success' : 'warning', title: enabled ? 'ระบบเปิดใช้งาน' : 'ระบบปิดใช้งาน', timer: 1500, showConfirmButton: false });
+      }
+    }
+
+    async function saveSetting(key) {
+      systemSettings[key] = document.getElementById(key === 'autoCloseModal' ? 'autoCloseToggle' : 'soundToggle').checked;
+      await callAPI({ action: 'saveSystemSettings', settings: systemSettings });
+    }
+
+    async function adminLogin() {
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+      const res = await callAPI({ action: 'validateAuth', credentials: { username, password } });
+      if (res.success) {
+        isAdminLoggedIn = true;
+        document.getElementById('adminLoginSection').classList.add('hidden');
+        document.getElementById('adminControls').classList.remove('hidden');
+        document.getElementById('adminUsername').value = '';
+        document.getElementById('adminPassword').value = '';
+        Swal.fire('✅ เข้าสู่ระบบสำเร็จ', '', 'success');
+      } else {
+        Swal.fire('❌ ผิดพลาด', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
+      }
+    }
+
+    function adminLogout() {
+      isAdminLoggedIn = false;
+      document.getElementById('adminLoginSection').classList.remove('hidden');
+      document.getElementById('adminControls').classList.add('hidden');
+      Swal.fire('ออกจากระบบแล้ว', '', 'info');
+    }
+
+    function checkAuthAndExport() {
+      if (!isAdminLoggedIn) {
+        Swal.fire('❌ ต้องเข้าสู่ระบบ', 'กรุณาเข้าสู่ระบบผู้ดูแลในหน้า "ตั้งค่า" ก่อนส่งออกข้อมูล', 'warning');
+        showPage('settings', document.querySelectorAll('.nav-item')[2]);
+        return;
+      }
+      document.getElementById("exportModal").classList.remove("hidden");
+    }
+
+    function closeExportModal() { document.getElementById("exportModal").classList.add("hidden"); }
+
+    async function exportCSV() {
+      const startDate = document.getElementById("exportStartDate").value;
+      const endDate = document.getElementById("exportEndDate").value;
+      const selectedPrayers = Array.from(document.getElementById("exportPrayerSelect").selectedOptions).map(o => o.value);
+      if (!startDate || !endDate) { Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่', 'error'); return; }
+
+      Swal.fire({ title: 'กำลังเตรียมไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const res = await callAPI({ action: 'exportCSV', filters: { startDate, endDate, prayers: selectedPrayers } });
+      Swal.close();
+
+      if (res.success) {
+        const blob = new Blob([res.content], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = res.filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        closeExportModal();
+        Swal.fire('✅ สำเร็จ', `ดาวน์โหลด ${res.count} รายการเรียบร้อย`, 'success');
+      } else {
+        Swal.fire('❌ ผิดพลาด', res.error, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
