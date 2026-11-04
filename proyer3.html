@@ -34,6 +34,8 @@
     .pagination-btn { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 0.375rem; font-size: 0.875rem; }
     .pagination-btn.active { background: #10b981; color: white; border-color: #10b981; }
     .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .outside-time-alert { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 1rem; border-radius: 0.5rem; text-align: center; margin: 1rem 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -42,6 +44,9 @@
       <h1 class="text-xl font-bold"><i class="fas fa-mosque mr-2"></i>ระบบสแกนละหมาด</h1>
       <p class="text-xs text-green-100 mt-1" id="currentPrayerDisplay">กำลังโหลดเวลาจากเซิร์ฟเวอร์...</p>
       <div id="systemStatus" class="text-xs mt-1"><span class="bg-green-500 px-2 py-1 rounded-full">ระบบเปิด</span></div>
+      <div id="outsideTimeAlert" class="outside-time-alert hidden mt-2">
+        <i class="fas fa-exclamation-triangle mr-2"></i>⚠️ อยู่นอกเวลาละหมาด ไม่สามารถสแกนได้
+      </div>
     </header>
 
     <main class="flex-1 p-4 pb-24 overflow-y-auto">
@@ -86,7 +91,7 @@
               <option value="Subhi" selected>Subhi</option>
               <option value="Dhur" selected>Dhur</option>
               <option value="Asri" selected>Asri</option>
-              <option value="Maqrhib" selected>Maqrhib</option>
+              <option value="Maghrib" selected>Maghrib</option>
               <option value="Isha" selected>Isha</option>
             </select>
           </div>
@@ -229,7 +234,7 @@
             <label class="text-xs text-gray-500">เลือกกะ</label>
             <select id="exportPrayerSelect" multiple class="w-full p-2 border rounded-lg h-24 text-sm">
               <option value="Subhi" selected>Subhi</option><option value="Dhur" selected>Dhur</option>
-              <option value="Asri" selected>Asri</option><option value="Maqrhib" selected>Maqrhib</option><option value="Isha" selected>Isha</option>
+              <option value="Asri" selected>Asri</option><option value="Maghrib" selected>Maghrib</option><option value="Isha" selected>Isha</option>
             </select>
           </div>
         </div>
@@ -242,11 +247,11 @@
   </div>
 
   <script>
-    // ⚠️ สำคัญ: เปลี่ยน URL นี้เป็น URL ของคุณที่ Deploy จาก Google Apps Script
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby-XCfmZT3fYWgUabyHlFYu3MZNz6DLWhDnGMfOYzNXU7xVEO6sVpHPC0J61iiyAo_t/exec";
 
     let prayerTimes = [];
     let currentServerPrayer = null;
+    let isInPrayerTime = false;
     let lastServerTimeCheck = 0;
     let html5QrCode = null;
     let isCameraRunning = false;
@@ -267,34 +272,45 @@
       }
     }
 
-    // ✅ ฟังก์ชันหลัก: ดึงเวลาปัจจุบันและคำนวณกะจาก "เซิร์ฟเวอร์ + ชีต Settings"
     async function getCurrentPrayerFromServer() {
       const now = Date.now();
-      if (now - lastServerTimeCheck > 60000 || !currentServerPrayer) {
+      if (now - lastServerTimeCheck > 30000 || currentServerPrayer === null) {
         try {
           const res = await callAPI({ action: 'getCurrentPrayerFromServer' });
           if (res.success) {
             currentServerPrayer = res.prayer;
+            isInPrayerTime = res.isInPrayerTime;
             lastServerTimeCheck = now;
-            // อัปเดต prayerTimes จากเซิร์ฟเวอร์เพื่อให้หน้าตั้งค่าตรงกันเสมอ
             if (res.prayerTimes) {
               prayerTimes = res.prayerTimes;
               renderPrayerTimesForm();
             }
+            updateOutsideTimeAlert();
             return res;
           }
         } catch (e) {
           console.error('Failed to get server prayer time:', e);
         }
       }
-      return { prayer: currentServerPrayer || 'Isha', serverTime: '' };
+      return { prayer: currentServerPrayer, isInPrayerTime: isInPrayerTime, serverTime: '' };
+    }
+
+    function updateOutsideTimeAlert() {
+      const alertDiv = document.getElementById('outsideTimeAlert');
+      if (!isInPrayerTime) {
+        alertDiv.classList.remove('hidden');
+      } else {
+        alertDiv.classList.add('hidden');
+      }
     }
 
     async function updateCurrentPrayerDisplay() {
       const res = await getCurrentPrayerFromServer();
       if (res.success) {
         const timeStr = res.serverTime || '';
-        document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${res.prayer} (${timeStr})`;
+        const prayerText = res.isInPrayerTime ? `วักตูปัจจุบัน: ${res.prayer}` : '⚠️ นอกเวลาละหมาด';
+        const statusColor = res.isInPrayerTime ? 'text-green-100' : 'text-red-200';
+        document.getElementById('currentPrayerDisplay').innerHTML = `<span class="${statusColor}">${prayerText} (${timeStr})</span>`;
       }
     }
 
@@ -310,7 +326,6 @@
         applySystemSettings();
       }
 
-      // โหลดเวลาจากชีต Settings มาแสดงในหน้าตั้งค่า
       const prayerRes = await callAPI({ action: 'getPrayerTimes' });
       if (prayerRes.success) {
         prayerTimes = prayerRes.data;
@@ -323,7 +338,7 @@
       
       setInterval(async () => {
         await updateCurrentPrayerDisplay();
-      }, 60000);
+      }, 30000);
       
       setInterval(loadRecentScans, 30000);
     };
@@ -364,22 +379,40 @@
 
     async function handleScan(studentId) {
       if (!studentId) return;
+      
       if (!document.getElementById('systemToggle').checked) {
         Swal.fire({ icon: 'error', title: 'ระบบปิด', text: 'ระบบกำลังปิดอยู่ ไม่สามารถสแกนได้', timer: 2000, showConfirmButton: false });
+        return;
+      }
+
+      if (!isInPrayerTime) {
+        Swal.fire({ 
+          icon: 'warning', 
+          title: '⚠️ อยู่นอกเวลาละหมาด', 
+          text: 'ไม่สามารถสแกนได้เนื่องจากอยู่นอกเวลาละหมาดที่กำหนด กรุณาสแกนในช่วงเวลาละหมาด', 
+          timer: 3000, 
+          showConfirmButton: false 
+        });
         return;
       }
       
       Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       
-      // ✅ ยึดเวลาสแกนตามหน้าตั้งค่า/เซิร์ฟเวอร์ 100%
       const prayer = await getCurrentPrayer();
-      
       const res = await callAPI({ action: 'logScan', studentId, prayer });
       Swal.close();
 
       if (res.success) {
         showStudentModal(res, prayer);
         loadRecentScans();
+      } else if (res.status === "outside_prayer_time") {
+        Swal.fire({ 
+          icon: 'warning', 
+          title: '⚠️ อยู่นอกเวลาละหมาด', 
+          text: res.message, 
+          timer: 3000, 
+          showConfirmButton: false 
+        });
       } else if (res.status === "duplicate") {
         Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
       } else if (res.status === "not_found") {
@@ -544,8 +577,8 @@
       
       if (res.success) {
         prayerTimes = updatedTimes;
+        await updateCurrentPrayerDisplay();
         Swal.fire('✅ สำเร็จ', 'บันทึกเวลาลงชีต Settings เรียบร้อย', 'success');
-        await updateCurrentPrayerDisplay(); // อัปเดตเวลาทันทีหลังบันทึก
       } else {
         Swal.fire('❌ ผิดพลาด', res.message, 'error');
       }
@@ -603,7 +636,7 @@
       const startDate = document.getElementById("exportStartDate").value;
       const endDate = document.getElementById("exportEndDate").value;
       const selectedPrayers = Array.from(document.getElementById("exportPrayerSelect").selectedOptions).map(o => o.value);
-      if (!startDate || !endDate) { Swal.fire('❌ ผิดพลาด', 'กรุณาเลือกวันที่', 'error'); return; }
+      if (!startDate || !endDate) { Swal.fire(' ผิดพลาด', 'กรุณาเลือกวันที่', 'error'); return; }
 
       Swal.fire({ title: 'กำลังเตรียมไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const res = await callAPI({ action: 'exportCSV', filters: { startDate, endDate, prayers: selectedPrayers } });
