@@ -4,11 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบสแกนละหมาด</title>
+  
+  <!-- ✅ แก้ไข: ใช้ Tailwind CSS stable CDN แทน Play CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- ✅ แก้ไข: เพิ่ม favicon แบบ inline (ไม่ต้องโหลดไฟล์ภายนอก) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕌</text></svg>">
+  
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
@@ -35,32 +42,38 @@
     .pagination-btn { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 0.375rem; font-size: 0.875rem; }
     .pagination-btn.active { background: #10b981; color: white; border-color: #10b981; }
     .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .outside-time-alert { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 1rem; border-radius: 0.5rem; text-align: center; margin: 1rem 0; animation: pulse 2s infinite; }
+    .outside-time-alert { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center; margin: 0.5rem 0; animation: pulse 2s infinite; font-size: 0.875rem; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-    .connection-error { background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 1rem; border-radius: 0.5rem; text-align: center; margin: 1rem 0; }
-    .retry-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; margin-top: 0.5rem; cursor: pointer; }
-    .retry-btn:hover { background: #dc2626; }
-    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .connection-error { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center; margin: 0.5rem 0; font-size: 0.875rem; }
+    .retry-btn { background: white; color: #d97706; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; margin-left: 0.5rem; cursor: pointer; font-weight: bold; }
+    #reader video { border-radius: 0.75rem; }
+    #reader img { border-radius: 0.75rem; }
   </style>
 </head>
 <body class="bg-gray-100">
   <div class="app-container flex flex-col">
+    <!-- Header -->
     <header class="bg-green-600 text-white p-4 text-center sticky top-0 z-40 shadow-md">
       <h1 class="text-xl font-bold"><i class="fas fa-mosque mr-2"></i>ระบบสแกนละหมาด</h1>
       <p class="text-xs text-green-100 mt-1" id="currentPrayerDisplay">กำลังโหลดเวลาจากเซิร์ฟเวอร์...</p>
       <div id="systemStatus" class="text-xs mt-1"><span class="bg-green-500 px-2 py-1 rounded-full">ระบบเปิด</span></div>
-      <div id="outsideTimeAlert" class="outside-time-alert hidden mt-2">
-        <i class="fas fa-exclamation-triangle mr-2"></i>⚠️ อยู่นอกเวลาละหมาด ไม่สามารถสแกนได้
+      
+      <!-- ✅ แจ้งเตือนเมื่ออยู่นอกเวลาละหมาด -->
+      <div id="outsideTimeAlert" class="outside-time-alert hidden">
+        <i class="fas fa-exclamation-triangle mr-1"></i>⚠️ อยู่นอกเวลาละหมาด ไม่สามารถสแกนได้
       </div>
-      <div id="connectionError" class="connection-error hidden mt-2">
-        <i class="fas fa-wifi mr-2"></i>⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้
-        <br>
-        <button onclick="retryConnection()" class="retry-btn"><i class="fas fa-sync-alt mr-1"></i>ลองอีกครั้ง</button>
+      
+      <!-- ✅ แจ้งเตือนเมื่อเชื่อมต่อ API ไม่ได้ -->
+      <div id="connectionErrorAlert" class="connection-error hidden">
+        <i class="fas fa-wifi mr-1"></i>ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้
+        <button onclick="retryConnection()" class="retry-btn">ลองใหม่</button>
       </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-1 p-4 pb-24 overflow-y-auto">
+      
+      <!-- หน้าสแกน -->
       <div id="scanPage" class="page-section active">
         <div class="scan-box mb-4">
           <div id="reader" class="w-full"></div>
@@ -73,6 +86,7 @@
           </button>
         </div>
 
+        <!-- การสแกนล่าสุด -->
         <div class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-history mr-2 text-blue-500"></i>สแกนล่าสุด (5 รายการ)</h3>
           <div id="recentScansList" class="space-y-2">
@@ -81,6 +95,7 @@
         </div>
       </div>
 
+      <!-- หน้ารายงาน -->
       <div id="reportPage" class="page-section">
         <div class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-4"><i class="fas fa-chart-bar mr-2 text-purple-500"></i>สถิติและรายงาน</h3>
@@ -163,6 +178,7 @@
         </div>
       </div>
 
+      <!-- หน้าตั้งค่า -->
       <div id="settingsPage" class="page-section">
         <div id="adminLoginSection" class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fas fa-lock mr-2 text-red-500"></i>เข้าสู่ระบบผู้ดูแล</h3>
@@ -207,6 +223,7 @@
       </div>
     </main>
 
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
       <div class="nav-item active" onclick="showPage('scan', this)">
         <i class="fas fa-qrcode"></i><span>สแกน</span>
@@ -219,6 +236,7 @@
       </div>
     </nav>
 
+    <!-- Student Success Modal -->
     <div id="studentModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
       <div class="student-card bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl">
         <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-green-500 shadow-lg bg-gray-100">
@@ -235,6 +253,7 @@
       </div>
     </div>
 
+    <!-- Export Modal -->
     <div id="exportModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
       <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
         <h3 class="text-lg font-bold text-gray-800 mb-4 text-center"><i class="fas fa-file-export mr-1 text-green-600"></i> ส่งออก CSV</h3>
@@ -244,8 +263,11 @@
           <div>
             <label class="text-xs text-gray-500">เลือกกะ</label>
             <select id="exportPrayerSelect" multiple class="w-full p-2 border rounded-lg h-24 text-sm">
-              <option value="Subhi" selected>Subhi</option><option value="Dhur" selected>Dhur</option>
-              <option value="Asri" selected>Asri</option><option value="Maghrib" selected>Maghrib</option><option value="Isha" selected>Isha</option>
+              <option value="Subhi" selected>Subhi</option>
+              <option value="Dhur" selected>Dhur</option>
+              <option value="Asri" selected>Asri</option>
+              <option value="Maghrib" selected>Maghrib</option>
+              <option value="Isha" selected>Isha</option>
             </select>
           </div>
         </div>
@@ -259,6 +281,7 @@
 
   <script>
     // ⚠️ สำคัญ: เปลี่ยน URL นี้เป็น URL ของคุณที่ Deploy จาก Google Apps Script
+    // ตัวอย่าง: https://script.google.com/macros/s/AKfycbx.../exec
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby-XCfmZT3fYWgUabyHlFYu3MZNz6DLWhDnGMfOYzNXU7xVEO6sVpHPC0J61iiyAo_t/exec";
 
     let prayerTimes = [];
@@ -273,95 +296,96 @@
     let isAdminLoggedIn = false;
     let systemSettings = {};
     let autoCloseTimer = null;
-    let isOnline = navigator.onLine;
-    let connectionRetryCount = 0;
-    const MAX_RETRY_COUNT = 3;
+    let connectionFailed = false;
+    let apiRetryCount = 0;
+    const MAX_RETRY = 3;
 
-    // ✅ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
-    window.addEventListener('online', () => {
-      isOnline = true;
-      updateConnectionStatus();
-    });
-
-    window.addEventListener('offline', () => {
-      isOnline = false;
-      updateConnectionStatus();
-      Swal.fire({
-        icon: 'warning',
-        title: 'ไม่มีอินเทอร์เน็ต',
-        text: 'คุณออฟไลน์อยู่ ระบบอาจทำงานไม่ปกติ',
-        timer: 3000
-      });
-    });
-
-    function updateConnectionStatus() {
-      const errorDiv = document.getElementById('connectionError');
-      if (!isOnline) {
-        errorDiv.classList.remove('hidden');
-        errorDiv.innerHTML = '<i class="fas fa-wifi mr-2"></i>⚠️ ไม่มีอินเทอร์เน็ต<br><small>กรุณาตรวจสอบการเชื่อมต่อ</small>';
-      }
-    }
-
-    // ✅ ฟังก์ชันเรียก API พร้อม retry
+    // ✅ ฟังก์ชันเรียก API พร้อม Retry และ Error Handling ที่ดีขึ้น
     async function callAPI(payload, retryCount = 0) {
+      // ตรวจสอบ URL ก่อนเรียก
+      if (!GAS_API_URL || GAS_API_URL.includes('YOUR_DEPLOYMENT_ID')) {
+        console.error('⚠️ GAS_API_URL ยังไม่ได้ตั้งค่า');
+        return { 
+          success: false, 
+          message: 'ยังไม่ได้ตั้งค่า URL ของ Google Apps Script กรุณาแก้ไข GAS_API_URL ในโค้ด',
+          needsSetup: true
+        };
+      }
+
       try {
-        if (!isOnline) {
-          throw new Error('ไม่มีอินเทอร์เน็ต');
-        }
-
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 วินาที timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // timeout 15 วินาที
 
-        const response = await fetch(GAS_API_URL, {
-          method: "POST",
+        const response = await fetch(GAS_API_URL, { 
+          method: "POST", 
           body: JSON.stringify(payload),
           signal: controller.signal,
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'text/plain;charset=utf-8'
           }
         });
         
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         
-        // Reset retry count on success
-        connectionRetryCount = 0;
-        document.getElementById('connectionError').classList.add('hidden');
+        // ✅ ถ้าเชื่อมต่อสำเร็จ ให้รีเซ็ตสถานะ
+        if (connectionFailed) {
+          connectionFailed = false;
+          apiRetryCount = 0;
+          document.getElementById('connectionErrorAlert').classList.add('hidden');
+        }
         
         return result;
       } catch (error) {
-        console.error(`API Error (attempt ${retryCount + 1}):`, error);
+        console.error("API Error:", error);
         
-        // Retry logic
-        if (retryCount < MAX_RETRY_COUNT) {
-          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
-          await new Promise(resolve => setTimeout(resolve, delay));
+        // ✅ Retry logic
+        if (retryCount < MAX_RETRY) {
+          console.log(`Retrying... (${retryCount + 1}/${MAX_RETRY})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
           return callAPI(payload, retryCount + 1);
         }
-        
-        // Show connection error after max retries
-        document.getElementById('connectionError').classList.remove('hidden');
-        connectionRetryCount = 0;
+
+        // ✅ แสดงแจ้งเตือนเมื่อเชื่อมต่อไม่ได้
+        connectionFailed = true;
+        document.getElementById('connectionErrorAlert').classList.remove('hidden');
         
         return { 
           success: false, 
-          message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองอีกครั้ง",
-          error: error.message
+          message: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: " + error.message,
+          connectionError: true
         };
       }
     }
 
-    function retryConnection() {
-      connectionRetryCount = 0;
-      document.getElementById('connectionError').classList.add('hidden');
-      location.reload();
+    // ✅ ฟังก์ชันลองเชื่อมต่อใหม่
+    async function retryConnection() {
+      document.getElementById('connectionErrorAlert').classList.add('hidden');
+      Swal.fire({ 
+        title: 'กำลังเชื่อมต่อใหม่...', 
+        allowOutsideClick: false, 
+        didOpen: () => Swal.showLoading() 
+      });
+      
+      const res = await callAPI({ action: 'getSystemSettings' });
+      Swal.close();
+      
+      if (res.success) {
+        systemSettings = res.data;
+        applySystemSettings();
+        await updateCurrentPrayerDisplay();
+        Swal.fire('✅ สำเร็จ', 'เชื่อมต่อเซิร์ฟเวอร์เรียบร้อย', 'success');
+      } else {
+        Swal.fire('❌ ล้มเหลว', res.message, 'error');
+      }
     }
 
+    // ✅ โหลดเวลาจาก server
     async function getCurrentPrayerFromServer() {
       const now = Date.now();
       if (now - lastServerTimeCheck > 30000 || currentServerPrayer === null) {
@@ -387,7 +411,7 @@
 
     function updateOutsideTimeAlert() {
       const alertDiv = document.getElementById('outsideTimeAlert');
-      if (!isInPrayerTime) {
+      if (!isInPrayerTime && currentServerPrayer !== null) {
         alertDiv.classList.remove('hidden');
       } else {
         alertDiv.classList.add('hidden');
@@ -396,11 +420,17 @@
 
     async function updateCurrentPrayerDisplay() {
       const res = await getCurrentPrayerFromServer();
+      const displayEl = document.getElementById('currentPrayerDisplay');
+      
       if (res.success) {
         const timeStr = res.serverTime || '';
         const prayerText = res.isInPrayerTime ? `วักตูปัจจุบัน: ${res.prayer}` : '⚠️ นอกเวลาละหมาด';
-        const statusColor = res.isInPrayerTime ? 'text-green-100' : 'text-red-200';
-        document.getElementById('currentPrayerDisplay').innerHTML = `<span class="${statusColor}">${prayerText} (${timeStr})</span>`;
+        const statusColor = res.isInPrayerTime ? 'text-green-100' : 'text-red-200 font-bold';
+        displayEl.innerHTML = `<span class="${statusColor}">${prayerText} (${timeStr})</span>`;
+      } else if (res.needsSetup) {
+        displayEl.innerHTML = '<span class="text-yellow-200">⚠️ กรุณาตั้งค่า GAS_API_URL</span>';
+      } else {
+        displayEl.innerHTML = '<span class="text-red-200">❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์</span>';
       }
     }
 
@@ -409,9 +439,23 @@
       return res.prayer;
     }
 
+    // ✅ เริ่มต้นระบบ
     window.onload = async function() {
-      updateConnectionStatus();
+      console.log('🚀 ระบบเริ่มต้นทำงาน...');
+      console.log('GAS_API_URL:', GAS_API_URL);
       
+      // ตรวจสอบ URL ก่อน
+      if (!GAS_API_URL || GAS_API_URL.includes('YOUR_DEPLOYMENT_ID')) {
+        Swal.fire({
+          icon: 'warning',
+          title: '⚠️ ยังไม่ได้ตั้งค่า URL',
+          html: 'กรุณาแก้ไข <code>GAS_API_URL</code> ในโค้ดให้เป็น URL ของ Google Apps Script ที่ Deploy แล้ว<br><br>ตัวอย่าง: <code>https://script.google.com/macros/s/AKfycbx.../exec</code>',
+          confirmButtonText: 'เข้าใจแล้ว'
+        });
+        document.getElementById('currentPrayerDisplay').innerHTML = '<span class="text-yellow-200">⚠️ กรุณาตั้งค่า GAS_API_URL</span>';
+        return;
+      }
+
       const settingsRes = await callAPI({ action: 'getSystemSettings' });
       if (settingsRes.success) {
         systemSettings = settingsRes.data;
@@ -425,7 +469,7 @@
       }
 
       await updateCurrentPrayerDisplay();
-      await loadRecentScans();
+      loadRecentScans();
       initCamera();
       
       setInterval(async () => {
@@ -451,23 +495,28 @@
     }
 
     function initCamera() {
-      html5QrCode = new Html5Qrcode("reader");
-      startCamera();
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+        startCamera();
+      } catch (e) {
+        console.error('Camera init error:', e);
+        document.getElementById('reader').innerHTML = '<div class="text-white text-center p-4">ไม่สามารถเริ่มต้นกล้องได้</div>';
+      }
     }
 
     function startCamera() {
       if (isCameraRunning) return;
-      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {})
-        .then(() => { isCameraRunning = true; })
-        .catch(err => {
-          console.warn("Camera error:", err);
-          Swal.fire({
-            icon: 'warning',
-            title: 'ไม่สามารถเปิดกล้อง',
-            text: 'กรุณาอนุญาตการเข้าถึงกล้อง',
-            timer: 3000
-          });
-        });
+      html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 250 } }, 
+        onScanSuccess, 
+        () => {}
+      )
+      .then(() => { isCameraRunning = true; })
+      .catch(err => { 
+        console.warn("Camera error:", err);
+        document.getElementById('reader').innerHTML = '<div class="text-white text-center p-4">ไม่สามารถเข้าถึงกล้องได้</div>';
+      });
     }
 
     function onScanSuccess(decodedText) {
@@ -480,6 +529,17 @@
     async function handleScan(studentId) {
       if (!studentId) return;
       
+      if (connectionFailed) {
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'ไม่สามารถเชื่อมต่อได้', 
+          text: 'กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตและลองใหม่อีกครั้ง', 
+          timer: 3000, 
+          showConfirmButton: false 
+        });
+        return;
+      }
+
       if (!document.getElementById('systemToggle').checked) {
         Swal.fire({ icon: 'error', title: 'ระบบปิด', text: 'ระบบกำลังปิดอยู่ ไม่สามารถสแกนได้', timer: 2000, showConfirmButton: false });
         return;
@@ -506,24 +566,20 @@
         showStudentModal(res, prayer);
         loadRecentScans();
       } else if (res.status === "outside_prayer_time") {
-        Swal.fire({ 
-          icon: 'warning', 
-          title: '⚠️ อยู่นอกเวลาละหมาด', 
-          text: res.message, 
-          timer: 3000, 
-          showConfirmButton: false 
-        });
+        Swal.fire({ icon: 'warning', title: '⚠️ อยู่นอกเวลาละหมาด', text: res.message, timer: 3000, showConfirmButton: false });
       } else if (res.status === "duplicate") {
         Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
       } else if (res.status === "not_found") {
         Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: `ไม่พบรหัสนักเรียน: ${studentId}`, timer: 2000, showConfirmButton: false });
+      } else if (res.connectionError) {
+        Swal.fire({ icon: 'error', title: 'เชื่อมต่อไม่ได้', text: res.message, timer: 3000, showConfirmButton: false });
       } else {
-        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ' });
+        Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message });
       }
     }
 
     function showStudentModal(data, prayerUsed) {
-      document.getElementById("studentPhoto").src = data.photoUrl;
+      document.getElementById("studentPhoto").src = data.photoUrl || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">👤</text></svg>';
       document.getElementById("studentName").innerText = data.name;
       document.getElementById("studentClass").innerText = `ชั้น ${data.class}`;
       document.getElementById("scanStatusText").innerText = `บันทึก ${prayerUsed} เรียบร้อย`;
@@ -550,31 +606,25 @@
     }
 
     async function loadRecentScans() {
-      try {
-        const res = await callAPI({ action: 'getRecentScans', limit: 5 });
-        if (res.success) {
-          const container = document.getElementById('recentScansList');
-          if (res.data.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-500 text-sm">ยังไม่มีรายการสแกน</div>';
-            return;
-          }
-          container.innerHTML = res.data.map(scan => `
-            <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fas fa-check text-xs"></i></div>
-                <div>
-                  <div class="text-sm font-medium text-gray-700">${scan.name || scan.id}</div>
-                  <div class="text-xs text-gray-500">${scan.class} | ${scan.prayer}</div>
-                </div>
-              </div>
-              <div class="text-xs text-gray-500 text-right"><div>${scan.time}</div><div>${scan.date}</div></div>
-            </div>
-          `).join('');
-        } else {
-          console.error('Failed to load recent scans:', res.message);
+      const res = await callAPI({ action: 'getRecentScans', limit: 5 });
+      if (res.success) {
+        const container = document.getElementById('recentScansList');
+        if (res.data.length === 0) {
+          container.innerHTML = '<div class="text-center text-gray-500 text-sm">ยังไม่มีรายการสแกน</div>';
+          return;
         }
-      } catch (e) {
-        console.error('Error in loadRecentScans:', e);
+        container.innerHTML = res.data.map(scan => `
+          <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i class="fas fa-check text-xs"></i></div>
+              <div>
+                <div class="text-sm font-medium text-gray-700">${scan.name || scan.id}</div>
+                <div class="text-xs text-gray-500">${scan.class} | ${scan.prayer}</div>
+              </div>
+            </div>
+            <div class="text-xs text-gray-500 text-right"><div>${scan.time}</div><div>${scan.date}</div></div>
+          </div>
+        `).join('');
       }
     }
 
@@ -599,8 +649,8 @@
         renderReportTable(res.data);
         renderPagination(res.total, res.totalPages, res.page);
         renderStatsSummary(res.stats);
-      } else {
-        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.message });
+      } else if (res.connectionError) {
+        Swal.fire('❌ เชื่อมต่อไม่ได้', res.message, 'error');
       }
     }
 
@@ -758,7 +808,7 @@
         closeExportModal();
         Swal.fire('✅ สำเร็จ', `ดาวน์โหลด ${res.count} รายการเรียบร้อย`, 'success');
       } else {
-        Swal.fire('❌ ผิดพลาด', res.error, 'error');
+        Swal.fire('❌ ผิดพลาด', res.error || res.message, 'error');
       }
     }
   </script>
