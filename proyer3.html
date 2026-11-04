@@ -38,17 +38,13 @@
 </head>
 <body class="bg-gray-100">
   <div class="app-container flex flex-col">
-    <!-- Header -->
     <header class="bg-green-600 text-white p-4 text-center sticky top-0 z-40 shadow-md">
       <h1 class="text-xl font-bold"><i class="fas fa-mosque mr-2"></i>ระบบสแกนละหมาด</h1>
       <p class="text-xs text-green-100 mt-1" id="currentPrayerDisplay">กำลังโหลดเวลาจากเซิร์ฟเวอร์...</p>
       <div id="systemStatus" class="text-xs mt-1"><span class="bg-green-500 px-2 py-1 rounded-full">ระบบเปิด</span></div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 p-4 pb-24 overflow-y-auto">
-      
-      <!-- หน้าสแกน -->
       <div id="scanPage" class="page-section active">
         <div class="scan-box mb-4">
           <div id="reader" class="w-full"></div>
@@ -61,7 +57,6 @@
           </button>
         </div>
 
-        <!-- การสแกนล่าสุด -->
         <div class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-history mr-2 text-blue-500"></i>สแกนล่าสุด (5 รายการ)</h3>
           <div id="recentScansList" class="space-y-2">
@@ -70,7 +65,6 @@
         </div>
       </div>
 
-      <!-- หน้ารายงาน -->
       <div id="reportPage" class="page-section">
         <div class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-4"><i class="fas fa-chart-bar mr-2 text-purple-500"></i>สถิติและรายงาน</h3>
@@ -106,7 +100,6 @@
             </button>
           </div>
 
-          <!-- สรุปสถิติ -->
           <div id="statsSummary" class="grid grid-cols-2 gap-3 mb-4 hidden">
             <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-3 text-center">
               <div class="text-2xl font-bold" id="totalScansStat">0</div>
@@ -118,7 +111,6 @@
             </div>
           </div>
 
-          <!-- ตารางข้อมูล -->
           <div class="overflow-x-auto mb-4 border rounded-lg">
             <table class="w-full">
               <thead>
@@ -135,7 +127,6 @@
             </table>
           </div>
 
-          <!-- Pagination -->
           <div id="pagination" class="flex justify-between items-center mb-4 hidden">
             <button onclick="changePage(-1)" class="pagination-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
             <div class="flex gap-1" id="pageNumbers"></div>
@@ -156,9 +147,7 @@
         </div>
       </div>
 
-      <!-- หน้าตั้งค่า -->
       <div id="settingsPage" class="page-section">
-        <!-- Admin Login Section -->
         <div id="adminLoginSection" class="bg-white rounded-lg shadow p-4 mb-4">
           <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fas fa-lock mr-2 text-red-500"></i>เข้าสู่ระบบผู้ดูแล</h3>
           <input type="text" id="adminUsername" placeholder="ชื่อผู้ใช้" class="w-full p-3 border rounded-lg mb-3 outline-none focus:ring-2 focus:ring-green-500">
@@ -168,7 +157,6 @@
           </button>
         </div>
 
-        <!-- Admin Controls (Hidden until logged in) -->
         <div id="adminControls" class="hidden space-y-4">
           <div class="bg-white rounded-lg shadow p-4">
             <div class="flex justify-between items-center mb-4">
@@ -203,7 +191,6 @@
       </div>
     </main>
 
-    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
       <div class="nav-item active" onclick="showPage('scan', this)">
         <i class="fas fa-qrcode"></i><span>สแกน</span>
@@ -216,7 +203,6 @@
       </div>
     </nav>
 
-    <!-- Student Success Modal -->
     <div id="studentModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
       <div class="student-card bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl">
         <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-green-500 shadow-lg bg-gray-100">
@@ -233,7 +219,6 @@
       </div>
     </div>
 
-    <!-- Export Modal -->
     <div id="exportModal" class="modal fixed inset-0 flex items-center justify-center p-4 hidden">
       <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
         <h3 class="text-lg font-bold text-gray-800 mb-4 text-center"><i class="fas fa-file-export mr-1 text-green-600"></i> ส่งออก CSV</h3>
@@ -272,7 +257,6 @@
     let systemSettings = {};
     let autoCloseTimer = null;
 
-    // ✅ เรียก API
     async function callAPI(payload) {
       try {
         const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
@@ -283,42 +267,42 @@
       }
     }
 
-    // ✅ โหลดเวลาจาก server แทนการใช้เวลาเครื่อง client
+    // ✅ ฟังก์ชันหลัก: ดึงเวลาปัจจุบันและคำนวณกะจาก "เซิร์ฟเวอร์ + ชีต Settings"
     async function getCurrentPrayerFromServer() {
       const now = Date.now();
-      // อัพเดททุก 1 นาที
       if (now - lastServerTimeCheck > 60000 || !currentServerPrayer) {
         try {
           const res = await callAPI({ action: 'getCurrentPrayerFromServer' });
           if (res.success) {
             currentServerPrayer = res.prayer;
             lastServerTimeCheck = now;
-            console.log(`Server Time: ${res.serverTime}, Prayer: ${res.prayer}`);
+            // อัปเดต prayerTimes จากเซิร์ฟเวอร์เพื่อให้หน้าตั้งค่าตรงกันเสมอ
+            if (res.prayerTimes) {
+              prayerTimes = res.prayerTimes;
+              renderPrayerTimesForm();
+            }
             return res;
           }
         } catch (e) {
           console.error('Failed to get server prayer time:', e);
         }
       }
-      return { prayer: currentServerPrayer || 'Isha' };
+      return { prayer: currentServerPrayer || 'Isha', serverTime: '' };
     }
 
-    // ✅ อัปเดต display เวลาละหมาดปัจจุบัน
     async function updateCurrentPrayerDisplay() {
       const res = await getCurrentPrayerFromServer();
       if (res.success) {
-        const timeStr = res.serverTime.split(' ')[1] || '';
+        const timeStr = res.serverTime || '';
         document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${res.prayer} (${timeStr})`;
       }
     }
 
-    // ✅ แก้ไข getCurrentPrayer() ให้ใช้ server time
     async function getCurrentPrayer() {
       const res = await getCurrentPrayerFromServer();
       return res.prayer;
     }
 
-    // ✅ เริ่มต้นระบบ
     window.onload = async function() {
       const settingsRes = await callAPI({ action: 'getSystemSettings' });
       if (settingsRes.success) {
@@ -326,17 +310,17 @@
         applySystemSettings();
       }
 
+      // โหลดเวลาจากชีต Settings มาแสดงในหน้าตั้งค่า
       const prayerRes = await callAPI({ action: 'getPrayerTimes' });
       if (prayerRes.success) {
         prayerTimes = prayerRes.data;
-        await updateCurrentPrayerDisplay(); // ✅ ใช้ await
         renderPrayerTimesForm();
       }
 
+      await updateCurrentPrayerDisplay();
       loadRecentScans();
       initCamera();
       
-      // ✅ อัปเดตทุก 1 นาที
       setInterval(async () => {
         await updateCurrentPrayerDisplay();
       }, 60000);
@@ -378,7 +362,6 @@
       handleScan(decodedText.trim());
     }
 
-    // ✅ แก้ไข handleScan() ให้รอรับ prayer จาก server
     async function handleScan(studentId) {
       if (!studentId) return;
       if (!document.getElementById('systemToggle').checked) {
@@ -388,14 +371,14 @@
       
       Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       
-      // ✅ รับ prayer จาก server แทนการคำนวณที่ client
+      // ✅ ยึดเวลาสแกนตามหน้าตั้งค่า/เซิร์ฟเวอร์ 100%
       const prayer = await getCurrentPrayer();
       
       const res = await callAPI({ action: 'logScan', studentId, prayer });
       Swal.close();
 
       if (res.success) {
-        showStudentModal(res, prayer); // ✅ ส่ง prayer ไปด้วย
+        showStudentModal(res, prayer);
         loadRecentScans();
       } else if (res.status === "duplicate") {
         Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
@@ -406,7 +389,6 @@
       }
     }
 
-    // ✅ แสดง prayer ที่ถูกต้องใน modal
     function showStudentModal(data, prayerUsed) {
       document.getElementById("studentPhoto").src = data.photoUrl;
       document.getElementById("studentName").innerText = data.name;
@@ -525,10 +507,9 @@
     function goToPage(page) { currentReportPage = page; loadReportData(); }
     function changePageSize() { currentReportPageSize = parseInt(document.getElementById('pageSizeSelect').value); currentReportPage = 1; loadReportData(); }
 
-    // ✅ ใน renderPrayerTimesForm() ให้แสดงค่า start และ end
     function renderPrayerTimesForm() {
       const form = document.getElementById('prayerTimesForm');
-      if (!form) return;
+      if (!form || !prayerTimes || prayerTimes.length === 0) return;
       
       form.innerHTML = prayerTimes.map((p, i) => `
         <div class="bg-gray-50 p-3 rounded-lg">
@@ -556,13 +537,17 @@
         start: parseInt(document.getElementById(`prayerStart-${i}`).value) || p.start,
         end: parseInt(document.getElementById(`prayerEnd-${i}`).value) || p.end
       }));
+      
       Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const res = await callAPI({ action: 'savePrayerTimes', times: updatedTimes });
       Swal.close();
+      
       if (res.success) {
         prayerTimes = updatedTimes;
-        Swal.fire('✅ สำเร็จ', 'บันทึกเวลาเรียบร้อย', 'success');
-        await updateCurrentPrayerDisplay();
+        Swal.fire('✅ สำเร็จ', 'บันทึกเวลาลงชีต Settings เรียบร้อย', 'success');
+        await updateCurrentPrayerDisplay(); // อัปเดตเวลาทันทีหลังบันทึก
+      } else {
+        Swal.fire('❌ ผิดพลาด', res.message, 'error');
       }
     }
 
