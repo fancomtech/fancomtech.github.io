@@ -272,17 +272,7 @@
     let systemSettings = {};
     let autoCloseTimer = null;
 
-    async function callAPI(payload) {
-      try {
-        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
-        return await response.json();
-      } catch (error) {
-        console.error("API Error:", error);
-        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
-      }
-    }
-
-    // ✅ ฟังก์ชันใหม่: รับวักตูจาก server (ป้องกันเวลาเครื่องไม่ตรง)
+    // ✅ โหลดเวลาจาก server แทนการใช้เวลาเครื่อง client
     async function getCurrentPrayerFromServer() {
       const now = Date.now();
       // อัพเดททุก 1 นาที
@@ -292,7 +282,8 @@
           if (res.success) {
             currentServerPrayer = res.prayer;
             lastServerTimeCheck = now;
-            console.log(`Server Time: ${res.serverTime}, Prayer: ${res.prayer}, Current: ${res.currentTime}`);
+            console.log(`Server Time: ${res.serverTime}, Prayer: ${res.prayer}`);
+            return res.prayer;
           }
         } catch (e) {
           console.error('Failed to get server prayer time:', e);
@@ -301,22 +292,33 @@
       return currentServerPrayer || 'Isha';
     }
 
-    // ✅ แสดงวักตูปัจจุบันจาก server
+    // ✅ อัปเดต display เวลาละหมาดปัจจุบัน
     async function updateCurrentPrayerDisplay() {
-      const prayer = await getCurrentPrayerFromServer();
-      document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${prayer}`;
+      try {
+        const res = await callAPI({ action: 'getCurrentPrayerFromServer' });
+        if (res.success) {
+          currentServerPrayer = res.prayer;
+          const timeStr = `${res.serverTime.substring(0,2)}:${res.serverTime.substring(2,4)}`;
+          document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${res.prayer} (${timeStr} น.)`;
+        }
+      } catch (e) {
+        console.error('Error updating prayer display:', e);
+      }
     }
 
-    // ✅ ใช้ server time ในการคำนวณวักตู
+    // ✅ แก้ไข getCurrentPrayer() ให้ใช้ server time
     async function getCurrentPrayer() {
-      // ถ้าเลือก manual ให้ใช้ค่าที่เลือก
-      const manualSelect = document.getElementById('prayerSelect');
-      if (manualSelect && manualSelect.value !== 'auto') {
-        return manualSelect.value;
-      }
-      
-      // ใช้เวลาจาก server (ป้องกันเวลาเครื่องไม่ตรง)
       return await getCurrentPrayerFromServer();
+    }
+
+    async function callAPI(payload) {
+      try {
+        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
+        return await response.json();
+      } catch (error) {
+        console.error("API Error:", error);
+        return { success: false, message: "การเชื่อมต่อล้มเหลว: " + error.message };
+      }
     }
 
     window.onload = async function() {
@@ -329,14 +331,14 @@
       const prayerRes = await callAPI({ action: 'getPrayerTimes' });
       if (prayerRes.success) {
         prayerTimes = prayerRes.data;
-        await updateCurrentPrayerDisplay();
+        await updateCurrentPrayerDisplay(); // ✅ ใช้ await
         renderPrayerTimesForm();
       }
 
       loadRecentScans();
       initCamera();
       
-      // อัปเดตทุก 1 นาที
+      // ✅ อัปเดตทุก 1 นาที
       setInterval(async () => {
         await updateCurrentPrayerDisplay();
       }, 60000);
@@ -378,7 +380,7 @@
       handleScan(decodedText.trim());
     }
 
-    // ✅ แก้ไข handleScan ให้ใช้ server time
+    // ✅ แก้ไข handleScan() ให้รอรับ prayer จาก server
     async function handleScan(studentId) {
       if (!studentId) return;
       if (!document.getElementById('systemToggle').checked) {
@@ -395,7 +397,7 @@
       Swal.close();
 
       if (res.success) {
-        showStudentModal(res, prayer);
+        showStudentModal(res, prayer); // ✅ ส่ง prayer ไปด้วย
         loadRecentScans();
       } else if (res.status === "duplicate") {
         Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
