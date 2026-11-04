@@ -261,6 +261,8 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby-XCfmZT3fYWgUabyHlFYu3MZNz6DLWhDnGMfOYzNXU7xVEO6sVpHPC0J61iiyAo_t/exec";
 
     let prayerTimes = [];
+    let currentServerPrayer = null;
+    let lastServerTimeCheck = 0;
     let html5QrCode = null;
     let isCameraRunning = false;
     let lastScanTime = 0;
@@ -269,6 +271,149 @@
     let isAdminLoggedIn = false;
     let systemSettings = {};
     let autoCloseTimer = null;
+
+    // แทนที่ฟังก์ชันเหล่านี้ในไฟล์ index.html เดิม:
+
+let prayerTimes = [];
+let currentServerPrayer = null;
+let lastServerTimeCheck = 0;
+
+// ✅ โหลดเวลาจาก server แทนการใช้เวลาเครื่อง client
+async function getCurrentPrayerFromServer() {
+  const now = Date.now();
+  // อัพเดททุก 1 นาที
+  if (now - lastServerTimeCheck > 60000 || !currentServerPrayer) {
+    try {
+      const res = await callAPI({ action: 'getCurrentPrayerFromServer' });
+      if (res.success) {
+        currentServerPrayer = res.prayer;
+        lastServerTimeCheck = now;
+        console.log(`Server Time: ${res.serverTime}, Prayer: ${res.prayer}`);
+      }
+    } catch (e) {
+      console.error('Failed to get server prayer time:', e);
+    }
+  }
+  return currentServerPrayer || 'Isha';
+}
+
+// ✅ อัปเดต display เวลาละหมาดปัจจุบัน
+async function updateCurrentPrayerDisplay() {
+  const prayer = await getCurrentPrayerFromServer();
+  const now = new Date();
+  const bangkokTime = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Bangkok'}));
+  const timeStr = bangkokTime.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+  document.getElementById('currentPrayerDisplay').innerText = `วักตูปัจจุบัน: ${prayer} (${timeStr})`;
+}
+
+// ✅ แก้ไข getCurrentPrayer() ให้ใช้ server time
+async function getCurrentPrayer() {
+  // ถ้าเลือก manual ให้ใช้ค่าที่เลือก
+  const manualSelect = document.getElementById('prayerSelect');
+  if (manualSelect && manualSelect.value !== 'auto') {
+    return manualSelect.value;
+  }
+  
+  // ใช้เวลาจาก server
+  return await getCurrentPrayerFromServer();
+}
+
+// ✅ แก้ไข handleScan() ให้รอรับ prayer จาก server
+async function handleScan(studentId) {
+  if (!studentId) return;
+  if (!document.getElementById('systemToggle').checked) {
+    Swal.fire({ icon: 'error', title: 'ระบบปิด', text: 'ระบบกำลังปิดอยู่ ไม่สามารถสแกนได้', timer: 2000, showConfirmButton: false });
+    return;
+  }
+  
+  Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  
+  // ✅ รับ prayer จาก server แทนการคำนวณที่ client
+  const prayer = await getCurrentPrayer();
+  
+  const res = await callAPI({ action: 'logScan', studentId, prayer });
+  Swal.close();
+
+  if (res.success) {
+    showStudentModal(res, prayer); // ส่ง prayer ไปด้วย
+    loadRecentScans();
+  } else if (res.status === "duplicate") {
+    Swal.fire({ icon: 'info', title: 'บันทึกแล้ว', text: `รหัสนี้ถูกบันทึกสำหรับ ${prayer} ไปแล้ว`, timer: 1500, showConfirmButton: false });
+  } else if (res.status === "not_found") {
+    Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: `ไม่พบรหัสนักเรียน: ${studentId}`, timer: 2000, showConfirmButton: false });
+  } else {
+    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: res.message });
+  }
+}
+
+// ✅ แสดง prayer ที่ถูกต้องใน modal
+function showStudentModal(data, prayerUsed) {
+  document.getElementById("studentPhoto").src = data.photoUrl;
+  document.getElementById("studentName").innerText = data.name;
+  document.getElementById("studentClass").innerText = `ชั้น ${data.class}`;
+  document.getElementById("scanStatusText").innerText = `บันทึก ${prayerUsed} เรียบร้อย`;
+  document.getElementById("studentModal").classList.remove("hidden");
+  
+  if (systemSettings.soundEnabled) {
+    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(()=>{});
+  }
+
+  if (systemSettings.autoCloseModal !== false) {
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    autoCloseTimer = setTimeout(() => { closeStudentModal(); }, 3000);
+  }
+}
+
+// ✅ อัปเดต window.onload
+window.onload = async function() {
+  const settingsRes = await callAPI({ action: 'getSystemSettings' });
+  if (settingsRes.success) {
+    systemSettings = settingsRes.data;
+    applySystemSettings();
+  }
+
+  const prayerRes = await callAPI({ action: 'getPrayerTimes' });
+  if (prayerRes.success) {
+    prayerTimes = prayerRes.data;
+    await updateCurrentPrayerDisplay(); // ✅ ใช้ await
+    renderPrayerTimesForm();
+  }
+
+  loadRecentScans();
+  initCamera();
+  
+  // ✅ อัปเดตทุก 1 นาที
+  setInterval(async () => {
+    await updateCurrentPrayerDisplay();
+  }, 60000);
+  
+  setInterval(loadRecentScans, 30000);
+};
+
+// ✅ ใน renderPrayerTimesForm() ให้แสดงค่า start และ end
+function renderPrayerTimesForm() {
+  const form = document.getElementById('prayerTimesForm');
+  if (!form) return;
+  
+  form.innerHTML = prayerTimes.map((p, i) => `
+    <div class="bg-gray-50 p-3 rounded-lg">
+      <div class="font-medium text-gray-700 mb-2">${p.name}</div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">เริ่ม (น.)</label>
+          <input type="number" id="prayerStart-${i}" value="${p.start}" min="0" max="2359" class="w-full p-2 border rounded-lg text-center">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">สิ้นสุด (น.)</label>
+          <input type="number" id="prayerEnd-${i}" value="${p.end}" min="0" max="2359" class="w-full p-2 border rounded-lg text-center">
+        </div>
+      </div>
+      <div class="text-xs text-gray-500 mt-1">
+        ${Math.floor(p.start/100)}:${(p.start%100).toString().padStart(2,'0')} - ${Math.floor(p.end/100)}:${(p.end%100).toString().padStart(2,'0')} น.
+      </div>
+    </div>
+  `).join('');
+}
 
     async function callAPI(payload) {
       try {
